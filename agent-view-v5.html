@@ -120,7 +120,11 @@
     .app.is-client .icon-rail { display: none; }
     .app.is-client .global-header { grid-column: 1; }
     .app.is-client .body-row { display: none; }
-    .app.is-client .client-body { display: block; grid-column: 1; }
+    .app.is-client .client-body {
+      display: flex; flex-direction: column; grid-column: 1;
+      min-height: 0; overflow: hidden;
+    }
+    .app.is-client .client-body:not(.is-viewings-active) { overflow-y: auto; }
     .viewer-body {
       grid-column: 2; grid-row: 2;
       overflow-y: auto; min-height: 0;
@@ -1455,28 +1459,159 @@
     }
     .client-progress-item.is-done { border-color: #6ee7b7; background: #f0fdf4; color: #059669; }
     .client-progress-item.is-active { border-color: #7c3aed; background: #faf5ff; color: #6d28d9; box-shadow: 0 0 0 1px #7c3aed inset; }
-    .client-viewings-view { display: none; }
+    .client-viewings-view { display: none; width: 100%; }
     .client-viewings-view.is-visible {
-      display: flex; flex-direction: column; flex: 1; min-height: 0;
+      display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden;
+      width: 100%;
     }
-    .client-viewings-view.is-visible > *:not(.client-tab-panels) { flex-shrink: 0; }
-    .client-tab-panels { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  /* Match agent workflow width (viewport − icon rail − case panel), centered for client */
+    .client-v-page {
+      flex: 1; min-height: 0; width: 100%;
+      display: flex; flex-direction: column; align-items: center;
+      overflow: hidden; background: #f8fafc;
+    }
+    .client-v-page-inner {
+      width: 100%; max-width: calc(100vw - 276px);
+      min-width: 0; flex: 1; min-height: 0;
+      display: flex; flex-direction: column; overflow: hidden;
+      padding: 0 16px;
+    }
+    .client-v-page-head {
+      flex-shrink: 0; padding: 20px 8px 16px; background: #f8fafc;
+      border-bottom: 1px solid var(--border);
+    }
+    .client-v-page-title {
+      font-size: 24px; font-weight: 600; color: var(--fg-strong);
+      margin: 8px 0 0; line-height: 1.2;
+    }
+    .client-tab-panels {
+      flex: 1; min-height: 0; width: 100%;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
     .client-wrap.is-viewings-workflow {
-      max-width: none; flex: 1; min-height: 0;
-      display: flex; flex-direction: column;
-      padding: 24px 16px 16px;
+      max-width: none; width: 100%; flex: 1; min-height: 0;
+      display: flex; flex-direction: column; overflow: hidden;
+      padding: 0; margin: 0;
     }
-    .app.is-client .client-body.is-viewings-active {
-      overflow: hidden; display: flex; flex-direction: column;
-    }
+    .client-wrap.is-viewings-workflow .client-dashboard-view { display: none; }
     .client-viewings-workspace {
-      flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px;
+      flex: 1; min-height: 0; width: 100%;
+      display: flex; flex-direction: column; overflow: hidden;
+      padding: 16px 8px 0; gap: 16px;
     }
+    .client-offers-pref-banner {
+      flex-shrink: 0; padding: 12px 14px;
+      background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px;
+      font-size: 13px; color: #78350f; line-height: 1.55;
+    }
+    .client-v-controls {
+      flex-shrink: 0; width: 100%;
+      display: flex; flex-direction: column; align-items: stretch; gap: 12px;
+    }
+    .client-v-controls .vf-search-wrap { width: 100%; }
+    .client-v-controls .vf-filter-bar {
+      display: flex; flex-direction: column; align-items: stretch; gap: 10px;
+      width: 100%;
+    }
+    .client-v-controls .vf-time-toggle { width: 100%; }
+    .client-v-controls .vf-time-btn { flex: 1; min-width: 0; }
+    .client-date-slot { width: 100%; }
+    .client-date-slot .client-date-filter {
+      width: 100%; box-sizing: border-box;
+    }
+    .client-date-slot.is-hidden { display: none; }
+    .client-viewings-main { position: relative; }
+    .client-dock-backdrop {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      z-index: 198;
+      opacity: 0;
+      transition: opacity var(--dur-normal, 0.2s) ease;
+    }
+    .client-dock-backdrop.is-visible {
+      display: block;
+      opacity: 1;
+    }
+    .client-dock-close {
+      display: none;
+      align-items: center; justify-content: center;
+      width: 32px; height: 32px; padding: 0;
+      background: var(--bg); border: 1px solid #cbd5e1; border-radius: var(--radius-md);
+      color: var(--fg); cursor: pointer; font-family: inherit; flex-shrink: 0;
+    }
+    .client-dock-close svg { width: 16px; height: 16px; }
+    .client-dock-close:hover { background: var(--slate-50); }
     .client-viewings-main {
-      flex: 1; min-height: 0;
-      background: #f8fafc; border-radius: var(--radius-xl); padding: 16px;
+      flex: 1; min-height: 0; width: 100%; overflow: hidden;
+      display: flex; gap: 24px; align-items: stretch;
+      background: #f8fafc;
     }
-    .client-vendor-email-wrap { flex-shrink: 0; margin-bottom: 4px; }
+    .client-viewings-main .viewings-list-col-wrap {
+      flex: 1; min-width: 0;
+    }
+    .client-viewings-main .viewing-detail-dock {
+      width: 413px; flex-shrink: 0;
+    }
+
+    /* Client dock overlay — smaller desktops & tablets */
+    @media (max-width: 1100px) {
+      .client-viewings-main .viewing-detail-dock {
+        position: fixed;
+        top: 0; right: 0; bottom: 0;
+        width: min(420px, 94vw);
+        max-width: 420px;
+        height: 100%;
+        z-index: 200;
+        transform: translateX(100%);
+        transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 0;
+        box-shadow: -8px 0 32px rgba(0, 0, 0, 0.14);
+        pointer-events: none;
+      }
+      .client-viewings-main .viewing-detail-dock.is-open {
+        transform: translateX(0);
+        pointer-events: auto;
+      }
+      .client-dock-close { display: inline-flex; }
+      .client-viewings-main .viewing-list-col-wrap { width: 100%; }
+      body.client-dock-open { overflow: hidden; }
+      .app.is-client .client-body.client-dock-open { overflow: hidden; }
+    }
+
+    /* Client dock — full-screen on mobile */
+    @media (max-width: 640px) {
+      .client-viewings-main .viewing-detail-dock {
+        width: 100%;
+        max-width: 100%;
+        left: 0;
+        box-shadow: none;
+      }
+      .client-v-page-inner { padding: 0 8px; }
+      .client-v-page-head { padding: 12px 4px 10px; }
+      .client-v-page-title { font-size: 20px; }
+      .client-viewings-workspace { padding: 10px 4px 0; gap: 12px; }
+      .client-v-controls .vf-time-toggle { flex-wrap: wrap; }
+      .client-v-controls .vf-time-btn {
+        flex: 1 1 calc(50% - 2px);
+        min-width: calc(50% - 2px);
+      }
+    }
+    .client-dock-offer-section {
+      display: flex; flex-direction: column; gap: var(--space-3);
+      padding: var(--space-4);
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: var(--radius-md);
+    }
+    .client-dock-offer-header {
+      display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+    }
+    .client-dock-offer-amount {
+      font-size: 22px; font-weight: 700; color: #047857; margin: 0;
+      letter-spacing: -0.3px;
+    }
+    .client-dock-offer-actions { display: flex; align-items: center; gap: var(--space-2); }
     .dock-readonly-value {
       font-size: var(--text-body-size); line-height: var(--lh-body);
       color: var(--fg-strong); margin: 0; white-space: pre-wrap;
@@ -1485,36 +1620,11 @@
     .client-dashboard-view.is-hidden { display: none; }
     .client-viewings-back {
       display: inline-flex; align-items: center; gap: 6px;
-      background: none; border: none; padding: 0; margin-bottom: 20px;
-      font-size: 14px; font-weight: 500; color: #6d28d9; cursor: pointer; font-family: inherit;
+      background: none; border: none; padding: 0;
+      font-size: 13px; font-weight: 500; color: #6d28d9; cursor: pointer; font-family: inherit;
+      margin-bottom: 10px;
     }
     .client-viewings-back:hover { text-decoration: underline; }
-    .client-viewings-head { margin-bottom: 20px; }
-    .client-viewings-title { font-size: 24px; font-weight: 600; color: #334155; margin: 0 0 8px; }
-    .client-viewings-intro { font-size: 14px; color: #64748b; margin: 0; line-height: 1.55; max-width: 640px; }
-    .client-banner {
-      background: var(--purple-50); border: 1px solid var(--purple-100); border-radius: 12px;
-      padding: 16px 18px; margin-bottom: 24px; display: flex; gap: 14px; align-items: flex-start;
-    }
-    .client-banner svg { width: 20px; height: 20px; flex-shrink: 0; color: var(--purple-600); margin-top: 1px; }
-    .client-banner strong { display: block; font-size: 14px; color: var(--fg-strong); margin-bottom: 4px; }
-    .client-banner p { font-size: 13px; color: var(--fg); line-height: 1.5; margin: 0; }
-    .client-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 26px; }
-    .client-stat { background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
-    .client-stat-val { font-size: 22px; font-weight: 700; color: var(--fg-strong); letter-spacing: -0.4px; }
-    .client-stat-lbl { font-size: 12px; color: var(--fg-muted); margin-top: 2px; }
-    .client-stat.is-highlight { border-color: #c4b5fd; background: #faf5ff; }
-    .client-stat.is-highlight .client-stat-val { color: var(--purple-700); }
-    .client-tab-row { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
-    .client-tab {
-      padding: 10px 4px; margin-right: 28px; font-size: 14px; font-weight: 500; color: var(--fg-subtle);
-      border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer;
-      display: inline-flex; align-items: center; gap: 6px; background: none; border-top: none; border-left: none; border-right: none;
-      font-family: inherit;
-    }
-    .client-tab.is-active { color: var(--purple-600); border-bottom-color: var(--purple-600); font-weight: 600; }
-    .client-tab-badge { background: #e2e8f0; color: var(--fg); border-radius: 10px; font-size: 11px; font-weight: 600; padding: 1px 6px; line-height: 1.5; }
-    .client-tab.is-active .client-tab-badge { background: var(--purple-100); color: var(--purple-700); }
     .client-panel { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-bottom: 16px; }
     .client-panel-head { padding: 16px 20px; border-bottom: 1px solid var(--border); font-size: 15px; font-weight: 600; color: var(--fg-strong); }
     .client-list { padding: var(--space-4); }
@@ -1536,8 +1646,8 @@
     .client-pill-offer { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
     .client-pill-rebook { background: #fef3c7; color: #92400e; }
     .client-privacy-note {
-      font-size: var(--text-body-size); color: var(--fg-muted);
-      line-height: var(--lh-body); margin: 0 0 var(--space-4);
+      font-size: 12px; color: var(--fg-muted);
+      line-height: 1.5; margin: 0;
     }
     .client-search-row { display: flex; gap: 10px; margin-bottom: 14px; }
     .client-search-wrap { position: relative; flex: 1; }
@@ -1595,8 +1705,7 @@
       .client-task-illus { width: 100%; min-height: 120px; }
       .client-task-body { border-left: none; border-top: 1px solid #e2e8f0; }
       .client-wrap { padding: 20px 16px 60px; }
-      .client-stats { grid-template-columns: repeat(2, 1fr); }
-      .client-viewings-main { flex-direction: column; padding: 12px; }
+      .client-v-page-inner { max-width: 100%; }
     }
   </style>
 </head>
@@ -2030,30 +2139,18 @@
       </div>
 
       <div id="client-viewings-view" class="client-viewings-view">
-        <button type="button" class="client-viewings-back" id="client-viewings-back">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Back to tasks
-        </button>
-        <div class="client-viewings-head">
-          <h1 class="client-viewings-title">Viewing and Feedback</h1>
-          <p class="client-viewings-intro">See every viewing on your property, including applicant assessments your agent records after each visit. Applicant names only — contact details and lead records are not shared.</p>
-        </div>
-        <div class="client-banner">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4 20-7z"/></svg>
-          <div>
-            <strong>Latest update from your agent</strong>
-            <p id="client-banner-text">Loading…</p>
+        <div class="client-v-page">
+          <div class="client-v-page-inner">
+            <header class="client-v-page-head">
+              <button type="button" class="client-viewings-back" id="client-viewings-back">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Back to tasks
+              </button>
+              <h1 class="client-v-page-title">Viewing and Feedback</h1>
+            </header>
+            <div id="client-tab-panels" class="client-tab-panels"></div>
           </div>
         </div>
-        <div class="client-stats" id="client-stats" aria-live="polite"></div>
-        <div class="client-tab-row" id="client-tabs" role="tablist">
-          <button type="button" class="client-tab is-active" data-client-tab="all" role="tab" aria-selected="true">All viewings <span class="client-tab-badge" id="client-badge-all">0</span></button>
-          <button type="button" class="client-tab" data-client-tab="summary" role="tab" aria-selected="false">Summary</button>
-          <button type="button" class="client-tab" data-client-tab="upcoming" role="tab" aria-selected="false">Upcoming <span class="client-tab-badge" id="client-badge-upcoming">0</span></button>
-          <button type="button" class="client-tab" data-client-tab="history" role="tab" aria-selected="false">History <span class="client-tab-badge" id="client-badge-history">0</span></button>
-          <button type="button" class="client-tab" data-client-tab="offers" role="tab" aria-selected="false">Offers <span class="client-tab-badge" id="client-badge-offers">0</span></button>
-        </div>
-        <div id="client-tab-panels"></div>
       </div>
     </div>
   </div>
@@ -2769,12 +2866,10 @@
   let lastVendorUpdateDays = 3;
   let lastVendorUpdate = null;
   let vendorPersonalMessage = '';
-  let clientTab = 'all';
+  let clientTimeFilter = 'all';
   let clientScreen = 'dashboard';
   let clientTaskTab = 'pending';
-  let clientAllSearch = '';
-  let clientUpcomingSearch = '';
-  let clientHistorySearch = '';
+  let clientSearch = '';
   let clientHistoryDateFrom = '';
   let clientSelectedId = null;
   let clientDockActivityFull = false;
@@ -4750,19 +4845,20 @@
     return viewings.find(v => v.id === id);
   }
 
-  function getClientSearchForTab() {
-    if (clientTab === 'all' || clientTab === 'summary') return clientAllSearch;
-    if (clientTab === 'upcoming') return clientUpcomingSearch;
-    if (clientTab === 'history') return clientHistorySearch;
-    return '';
+  function clientHasOffer(v) {
+    return v.offerPrice != null && v.status !== 'cancelled';
   }
 
-  function getClientTabFilteredList() {
+  function getClientFilteredList() {
     let list = getClientViewings();
-    if (clientTab === 'upcoming') list = list.filter(clientIsUpcoming);
-    else if (clientTab === 'history') list = list.filter(clientIsHistory);
-    list = clientFilterBySearch(list, getClientSearchForTab());
-    if (clientTab === 'history') list = clientFilterByDateFrom(list, clientHistoryDateFrom);
+    if (clientTimeFilter === 'upcoming') list = list.filter(clientIsUpcoming);
+    else if (clientTimeFilter === 'past') list = list.filter(clientIsHistory);
+    else if (clientTimeFilter === 'offers') list = list.filter(clientHasOffer);
+    list = clientFilterBySearch(list, clientSearch);
+    if (clientTimeFilter === 'past') list = clientFilterByDateFrom(list, clientHistoryDateFrom);
+    if (clientTimeFilter === 'offers') {
+      return list.sort((a, b) => b.offerPrice - a.offerPrice);
+    }
     return list.sort((a, b) => new Date(b.date + 'T' + b.timeStart) - new Date(a.date + 'T' + a.timeStart));
   }
 
@@ -4832,8 +4928,9 @@
     if (!mount) return;
     mount.querySelectorAll('[data-client-load-more]').forEach(btn => {
       btn.addEventListener('click', () => {
-        clientTab = btn.dataset.clientLoadMore;
-        renderClientTab(false);
+        clientTimeFilter = btn.dataset.clientLoadMore;
+        updateClientTimeFilterUI();
+        renderClientList();
       });
     });
   }
@@ -4862,13 +4959,18 @@
   function renderClientList() {
     const mount = $('#client-viewings-list');
     if (!mount) return;
-    const list = getClientTabFilteredList();
+    updateClientTimeFilterUI();
+    const list = getClientFilteredList();
 
     if (!list.length) {
       clientSelectedId = null;
+      const emptyTitle = clientTimeFilter === 'offers' ? 'No offers yet' : 'No viewings match';
+      const emptyDesc = clientTimeFilter === 'offers'
+        ? 'Offer prices appear here once your agent records them after a viewing. Select a viewing to see feedback and context.'
+        : 'Try a different search or time filter.';
       mount.innerHTML = `<div style="text-align:center;padding:40px 16px;color:var(--fg-muted);font-size:13px;">
-        <strong style="display:block;color:var(--fg-strong);margin-bottom:4px;">No viewings match</strong>
-        Try a different search or switch tabs.
+        <strong style="display:block;color:var(--fg-strong);margin-bottom:4px;">${esc(emptyTitle)}</strong>
+        ${esc(emptyDesc)}
       </div>`;
       renderClientDock();
       return;
@@ -4876,7 +4978,9 @@
 
     if (!list.some(v => v.id === clientSelectedId)) clientSelectedId = list[0].id;
 
-    if (clientTab === 'all' || clientTab === 'summary') {
+    if (clientTimeFilter === 'offers') {
+      mount.innerHTML = list.map(clientViewingCardHtml).join('');
+    } else if (clientTimeFilter === 'all') {
       const buckets = { today: [], upcoming: [], past: [] };
       list.forEach(cv => {
         const raw = getClientRawViewing(cv.id);
@@ -4891,14 +4995,14 @@
           </section>`);
       }
       if (buckets.upcoming.length) parts.push(renderClientPreviewBucketHtml('Upcoming', buckets.upcoming, 'upcoming'));
-      if (buckets.past.length) parts.push(renderClientPreviewBucketHtml('Past', buckets.past, 'history'));
+      if (buckets.past.length) parts.push(renderClientPreviewBucketHtml('Past', buckets.past, 'past'));
       mount.innerHTML = parts.join('');
       bindClientLoadMoreButtons(mount);
-    } else if (clientTab === 'upcoming') {
+    } else if (clientTimeFilter === 'upcoming') {
       mount.innerHTML = renderClientDateGroupsHtml(
         groupViewingsByDate(list.map(cv => ({ ...cv, time: cv.timeStart })))
       );
-    } else if (clientTab === 'history') {
+    } else if (clientTimeFilter === 'past') {
       mount.innerHTML = renderClientPastDateGroupedHtml(list);
     }
 
@@ -4980,6 +5084,27 @@
       </div>`;
   }
 
+  function buildClientOfferPreferenceHtml(cv) {
+    if (!clientHasOffer(cv)) return '';
+    const prefId = localStorage.getItem(CLIENT_PREF_KEY);
+    const isPref = prefId === cv.id;
+    return `
+      <div class="client-dock-offer-section">
+        <div class="client-dock-offer-header">
+          <div>
+            <span class="dock-form-label">Offer recorded</span>
+            <p class="client-dock-offer-amount">${fmtPrice(cv.offerPrice)}</p>
+          </div>
+          <div class="client-dock-offer-actions">
+            ${isPref
+              ? '<span class="client-pref-badge">★ Your preference</span>'
+              : `<button type="button" class="client-btn-pref" data-pref-offer="${cv.id}">Express preference</button>`}
+          </div>
+        </div>
+        <p class="dock-help-text" style="margin:0">Your agent recorded this offer after the viewing. Express a preference to let them know which offer you&apos;d like to proceed with.</p>
+      </div>`;
+  }
+
   function buildClientAssessmentReadonlyHtml(cv) {
     if (cv.status !== 'completed' && !clientHasAssessmentData(cv)) return '';
     const priceVal = cv.priceProposed
@@ -5003,9 +5128,50 @@
   function setClientDockHeaderMode(mode) {
     const title = $('#client-dock-header-title');
     const back = $('#client-dock-activity-back');
+    const closeBtn = $('#client-dock-close');
     const isActivity = mode === 'activity';
     if (title) title.textContent = isActivity ? 'Activity Log' : 'Viewing Details';
     if (back) back.hidden = !isActivity;
+    if (closeBtn) closeBtn.hidden = isActivity;
+  }
+
+  function clientDockUsesOverlay() {
+    return window.matchMedia('(max-width: 1100px)').matches;
+  }
+
+  function syncClientDockOverlayState() {
+    const dock = $('#client-viewing-dock');
+    const backdrop = $('#client-dock-backdrop');
+    const body = document.body;
+    const clientBody = $('#client-body');
+    if (!dock) return;
+
+    const hasSelection = !!(clientSelectedId && getClientViewingById(clientSelectedId));
+    const overlay = clientDockUsesOverlay();
+    const open = overlay && hasSelection && !dock.classList.contains('is-empty');
+
+    dock.classList.toggle('is-open', open);
+    if (backdrop) {
+      backdrop.classList.toggle('is-visible', open);
+      backdrop.hidden = !open;
+      backdrop.setAttribute('aria-hidden', open ? 'false' : 'true');
+    }
+    body.classList.toggle('client-dock-open', open);
+    clientBody?.classList.toggle('client-dock-open', open);
+    dock.setAttribute('aria-hidden', overlay && !open ? 'true' : 'false');
+  }
+
+  function closeClientDetailDock() {
+    clientSelectedId = null;
+    clientDockActivityFull = false;
+    const mount = $('#client-viewings-list');
+    if (mount) {
+      $$('.viewing-card[data-client-id]', mount).forEach(c => {
+        c.classList.remove('is-selected');
+        c.setAttribute('aria-pressed', 'false');
+      });
+    }
+    renderClientDock();
   }
 
   function renderClientDock() {
@@ -5033,6 +5199,7 @@
             <p class="text-body dock-empty-sub">Pick a viewing from the list to see the full details</p>
           </div>
         </div>`;
+      syncClientDockOverlayState();
       return;
     }
 
@@ -5046,6 +5213,7 @@
         clientDockActivityFull = false;
         renderClientDock();
       });
+      syncClientDockOverlayState();
       return;
     }
 
@@ -5076,35 +5244,58 @@
       ${noShowHtml}
       ${cancelledHtml}
       ${buildClientAssessmentReadonlyHtml(cv)}
+      ${buildClientOfferPreferenceHtml(cv)}
       ${buildClientActivityPreviewHtml(cv)}`;
 
     $('#client-dock-activity-all')?.addEventListener('click', () => {
       clientDockActivityFull = true;
       renderClientDock();
     });
+    syncClientDockOverlayState();
   }
 
-  function renderClientWorkspaceShell(topHtml = '') {
-    const showDateFilter = clientTab === 'history';
+  function renderClientOffersPrefBannerHtml() {
+    if (clientTimeFilter !== 'offers') return '';
+    const prefId = localStorage.getItem(CLIENT_PREF_KEY);
+    const prefV = prefId ? getClientViewingById(prefId) : null;
+    if (!prefV || !clientHasOffer(prefV)) return '';
+    return `<div class="client-offers-pref-banner" id="client-offers-pref-banner">You&apos;ve expressed a preference for <strong>${esc(prefV.label)}&apos;s</strong> offer at <strong>${fmtPrice(prefV.offerPrice)}</strong>. Your agent will review before proceeding.</div>`;
+  }
+
+  function renderClientWorkspaceShell() {
+    const offerCount = getClientViewings().filter(clientHasOffer).length;
+    const timeOptions = [
+      { id: 'all', label: 'All' },
+      { id: 'upcoming', label: 'Upcoming' },
+      { id: 'past', label: 'Past' },
+      { id: 'offers', label: offerCount ? `Offers (${offerCount})` : 'Offers' },
+    ];
     return `
-      ${topHtml}
-      <div class="client-viewings-workspace">
-        <p class="client-privacy-note">The same viewings your agent manages appear here. Applicant assessments reflect what your agent recorded after each visit. Contact details, lead source, and buyer profile fields are not shown.</p>
+      <div class="client-viewings-workspace" id="client-viewings-workspace">
+        <div id="client-offers-pref-mount">${renderClientOffersPrefBannerHtml()}</div>
+        <div class="client-v-controls">
+          <div class="vf-search-wrap" role="search">
+            <svg class="vf-search-icon" width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.3"/><path d="M10.5 10.5L13.5 13.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+            <input type="search" class="input vf-search-input" id="client-vf-search" placeholder="Type to search..." autocomplete="off" aria-label="Search viewings">
+            <button type="button" class="vf-search-clear" id="client-vf-search-clear" hidden aria-label="Clear search">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><line x1="4" y1="4" x2="12" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="12" y1="4" x2="4" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+          <div class="vf-filter-bar">
+            <div class="vf-time-toggle" id="client-time-toggle" role="group" aria-label="Filter by time">
+              ${timeOptions.map(o => `<button type="button" class="vf-time-btn${clientTimeFilter === o.id ? ' is-active' : ''}" data-client-time="${o.id}">${o.label}</button>`).join('')}
+            </div>
+            <div class="client-date-slot${clientTimeFilter === 'past' ? '' : ' is-hidden'}" id="client-date-slot">
+              <input type="date" class="client-date-filter" id="client-history-date-from" aria-label="Filter from date">
+            </div>
+          </div>
+        </div>
         <div class="viewings-main client-viewings-main">
           <div class="viewings-list-col-wrap">
-            <div class="viewings-controls">
-              <div class="vf-search-wrap" role="search">
-                <svg class="vf-search-icon" width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.3"/><path d="M10.5 10.5L13.5 13.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
-                <input type="search" class="input vf-search-input" id="client-vf-search" placeholder="Type to search..." autocomplete="off" aria-label="Search viewings">
-                <button type="button" class="vf-search-clear" id="client-vf-search-clear" hidden aria-label="Clear search">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><line x1="4" y1="4" x2="12" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="12" y1="4" x2="4" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-                </button>
-              </div>
-              ${showDateFilter ? `<input type="date" class="client-date-filter" id="client-history-date-from" aria-label="Filter from date">` : ''}
-            </div>
             <div class="viewing-list-col" id="client-viewings-list" role="region" aria-label="Viewings"></div>
           </div>
-          <aside class="viewing-detail-dock is-empty" id="client-viewing-dock" aria-label="Viewing details">
+          <div class="client-dock-backdrop" id="client-dock-backdrop" hidden aria-hidden="true"></div>
+          <aside class="viewing-detail-dock is-empty" id="client-viewing-dock" aria-label="Viewing details" role="dialog" aria-modal="true" aria-labelledby="client-dock-header-title">
             <div class="dock-header" id="client-dock-header" hidden>
               <div class="dock-header-left">
                 <button type="button" class="btn btn-tertiary dock-activity-back" id="client-dock-activity-back" hidden>
@@ -5113,6 +5304,11 @@
                 </button>
                 <span class="text-h2 dock-header-title" id="client-dock-header-title">Viewing Details</span>
               </div>
+              <div class="dock-header-actions">
+                <button type="button" class="client-dock-close" id="client-dock-close" aria-label="Close viewing details">
+                  <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                </button>
+              </div>
             </div>
             <div class="dock-body" id="client-dock-body"></div>
           </aside>
@@ -5120,38 +5316,87 @@
       </div>`;
   }
 
-  function bindClientWorkspaceControls(panel) {
-    const searchEl = $('#client-vf-search', panel);
-    const clearEl = $('#client-vf-search-clear', panel);
-    if (searchEl) {
-      searchEl.value = getClientSearchForTab();
-      if (clearEl) clearEl.hidden = !searchEl.value;
-      searchEl.addEventListener('input', () => {
-        const q = searchEl.value.trim();
-        if (clientTab === 'all' || clientTab === 'summary') clientAllSearch = q;
-        else if (clientTab === 'upcoming') clientUpcomingSearch = q;
-        else if (clientTab === 'history') clientHistorySearch = q;
-        if (clearEl) clearEl.hidden = !searchEl.value;
-        renderClientList();
-      });
-    }
-    clearEl?.addEventListener('click', () => {
-      if (!searchEl) return;
-      searchEl.value = '';
-      clearEl.hidden = true;
-      if (clientTab === 'all' || clientTab === 'summary') clientAllSearch = '';
-      else if (clientTab === 'upcoming') clientUpcomingSearch = '';
-      else if (clientTab === 'history') clientHistorySearch = '';
-      renderClientList();
+  function updateClientTimeFilterUI() {
+    $$('#client-time-toggle [data-client-time]').forEach(btn => {
+      btn.classList.toggle('is-active', btn.dataset.clientTime === clientTimeFilter);
     });
-    const dateEl = $('#client-history-date-from', panel);
-    if (dateEl) {
-      dateEl.value = clientHistoryDateFrom;
-      dateEl.addEventListener('change', () => {
-        clientHistoryDateFrom = dateEl.value;
-        renderClientList();
-      });
+    const dateSlot = $('#client-date-slot');
+    if (dateSlot) dateSlot.classList.toggle('is-hidden', clientTimeFilter !== 'past');
+    const dateEl = $('#client-history-date-from');
+    if (dateEl) dateEl.value = clientHistoryDateFrom;
+    const prefMount = $('#client-offers-pref-mount');
+    if (prefMount) prefMount.innerHTML = renderClientOffersPrefBannerHtml();
+    const offersBtn = $('#client-time-toggle [data-client-time="offers"]');
+    if (offersBtn) {
+      const n = getClientViewings().filter(clientHasOffer).length;
+      offersBtn.textContent = n ? `Offers (${n})` : 'Offers';
     }
+  }
+
+  function ensureClientViewingsShell() {
+    const panel = $('#client-tab-panels');
+    if ($('#client-viewings-list', panel)) return panel;
+    panel.innerHTML = renderClientWorkspaceShell();
+    bindClientWorkspaceControls(panel);
+    return panel;
+  }
+
+  function bindClientWorkspaceControls(panel) {
+    if (panel._clientControlsBound) return;
+    panel._clientControlsBound = true;
+
+    panel.addEventListener('input', (e) => {
+      if (e.target.id === 'client-vf-search') {
+        clientSearch = e.target.value.trim();
+        const clearEl = $('#client-vf-search-clear', panel);
+        if (clearEl) clearEl.hidden = !e.target.value;
+        renderClientList();
+      }
+    });
+
+    panel.addEventListener('click', (e) => {
+      if (e.target.closest('#client-vf-search-clear')) {
+        const searchEl = $('#client-vf-search', panel);
+        if (searchEl) searchEl.value = '';
+        clientSearch = '';
+        const clearEl = $('#client-vf-search-clear', panel);
+        if (clearEl) clearEl.hidden = true;
+        renderClientList();
+        return;
+      }
+      const timeBtn = e.target.closest('[data-client-time]');
+      if (timeBtn && timeBtn.dataset.clientTime !== clientTimeFilter) {
+        clientTimeFilter = timeBtn.dataset.clientTime;
+        updateClientTimeFilterUI();
+        renderClientList();
+        return;
+      }
+      const prefBtn = e.target.closest('[data-pref-offer]');
+      if (prefBtn) {
+        localStorage.setItem(CLIENT_PREF_KEY, prefBtn.dataset.prefOffer);
+        updateClientTimeFilterUI();
+        renderClientList();
+        return;
+      }
+      if (e.target.closest('#client-dock-backdrop') || e.target.closest('#client-dock-close')) {
+        closeClientDetailDock();
+      }
+    });
+
+    panel.addEventListener('change', (e) => {
+      if (e.target.id === 'client-history-date-from') {
+        clientHistoryDateFrom = e.target.value;
+        renderClientList();
+      }
+    });
+  }
+
+  function syncClientSearchInput() {
+    const searchEl = $('#client-vf-search');
+    const clearEl = $('#client-vf-search-clear');
+    if (searchEl) searchEl.value = clientSearch;
+    if (clearEl) clearEl.hidden = !clientSearch;
+    updateClientTimeFilterUI();
   }
 
   function clientEmptyState(title, desc) {
@@ -5270,17 +5515,21 @@
 
   function openClientViewingsWorkflow() {
     clientScreen = 'viewings';
-    clientTab = 'all';
+    clientTimeFilter = 'all';
     $('#client-dashboard-view')?.classList.add('is-hidden');
     $('#client-viewings-view')?.classList.add('is-visible');
     $('#client-wrap')?.classList.add('is-viewings-workflow');
     $('#client-body')?.classList.add('is-viewings-active');
     renderClientStats();
-    renderClientTab(true);
+    renderClientViewingsScreen(true);
   }
 
   function closeClientViewingsWorkflow() {
     clientScreen = 'dashboard';
+    clientSelectedId = null;
+    clientDockActivityFull = false;
+    document.body.classList.remove('client-dock-open');
+    $('#client-body')?.classList.remove('client-dock-open');
     $('#client-dashboard-view')?.classList.remove('is-hidden');
     $('#client-viewings-view')?.classList.remove('is-visible');
     $('#client-wrap')?.classList.remove('is-viewings-workflow');
@@ -5289,33 +5538,7 @@
   }
 
   function renderClientStats() {
-    const all = getClientViewings();
-    const upcomingCount = all.filter(clientIsUpcoming).length;
-    const withFeedback = all.filter(v => v.feedback === 'received').length;
-    const offers = clientOffersWithPrice();
-    const prefId = localStorage.getItem(CLIENT_PREF_KEY);
-    const prefV = prefId ? all.find(v => v.id === prefId) : null;
-
-    const stats = $('#client-stats');
-    if (stats) {
-      stats.innerHTML = `
-        <div class="client-stat is-highlight"><div class="client-stat-val">${upcomingCount}</div><div class="client-stat-lbl">Upcoming viewings</div></div>
-        <div class="client-stat"><div class="client-stat-val">${withFeedback}</div><div class="client-stat-lbl">Feedback received</div></div>
-        <div class="client-stat"><div class="client-stat-val">${offers.length}</div><div class="client-stat-lbl">Offers received</div></div>
-        <div class="client-stat${prefV ? ' is-highlight' : ''}"><div class="client-stat-val">${prefV ? '1 Preferred offer' : '—'}</div><div class="client-stat-lbl">Preference expressed</div></div>`;
-    }
-
-    const banner = $('#client-banner-text');
-    if (banner) {
-      banner.textContent = `Your agent last updated your case on ${clientFormatDate(getSimulatedDate())}. You have ${upcomingCount} upcoming viewing${upcomingCount === 1 ? '' : 's'}.`;
-    }
-
-    const up = all.filter(clientIsUpcoming).length;
-    const hist = all.filter(clientIsHistory).length;
-    $('#client-badge-all') && ($('#client-badge-all').textContent = all.length);
-    $('#client-badge-upcoming') && ($('#client-badge-upcoming').textContent = up);
-    $('#client-badge-history') && ($('#client-badge-history').textContent = hist);
-    $('#client-badge-offers') && ($('#client-badge-offers').textContent = offers.length);
+    /* Offer count shown on the Offers filter button when workspace is rendered */
   }
 
   function clientFilterBySearch(list, query) {
@@ -5334,78 +5557,20 @@
     return list.filter(v => new Date(v.date + 'T00:00') >= from);
   }
 
-  function renderClientSummaryTopHtml() {
-    const vendorEmailBlock = lastVendorUpdate
-      ? lastVendorUpdate.html
-      : `<div class="client-update-card">
-          <div class="client-update-meta">Agent update</div>
-          <div class="client-update-body">
-            <p>Your agent will send viewing updates here after each vendor email. Select a viewing below to see full details.</p>
-          </div>
-        </div>`;
-    return `<div class="client-vendor-email-wrap">${vendorEmailBlock}</div>`;
-  }
-
-  function renderClientOffersPanel() {
-    const offers = clientOffersWithPrice();
-    const prefId = localStorage.getItem(CLIENT_PREF_KEY);
-    const prefV = prefId ? getClientViewings().find(v => v.id === prefId) : null;
-    let html = `<p style="font-size:13px;color:#334155;line-height:1.6;margin-bottom:16px"><strong>Review offers below.</strong> Express a preference to let your agent know which offer you'd like to proceed with.</p>`;
-    if (prefV) {
-      html += `<div class="client-pref-notice">You've expressed a preference for <strong>${esc(prefV.label)}'s</strong> offer at <strong>${fmtPrice(prefV.offerPrice)}</strong>. Your agent will review and confirm before proceeding.</div>`;
-    }
-    if (!offers.length) {
-      html += `<div class="client-panel"><div class="client-list">${clientEmptyState('No offers yet', 'Offer prices will appear here once recorded by your agent.')}</div></div>`;
-    } else {
-      html += '<div class="client-panel"><div class="client-panel-head">Viewer offers</div><div class="client-list" style="padding:12px">';
-      offers.forEach(v => {
-        const isPref = prefId === v.id;
-        html += `<div class="client-offer-row${isPref ? ' is-preferred' : ''}" data-offer-id="${v.id}">
-          <div><div class="client-offer-name">${esc(v.label)}</div><div class="client-offer-meta">${v.interest ? esc(v.interest) + ' · ' : ''}${clientFormatDate(v.date)}</div></div>
-          <div class="client-offer-amt">${fmtPrice(v.offerPrice)}</div>
-          <div>${isPref ? '<span class="client-pref-badge">★ Your preference</span>' : `<button type="button" class="client-btn-pref" data-pref-offer="${v.id}">Express preference</button>`}</div>
-        </div>`;
-      });
-      html += '</div></div>';
-    }
-    html += `<div class="client-info-note">Once you and your agent agree on a final offer, your agent will generate the Memorandum of Sale.</div>`;
-    return html;
-  }
-
-  const CLIENT_VIEWING_TABS = new Set(['all', 'summary', 'upcoming', 'history']);
-
-  function renderClientTab(resetFilters) {
+  function renderClientViewingsScreen(resetFilters) {
     clientDockActivityFull = false;
     if (resetFilters) {
-      clientAllSearch = '';
-      clientUpcomingSearch = '';
-      clientHistorySearch = '';
+      clientSearch = '';
       clientHistoryDateFrom = '';
       clientSelectedId = null;
+      clientTimeFilter = 'all';
     }
     const panel = $('#client-tab-panels');
     if (!panel) return;
 
-    if (CLIENT_VIEWING_TABS.has(clientTab)) {
-      const topHtml = clientTab === 'summary' ? renderClientSummaryTopHtml() : '';
-      panel.innerHTML = renderClientWorkspaceShell(topHtml);
-      bindClientWorkspaceControls(panel);
-      renderClientList();
-    } else {
-      panel.innerHTML = renderClientOffersPanel();
-      $$('[data-pref-offer]', panel).forEach(btn => {
-        btn.addEventListener('click', () => {
-          localStorage.setItem(CLIENT_PREF_KEY, btn.dataset.prefOffer);
-          renderClientDashboard();
-        });
-      });
-    }
-
-    $$('#client-tabs .client-tab').forEach(el => {
-      const on = el.dataset.clientTab === clientTab;
-      el.classList.toggle('is-active', on);
-      el.setAttribute('aria-selected', on ? 'true' : 'false');
-    });
+    ensureClientViewingsShell();
+    syncClientSearchInput();
+    renderClientList();
   }
 
   function renderClientDashboard() {
@@ -5416,8 +5581,12 @@
       $('#client-wrap')?.classList.add('is-viewings-workflow');
       $('#client-body')?.classList.add('is-viewings-active');
       renderClientStats();
-      if ($('#client-viewings-list')) renderClientList();
-      else renderClientTab(false);
+      if ($('#client-viewings-list')) {
+        updateClientTimeFilterUI();
+        renderClientList();
+      } else {
+        renderClientViewingsScreen(false);
+      }
     } else {
       $('#client-dashboard-view')?.classList.remove('is-hidden');
       $('#client-viewings-view')?.classList.remove('is-visible');
@@ -5826,15 +5995,6 @@
     if (mode === 'viewer') renderViewerDashboard();
   }
 
-  function setupClientTabs() {
-    $('#client-tabs')?.addEventListener('click', (e) => {
-      const tab = e.target.closest('[data-client-tab]');
-      if (!tab || tab.dataset.clientTab === clientTab) return;
-      clientTab = tab.dataset.clientTab;
-      renderClientTab(true);
-    });
-  }
-
   function setupClientWorkflowUI() {
     $('#client-task-tabs')?.addEventListener('click', (e) => {
       const tab = e.target.closest('[data-client-task-tab]');
@@ -5849,6 +6009,23 @@
     });
 
     $('#client-viewings-back')?.addEventListener('click', () => closeClientViewingsWorkflow());
+
+    if (!window._clientDockResponsiveBound) {
+      window._clientDockResponsiveBound = true;
+      window.addEventListener('resize', () => {
+        if (clientScreen === 'viewings') syncClientDockOverlayState();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && clientScreen === 'viewings' && $('#client-viewing-dock')?.classList.contains('is-open')) {
+          if (clientDockActivityFull) {
+            clientDockActivityFull = false;
+            renderClientDock();
+          } else {
+            closeClientDetailDock();
+          }
+        }
+      });
+    }
   }
 
   function setupPerspectiveSwitch() {
@@ -5900,7 +6077,6 @@
   setupEmailSettings();
   setupProtoSettings();
   setupPerspectiveSwitch();
-  setupClientTabs();
   setupClientWorkflowUI();
   setupVendorUpdateModal();
   setupViewerCancelModal();
