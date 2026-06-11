@@ -1,0 +1,1435 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Viewings and feedback v4 — Homey</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="design-system/homeywebfoundation.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans);
+      font-size: var(--fs-base);
+      line-height: 1.5;
+      color: var(--fg);
+      background: var(--bg-subtle);
+      min-height: 100vh;
+    }
+    .icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+    .modal-scrim { display: none; }
+    .modal-scrim.is-open { display: flex; }
+
+    .app {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      grid-template-rows: 48px 1fr;
+      min-height: 100vh;
+    }
+    .global-header {
+      grid-column: 2; grid-row: 1;
+      height: 48px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 var(--space-6);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+    .header-actions-global { display: flex; align-items: center; gap: var(--space-2); }
+    .body-row {
+      grid-column: 2; grid-row: 2;
+      display: flex; min-height: 0; overflow: hidden;
+    }
+    .icon-rail {
+      grid-column: 1; grid-row: 1 / -1;
+      width: 56px; background: var(--bg);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; align-items: center;
+      padding: var(--space-3) 0; gap: var(--space-2);
+    }
+    .rail-logo {
+      width: 32px; height: 32px;
+      background: var(--purple-600);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-4);
+    }
+    .rail-item {
+      width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: var(--radius-md);
+      color: var(--fg-muted); cursor: pointer;
+    }
+    .rail-item:hover { background: var(--slate-100); color: var(--fg); }
+    .rail-item.active { background: var(--purple-50); color: var(--purple-700); }
+
+    .case-panel {
+      width: 350px; flex-shrink: 0;
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      display: flex; flex-direction: column;
+    }
+    .panel-section {
+      padding: var(--space-4);
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-section:last-child { border-bottom: none; flex: 1; }
+    .client-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: var(--space-3);
+    }
+    .client-identity { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+    .client-name { font-size: var(--fs-md); font-weight: 600; color: var(--fg-strong); }
+    .client-actions { display: flex; gap: var(--space-2); }
+    .contact-row {
+      display: flex; align-items: center; gap: var(--space-2);
+      font-size: var(--fs-base); margin-bottom: var(--space-2);
+    }
+    .contact-row a { color: var(--purple-700); text-decoration: none; }
+    .contact-row a:hover { text-decoration: underline; }
+    .contact-row svg { color: var(--fg-muted); flex-shrink: 0; }
+    .follow-up-row { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-1); }
+    .follow-up-btn {
+      font-family: inherit; font-size: var(--fs-base); color: var(--fg);
+      background: none; border: none; cursor: pointer;
+      display: flex; align-items: center; gap: 4px; padding: 4px 0;
+    }
+    .follow-up-btn:hover { color: var(--purple-700); }
+    .section-title-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: var(--space-3);
+    }
+    .section-title { font-size: var(--fs-md); font-weight: 600; color: var(--fg-strong); }
+    .property-address {
+      font-size: var(--fs-base); font-weight: 500;
+      display: flex; align-items: flex-start; gap: var(--space-2);
+      margin-bottom: var(--space-3); color: var(--fg-strong);
+    }
+    .property-meta { display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--fs-base); }
+    .property-meta-row { display: flex; gap: var(--space-2); }
+    .property-meta-row .label { width: 56px; color: var(--fg-muted); flex-shrink: 0; }
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      font-size: var(--fs-base); cursor: pointer;
+      background: var(--bg); color: var(--fg-strong); font-family: inherit;
+    }
+    .status-pill:hover { background: var(--slate-50); }
+    .show-more {
+      font-size: var(--fs-base); color: var(--purple-700);
+      background: none; border: none; cursor: pointer;
+      display: flex; align-items: center; gap: 4px;
+      margin-top: var(--space-2); padding: 0; font-family: inherit;
+    }
+    .phase-tabs {
+      display: flex; border-bottom: 1px solid var(--border);
+      padding: 0 var(--space-4); background: var(--bg);
+    }
+    .phase-tab {
+      padding: var(--space-3) var(--space-4);
+      font-size: var(--fs-base); font-weight: 500; color: var(--fg-muted);
+      background: none; border: none; border-bottom: 2px solid transparent;
+      margin-bottom: -1px; cursor: pointer; font-family: inherit;
+    }
+    .phase-tab:hover { color: var(--fg-strong); }
+    .phase-tab.active {
+      color: var(--purple-700);
+      border-bottom-color: var(--purple-600);
+      font-weight: 600;
+    }
+    .workflow-list {
+      padding: var(--space-3) var(--space-4) var(--space-4);
+      display: flex; flex-direction: column; gap: var(--space-2);
+    }
+    .workflow-card {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-3) 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background: var(--bg); cursor: pointer;
+      text-align: left; font-family: inherit; width: 100%;
+    }
+    .workflow-card:hover { border-color: var(--border-strong); background: var(--slate-50); }
+    .workflow-card.active {
+      background: var(--purple-50);
+      border-color: var(--purple-200);
+    }
+    .workflow-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .workflow-dot.progress { background: var(--info-600); }
+    .workflow-dot.pending { background: var(--warning-600); }
+    .workflow-label { flex: 1; font-size: var(--fs-base); font-weight: 500; color: var(--fg-strong); }
+    .workflow-chevron { color: var(--fg-subtle); flex-shrink: 0; }
+
+    .workflow-main {
+      flex: 1; display: flex; flex-direction: column;
+      min-width: 0; background: var(--bg-subtle);
+    }
+    .workflow-body { flex: 1; overflow: auto; background: var(--bg-subtle); }
+    .viewings-page { padding: var(--space-6); max-width: none; }
+    .viewings-page-header { margin-bottom: var(--space-6); }
+    .viewings-title {
+      font-size: 24px; font-weight: 600; line-height: normal;
+      color: var(--fg-strong); margin: 0;
+    }
+
+    /* Figma Filter chip — 4110:15723 */
+    .vf-chip-bar {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: var(--space-6);
+    }
+    .filter-chip-active {
+      display: inline-flex; align-items: stretch; height: 25px;
+      border: 1px solid var(--purple-400); background: var(--purple-50);
+      border-radius: var(--radius-md); overflow: hidden;
+    }
+    .filter-chip-seg {
+      display: inline-flex; align-items: center; gap: var(--space-2);
+      padding: 0 var(--space-3); font-size: var(--fs-base); line-height: 1.5;
+      color: var(--purple-700); white-space: nowrap;
+      border-right: 1px solid var(--purple-400);
+    }
+    .filter-chip-seg--clear {
+      width: 28px; justify-content: center; padding: 0;
+      border-right: none; background: none; border: none; cursor: pointer;
+      font-family: inherit; color: var(--purple-700);
+    }
+    .filter-chip-count {
+      background: var(--purple-200); border-radius: var(--radius-md);
+      min-width: 18px; height: 18px; padding: 0 5px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 600; color: var(--purple-700);
+    }
+
+    /* ── Workspace: equal-split two columns ── */
+    .viewings-workspace {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-4);
+      align-items: start;
+    }
+    /* Viewing list cards — Figma 4110:15725 */
+    .viewing-card-list { display: flex; flex-direction: column; gap: var(--space-4); }
+    .viewing-card {
+      padding: var(--space-4);
+      cursor: pointer;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg);
+      display: flex; flex-direction: column; gap: var(--space-3);
+    }
+    .viewing-card.is-selected { border-color: var(--purple-400); }
+    .viewing-card-top {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: var(--space-3);
+    }
+    .viewing-card-name { font-size: var(--fs-base); font-weight: 600; line-height: 1.5; color: var(--fg-strong); }
+    .viewing-card-time { font-size: var(--fs-base); font-weight: 400; line-height: 1.5; color: var(--fg-strong); white-space: nowrap; flex-shrink: 0; }
+
+    /* ── Detail dock (right panel) ── */
+    .viewing-detail-dock {
+      position: sticky; top: 0;
+      display: flex; flex-direction: column;
+      height: calc(100vh - 48px); overflow: hidden;
+      background: var(--bg);
+      border-radius: 16px;
+      box-shadow: 0 2px 14.1px rgba(0, 0, 0, 0.08);
+    }
+    /* + schedule — same shell as .dropdown-item, primary tokens */
+    .vf-chip-add {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: auto; min-width: auto; height: auto;
+      padding: 8px 10px;
+      font-family: inherit; font-size: var(--fs-sm); font-weight: 600;
+      color: var(--purple-700);
+      background: transparent; border: 0;
+      border-radius: var(--radius-sm);
+      cursor: pointer; flex-shrink: 0;
+    }
+    .vf-chip-add:hover { background: var(--purple-50); color: var(--purple-700); }
+    .vf-chip-add svg { width: 16px; height: 16px; color: var(--purple-600); flex-shrink: 0; }
+    .dock-scroll {
+      flex: 1; overflow-y: auto;
+      padding: var(--space-3);
+      display: flex; flex-direction: column; gap: var(--space-6);
+    }
+    .dock-footer {
+      padding: var(--space-2) var(--space-3) var(--space-3);
+      background: var(--bg);
+      display: flex; flex-direction: column; gap: var(--space-3); flex-shrink: 0;
+    }
+    .dock-empty {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: var(--space-3); color: var(--fg-muted); font-size: var(--fs-sm);
+      text-align: center; padding: var(--space-10) var(--space-4); height: 100%;
+    }
+    /* Hero */
+    .dock-hero {
+      display: flex; flex-direction: column; align-items: center; gap: var(--space-2);
+      padding: var(--space-4) var(--space-3);
+      background: #fcfcfd;
+      border-radius: 12px;
+    }
+    .dock-avatar { width: 48px; height: 48px; font-size: 14px; font-weight: 600; flex-shrink: 0; }
+    .dock-name { font-size: 24px; font-weight: 600; line-height: normal; color: var(--fg-strong); text-align: center; margin: 0; }
+    .dock-row {
+      display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4);
+    }
+    .dock-label { font-size: var(--fs-base); font-weight: 400; line-height: 1.5; color: var(--fg-strong); flex-shrink: 0; }
+    .dock-value { display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-2); }
+    .dock-value-main { font-size: 16px; font-weight: 600; line-height: normal; color: var(--fg-strong); text-align: right; }
+    .dock-text-btn {
+      font-size: var(--fs-base); font-weight: 400; line-height: 20px; color: var(--fg-muted);
+      background: none; border: none; cursor: pointer; font-family: inherit; padding: 0;
+    }
+    .dock-text-btn:hover { color: var(--fg-strong); }
+    .dock-meta-line { font-size: var(--fs-xs); line-height: normal; color: var(--fg-muted); text-align: right; }
+    .dock-notes-label { font-size: 12px; font-weight: 400; line-height: normal; color: var(--fg-strong); margin: 0 0 var(--space-3); display: block; }
+    .dock-notes-caption { font-size: 12px; font-weight: 400; line-height: normal; color: var(--fg-strong); margin-top: var(--space-1); }
+    #detail-internal-note { min-height: 108px; }
+    .dock-feedback { display: flex; flex-direction: column; gap: var(--space-3); }
+    .dock-cta-btn {
+      width: 100%;
+      display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2);
+    }
+    .dock-footer-note { font-size: 12px; line-height: normal; color: var(--fg-strong); text-align: center; margin: 0; }
+    .status-badge-figma {
+      display: inline-flex; align-items: center; gap: var(--space-2);
+      height: 24px; padding: 4px 8px; border-radius: var(--radius-md);
+      font-size: 12px; font-weight: 600; line-height: 1.5;
+      border: 1px solid; white-space: nowrap;
+    }
+    .status-badge-figma .status-badge-icon { width: 16px; height: 16px; flex-shrink: 0; }
+    .status-badge-scheduled { background: #f8fafc; border-color: #e2e8f0; color: #64748b; }
+    .status-badge-confirmed { background: #dbeafe; border-color: #bfdbfe; color: #2563eb; }
+    .status-badge-cancelled { background: #fef7ec; border-color: #fbd3a7; color: #ff7214; }
+    .status-badge-noshow { background: #fef2f2; border-color: #fecaca; color: #ef4444; }
+    .status-badge-completed { background: #ecfdf5; border-color: #6ee7b7; color: #059669; }
+    .status-badge-feedback { background: #f8fafc; border-color: #e2e8f0; color: #64748b; }
+
+    .feedback-offer-check {
+      display: flex; align-items: flex-start; gap: var(--space-2);
+      margin: 0 0 var(--space-3); cursor: pointer; font-size: var(--fs-sm);
+      color: var(--fg-strong);
+    }
+    .feedback-offer-check input[type="checkbox"] {
+      margin-top: 3px; flex-shrink: 0; accent-color: var(--purple-600);
+    }
+    #fb-offer-wrap { margin-bottom: var(--space-4); }
+    #fb-offer-wrap[hidden] { display: none; }
+    .rating-picker { display: flex; gap: 4px; flex-wrap: wrap; }
+    .rating-btn {
+      min-width: 32px; height: 32px;
+      border: 1px solid var(--border); border-radius: var(--radius-xs);
+      background: var(--bg); cursor: pointer;
+      font-family: inherit; font-size: var(--fs-sm); font-weight: 600; color: var(--fg-muted);
+    }
+    .rating-btn:hover { background: var(--slate-50); }
+    .rating-btn.is-selected {
+      background: var(--purple-50);
+      border-color: var(--purple-400);
+      color: var(--purple-700);
+    }
+    .internal-note {
+      background: var(--bg-subtle);
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3);
+    }
+    .form-row .field { margin-bottom: 0; }
+
+    /* Applicant search + dropdown (design-system tokens) */
+    .applicant-picker { position: relative; width: 100%; }
+    .applicant-picker-field > .search {
+      max-width: none; width: 100%;
+    }
+    .applicant-picker-toggle {
+      flex-shrink: 0; margin: -4px -6px -4px 0;
+      color: var(--fg-muted);
+    }
+    .applicant-picker-toggle .icon { width: 16px; height: 16px; transition: transform var(--dur-fast); }
+    .applicant-picker.is-open .applicant-picker-toggle .icon { transform: rotate(180deg); }
+    .applicant-picker-menu {
+      position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      padding: 4px; background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius-md); box-shadow: var(--shadow-md);
+      max-height: 260px; overflow-y: auto; z-index: 80;
+    }
+    .applicant-picker-menu[hidden] { display: none; }
+    .applicant-picker-option {
+      display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+      width: 100%; text-align: left;
+    }
+    .applicant-picker-option-name { font-size: var(--fs-sm); font-weight: 600; color: var(--fg-strong); }
+    .applicant-picker-option-meta { font-size: var(--fs-xs); color: var(--fg-muted); font-weight: 400; }
+    .applicant-picker-option:not(.applicant-picker-option--create).is-active,
+    .applicant-picker-option:not(.applicant-picker-option--create):hover {
+      background: var(--slate-50);
+    }
+    .applicant-picker-option.is-selected:not(.applicant-picker-option--create) {
+      color: var(--purple-700); background: var(--purple-50);
+    }
+    .applicant-picker-option--create .applicant-picker-option-name { color: var(--purple-700); }
+    .applicant-picker-option--create:hover,
+    .applicant-picker-option--create.is-active,
+    .applicant-picker-option--create.is-selected {
+      background: var(--purple-50);
+    }
+    .applicant-picker-option--create.is-selected .applicant-picker-option-name { color: var(--purple-700); }
+    .applicant-picker-new {
+      margin-top: var(--space-3); padding: var(--space-4);
+      border: 1px solid var(--border); border-radius: var(--radius-md);
+      background: var(--bg-subtle);
+    }
+    .applicant-picker-new-title {
+      font-size: var(--fs-sm); font-weight: 600; color: var(--fg-strong);
+      margin: 0 0 var(--space-3);
+    }
+    .applicant-picker-field.has-error .search {
+      border-color: var(--danger-500);
+    }
+    .applicant-picker-field.has-error .search:focus-within {
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+    }
+
+    .empty-state {
+      text-align: center; padding: var(--space-10) var(--space-6);
+      color: var(--fg-muted); font-size: var(--fs-sm);
+    }
+    .empty-state strong { display: block; color: var(--fg-strong); margin-bottom: var(--space-2); }
+
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+    }
+
+    .case-panel-toggle {
+      display: none; width: 100%; padding: var(--space-3) var(--space-4);
+      font-family: inherit; font-size: var(--fs-sm); font-weight: 600;
+      color: var(--fg-strong); background: var(--slate-50); border: none;
+      border-bottom: 1px solid var(--border); cursor: pointer;
+      align-items: center; justify-content: space-between;
+    }
+
+    @media (min-width: 1600px) {
+      .case-panel { width: 380px; }
+      .viewings-page { padding: var(--space-8); }
+      .viewings-workspace { gap: var(--space-5); }
+    }
+
+    @media (min-width: 1366px) and (max-width: 1599px) {
+      .case-panel { width: 350px; }
+    }
+
+    @media (min-width: 1200px) and (max-width: 1365px) {
+      .case-panel { width: 320px; }
+      .viewings-page { padding: var(--space-5); }
+      .viewings-workspace { gap: var(--space-3); }
+    }
+
+    @media (min-width: 1024px) and (max-width: 1199px) {
+      .case-panel { width: 300px; }
+      .viewings-page { padding: var(--space-4); }
+      .viewings-workspace { gap: var(--space-3); }
+      .viewing-card { padding: var(--space-3); }
+      .dock-scroll { padding: var(--space-4); }
+    }
+
+    @media (max-width: 1023px) {
+      .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+      .icon-rail {
+        grid-row: 2; grid-column: 1;
+        width: 100%; height: 56px; flex-direction: row;
+        border-right: none; border-top: 1px solid var(--border);
+        padding: 0 var(--space-4); justify-content: center;
+        position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+      }
+      .rail-logo { margin-bottom: 0; margin-right: var(--space-4); }
+      .global-header { grid-column: 1; }
+      .body-row { grid-column: 1; flex-direction: column; padding-bottom: 56px; }
+      .case-panel.is-collapsed .panel-section,
+      .case-panel.is-collapsed .phase-tabs,
+      .case-panel.is-collapsed .workflow-list { display: none; }
+      .case-panel-toggle { display: flex; }
+      .viewings-page { padding: var(--space-4); }
+      .form-row { grid-template-columns: 1fr; }
+      .viewings-workspace { grid-template-columns: 1fr; }
+      .viewing-detail-dock { height: auto; position: static; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <nav class="icon-rail" aria-label="Main navigation">
+      <div class="rail-logo" aria-hidden="true"></div>
+      <div class="rail-item active" title="Cases">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 7l7-4 7 4v10l-7 4-7-4V7Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="rail-item" title="Calendar">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3" y="4" width="14" height="13" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M3 8h14M7 2v3M13 2v3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      </div>
+      <div class="rail-item" title="Contacts">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M4 17c0-3.3 2.7-5 6-5s6 1.7 6 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      </div>
+    </nav>
+
+    <header class="global-header">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a class="breadcrumb-item" href="#">Dashboard</a>
+        <svg class="breadcrumb-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+        <a class="breadcrumb-item" href="#">PU-0001</a>
+        <svg class="breadcrumb-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+        <span class="breadcrumb-item is-current" aria-current="page">Agency</span>
+      </nav>
+      <div class="header-actions-global">
+        <button type="button" class="btn-icon" aria-label="Help">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="7.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 13.5V10M10 6.5h.01" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </button>
+        <div class="avatar avatar-md" title="John Doe">JD</div>
+      </div>
+    </header>
+
+    <div class="body-row">
+      <button type="button" class="case-panel-toggle" id="case-panel-toggle" aria-expanded="true">
+        <span>Case: Mr Hussain Somani · 12 Duarte Close</span>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+
+      <aside class="case-panel" id="case-panel">
+        <section class="panel-section">
+          <div class="client-header">
+            <div class="client-identity">
+              <div class="avatar avatar-sm">HS</div>
+              <span class="client-name">Mr Hussain Somani</span>
+            </div>
+            <div class="client-actions">
+              <button type="button" class="btn-icon btn-icon-bordered" aria-label="Edit client">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 13.33h5.33M2 13.33l2.93-1.27a1.87 1.87 0 0 0 .6-.42l5.8-6.1a1.67 1.67 0 0 0 0-2.3 1.58 1.58 0 0 0-2.26 0l-5.8 6.1c-.12.13-.22.27-.3.43L2 13.33Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="contact-row">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5.66 2.67H3.33C2.6 2.67 2 3.27 2 4c0 5.52 4.48 10 10 10 .73 0 1.33-.6 1.33-1.33v-2.33l-2.83-.94-1.28 1.28a10.42 10.42 0 0 1-4.9-4.9L5.6 4.5 4.66 1.67" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <a href="tel:+447790259198">+44 7790 259198</a>
+          </div>
+          <div class="contact-row">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M1.33 4.67l5.42 3.61a2 2 0 0 0 2.22 0l5.36-3.61M2.67 12h10.66c.74 0 1.34-.6 1.34-1.33V5.33c0-.73-.6-1.33-1.34-1.33H2.67c-.74 0-1.34.6-1.34 1.33v5.34c0 .73.6 1.33 1.34 1.33Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <a href="mailto:hussain@example.com">hussain.somani@email.com</a>
+          </div>
+        </section>
+        <section class="panel-section">
+          <div class="section-title-row">
+            <span class="section-title">Property</span>
+          </div>
+          <div class="property-address">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.33L2.67 6.67v6.66h10.66V6.67L8 1.33Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+            <span>12 Duarte Close Harrow HA1 4GW</span>
+          </div>
+          <div class="property-meta">
+            <div class="property-meta-row"><span class="label">Price</span><span>£400,000</span></div>
+            <div class="property-meta-row"><span class="label">Type</span><span>Sale</span></div>
+          </div>
+        </section>
+        <nav class="phase-tabs" aria-label="Case phase">
+          <button type="button" class="phase-tab active">Agency</button>
+          <button type="button" class="phase-tab">Conveyancing</button>
+          <button type="button" class="phase-tab">Hub</button>
+        </nav>
+        <div class="workflow-list" aria-label="Agency workflows">
+          <button type="button" class="workflow-card">
+            <span class="workflow-dot progress" aria-hidden="true"></span>
+            <span class="workflow-label">Instruction</span>
+            <svg class="workflow-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          </button>
+          <button type="button" class="workflow-card">
+            <span class="workflow-dot progress" aria-hidden="true"></span>
+            <span class="workflow-label">Marketing</span>
+            <svg class="workflow-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          </button>
+          <button type="button" class="workflow-card active" aria-current="page">
+            <span class="workflow-dot progress" aria-hidden="true"></span>
+            <span class="workflow-label">Viewings</span>
+            <svg class="workflow-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          </button>
+          <button type="button" class="workflow-card">
+            <span class="workflow-dot pending" aria-hidden="true"></span>
+            <span class="workflow-label">Offer and MOS</span>
+            <svg class="workflow-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          </button>
+          <button type="button" class="workflow-card">
+            <span class="workflow-dot pending" aria-hidden="true"></span>
+            <span class="workflow-label">Commission invoicing</span>
+            <svg class="workflow-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </aside>
+
+      <main class="workflow-main">
+        <div class="workflow-body">
+          <div class="viewings-page">
+            <header class="viewings-page-header">
+              <h1 class="viewings-title">Viewings</h1>
+            </header>
+
+            <div class="vf-chip-bar" id="vf-chip-bar" role="group" aria-label="Active filters"></div>
+
+            <div class="viewings-workspace">
+              <div id="viewings-table-mount" role="region" aria-label="Viewings list"></div>
+              <aside class="viewing-detail-dock" aria-label="Viewing detail panel">
+                <div class="dock-scroll" id="detail-dock-body"></div>
+                <div class="dock-footer" id="detail-dock-footer"></div>
+              </aside>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Schedule -->
+  <div class="modal-scrim" id="modal-schedule" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="sched-title" style="max-width:700px;">
+      <header class="modal-header">
+        <h2 class="modal-title" id="sched-title">Schedule viewing</h2>
+        <button type="button" class="btn btn-icon btn-ghost" data-close-modal="modal-schedule" aria-label="Close">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </header>
+      <div class="modal-body">
+        <div class="form-row" style="margin-bottom:12px;">
+          <label class="field"><span class="field-label">Property address</span><input class="input" value="12 Duarte Close, Harrow, HA1 4GW" readonly></label>
+          <label class="field"><span class="field-label">Agent conducting viewing</span><select class="input" id="form-agent"><option>Towers Wills</option><option>Sarah Malik</option></select></label>
+        </div>
+        <div class="form-row" style="margin-bottom:12px;">
+          <label class="field"><span class="field-label">Viewing date *</span><input class="input" type="date" id="form-date"></label>
+          <label class="field"><span class="field-label">Viewing time *</span><input class="input" type="time" id="form-time"></label>
+        </div>
+        <div class="form-row" style="margin-bottom:12px;">
+          <div class="field applicant-picker-field" id="applicant-picker-field">
+            <span class="field-label" id="applicant-label">Applicant *</span>
+            <div class="applicant-picker" id="applicant-picker">
+              <div class="search applicant-picker-control">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" class="applicant-picker-input" id="applicant-search" placeholder="Search or select applicant…" autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="applicant-listbox" aria-labelledby="applicant-label">
+                <button type="button" class="btn btn-icon btn-ghost btn-icon-compact applicant-picker-toggle" id="applicant-toggle" aria-label="Show applicant list" tabindex="-1">
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+              </div>
+              <div class="applicant-picker-menu" id="applicant-listbox" role="listbox" hidden></div>
+            </div>
+            <div class="applicant-picker-new" id="applicant-new-panel" hidden>
+              <p class="applicant-picker-new-title">New lead details</p>
+              <div class="form-row" style="margin-bottom:10px;">
+                <label class="field"><span class="field-label">First name *</span><input class="input" id="lead-first" autocomplete="given-name"></label>
+                <label class="field"><span class="field-label">Last name *</span><input class="input" id="lead-last" autocomplete="family-name"></label>
+              </div>
+              <div class="form-row">
+                <label class="field"><span class="field-label">Email</span><input class="input" type="email" id="lead-email" autocomplete="email"></label>
+                <label class="field"><span class="field-label">Phone</span><input class="input" type="tel" id="lead-phone" autocomplete="tel"></label>
+              </div>
+            </div>
+          </div>
+          <div class="field"><span class="field-label">Viewing type</span><div class="btn-group" role="group"><button type="button" class="btn-group-item is-active" data-type="Agent accompanied">Agent accompanied</button><button type="button" class="btn-group-item" data-type="Unaccompanied">Unaccompanied</button></div></div>
+        </div>
+        <label class="field"><span class="field-label">Viewer-facing notes (optional)</span><textarea class="input textarea" id="form-notes" placeholder="Access instructions, arrival notes"></textarea></label>
+        <p class="field-help" id="schedule-warning" style="display:none;color:var(--warning-600);"></p>
+        <p class="field-help" style="margin-top:8px;">A confirmation email will be sent to the viewer with options to confirm, cancel, or request a reschedule.</p>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close-modal="modal-schedule">Cancel</button>
+        <button type="button" class="btn btn-primary" id="btn-save-schedule">Save viewing</button>
+      </footer>
+    </div>
+  </div>
+
+  <div class="toast-region" aria-live="polite">
+    <div class="toast toast-success" id="toast" role="status">
+      <span class="toast-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+      </span>
+      <div class="toast-body">
+        <div class="toast-title" id="toast-title">Done</div>
+        <div class="toast-msg" id="toast-msg"></div>
+      </div>
+      <button type="button" class="toast-close" id="toast-close" aria-label="Dismiss">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+
+<script>
+(function(){
+  'use strict';
+
+  const PROTOTYPE_TODAY = '2026-05-29';
+
+  const base = (overrides) => ({
+    type: 'Agent accompanied', agent: 'Towers Wills',
+    feedback: null, suitability: null, summary: '', notesShared: '', notesInternal: '',
+    offer: null, rebook: 0, reminderSent: false, cancelReason: '',
+    ...overrides
+  });
+
+  const leads = [
+    { id: 'lead-lisa', name: 'Lisa Okinovo', email: 'lisa.okinovo@email.com', phone: '07700 900101' },
+    { id: 'lead-mark', name: 'Mark Jensen', email: 'mark.jensen@email.com', phone: '07700 900102' },
+    { id: 'lead-sofia', name: 'Sofia Romano', email: 'sofia.romano@email.com', phone: '07700 900103' },
+    { id: 'lead-derik', name: 'Derik Alrhtia', email: 'derik.alrhtia@email.com', phone: '07700 900104' },
+    { id: 'lead-james', name: 'James Parker', email: 'james.parker@email.com', phone: '07700 900105' },
+    { id: 'lead-emma', name: 'Emma Walker', email: 'emma.walker@email.com', phone: '07700 900201' },
+    { id: 'lead-david', name: 'David Khan', email: 'david.khan@email.com', phone: '07700 900202' },
+    { id: 'lead-priya', name: 'Priya Shah', email: 'priya.shah@email.com', phone: '07700 900203' }
+  ];
+
+  const viewings = [
+    base({ id: 'v-lisa', viewer: 'Lisa Okinovo', date: '2026-05-29', time: '12:30', status: 'scheduled' }),
+    base({ id: 'v-mark', viewer: 'Mark Jensen', date: '2026-05-29', time: '12:30', status: 'confirmed', reminderSent: true }),
+    base({ id: 'v-sofia', viewer: 'Sofia Romano', date: '2026-05-29', time: '12:30', status: 'completed', feedback: 'Interested', suitability: 4, summary: 'Liked the layout and natural light.' }),
+    base({ id: 'v-derik', viewer: 'Derik Alrhtia', date: '2026-05-29', time: '12:30', status: 'no_show', rebook: 1, notesInternal: 'No response on phone.' }),
+    base({ id: 'v-james', viewer: 'James Parker', date: '2026-05-29', time: '12:30', status: 'cancelled', cancelReason: 'Viewer no longer interested' })
+  ];
+
+  const STATUS_LABEL = { scheduled: 'Scheduled', confirmed: 'Confirmed', completed: 'Completed', cancelled: 'Cancelled', no_show: 'No Show' };
+
+  let selectedId = 'v-lisa';
+  let statusFilter = 'all';
+  let todayFilter = true;
+
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+
+  function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = s == null ? '' : String(s);
+    return d.innerHTML;
+  }
+
+  function toDateTime(v){ return new Date(`${v.date}T${v.time || '00:00'}`); }
+  function fmtTime(v){ return toDateTime(v).toLocaleString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
+  function fmtDateHeader(iso) {
+    const dt = new Date(`${iso}T12:00`);
+    return dt.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  }
+  function fmtDate(v){ return toDateTime(v).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }
+
+  function fmtDateTimeExact(v) {
+    const dt = toDateTime(v);
+    const dateLine = dt.toLocaleDateString('en-GB', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    });
+    const timeLine = dt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+    const rel = fmtSchedule(v).day;
+    const relSuffix = ['Today', 'Tomorrow', 'Yesterday'].includes(rel) ? rel : null;
+    return { dateLine, timeLine, relSuffix };
+  }
+
+  function fmtSchedule(v) {
+    const today = new Date(`${PROTOTYPE_TODAY}T12:00`);
+    const d = new Date(`${v.date}T12:00`);
+    const diff = Math.round((d - today) / 86400000);
+    let day;
+    if (diff === 0) day = 'Today';
+    else if (diff === 1) day = 'Tomorrow';
+    else if (diff === -1) day = 'Yesterday';
+    else day = d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+    return { day, time: fmtTime(v) };
+  }
+
+  function fmtEndTime(timeStr, addMins = 30) {
+    const [h, m] = timeStr.split(':').map(Number);
+    const d = new Date(2000, 0, 1, h, m + addMins);
+    return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function fmtDateTimeDisplay(v) {
+    const sched = fmtSchedule(v);
+    return `${sched.day}, ${sched.time} - ${fmtEndTime(v.time)}`;
+  }
+
+  function feedbackPending(v) {
+    return v.status === 'completed' && !(v.summary && v.summary.trim());
+  }
+
+  function getDockState(v) {
+    const showReschedule = ['scheduled', 'confirmed'].includes(v.status);
+    let statusAction = null;
+    if (v.status === 'scheduled') statusAction = 'Mark as Confirmed';
+    else if (v.status === 'confirmed') statusAction = 'Mark as Completed';
+    else if (v.status === 'no_show' && v.rebook < 3) statusAction = 'Send rebook email';
+    else if (v.status === 'cancelled') statusAction = 'Reschedule';
+
+    let ctaLabel = 'Save';
+    let ctaIcon = null;
+    let ctaNote = null;
+    let ctaAction = 'save';
+
+    if (v.status === 'scheduled') {
+      ctaLabel = 'Send Confirmation Email';
+      ctaIcon = 'mail';
+      ctaNote = `${viewerFirstName(v.viewer)} will receive options to confirm, reschedule, or cancel.`;
+      ctaAction = 'send-confirmation';
+    } else if (v.status === 'confirmed') {
+      ctaLabel = 'Mark as Completed';
+      ctaAction = 'mark-completed';
+    } else if (v.status === 'completed') {
+      ctaLabel = 'Save feedback';
+      ctaAction = 'save-feedback';
+    } else if (v.status === 'no_show') {
+      if (v.rebook >= 3) {
+        ctaLabel = 'Mark lead as lost';
+        ctaAction = 'mark-lost';
+      } else {
+        ctaLabel = 'Send rebook email';
+        ctaAction = 'send-rebook';
+      }
+    } else if (v.status === 'cancelled') {
+      ctaLabel = 'Reschedule';
+      ctaAction = 'reschedule';
+    }
+
+    return {
+      dateTime: fmtDateTimeDisplay(v),
+      showReschedule,
+      statusAction,
+      showFeedback: v.status === 'completed',
+      showRebookAttempts: v.status === 'no_show',
+      showCancelReason: v.status === 'cancelled' && !!v.cancelReason,
+      firstName: viewerFirstName(v.viewer),
+      ctaLabel,
+      ctaIcon,
+      ctaNote,
+      ctaAction
+    };
+  }
+
+  function viewerFirstName(name) {
+    return name.split(/\s+/)[0];
+  }
+
+  function statusBadgeClass(status){
+    if(status==='scheduled') return 'status-badge-scheduled';
+    if(status==='confirmed') return 'status-badge-confirmed';
+    if(status==='cancelled') return 'status-badge-cancelled';
+    if(status==='no_show') return 'status-badge-noshow';
+    if(status==='completed') return 'status-badge-completed';
+    return 'status-badge-feedback';
+  }
+
+  const STATUS_ICONS = {
+    scheduled: '<svg class="status-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+    confirmed: '<svg class="status-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>',
+    completed: '<svg class="status-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>',
+    no_show: '<svg class="status-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-8 0v2"/><circle cx="12" cy="7" r="4"/><line x1="18" y1="8" x2="22" y2="12"/></svg>',
+    cancelled: '<svg class="status-badge-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+  };
+
+  function statusBadgeHtml(v) {
+    if (feedbackPending(v)) {
+      return `<span class="status-badge-figma status-badge-feedback">${esc('Feedback pending')}</span>`;
+    }
+    const icon = STATUS_ICONS[v.status] || '';
+    return `<span class="status-badge-figma ${statusBadgeClass(v.status)}">${icon}${esc(STATUS_LABEL[v.status])}</span>`;
+  }
+
+  function viewerInitials(name) {
+    return name.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  }
+
+  function matchesFilter(v){
+    if (statusFilter !== 'all' && v.status !== statusFilter) return false;
+    if (todayFilter && v.date !== PROTOTYPE_TODAY) return false;
+    return true;
+  }
+
+  function getFilteredList(){
+    return viewings.filter(v => matchesFilter(v)).sort((a,b)=> toDateTime(a) - toDateTime(b));
+  }
+
+  function showToast(title, msg) {
+    $('#toast-title').textContent = title;
+    $('#toast-msg').textContent = msg;
+    $('#toast').classList.add('is-visible');
+    setTimeout(() => $('#toast').classList.remove('is-visible'), 3500);
+  }
+
+  function openModal(id){
+    const m = $('#'+id);
+    if (!m) return;
+    if (id === 'modal-schedule') resetApplicantPicker();
+    m.classList.add('is-open');
+    m.setAttribute('aria-hidden','false');
+  }
+  function closeModal(id){
+    const m = $('#'+id);
+    if (!m) return;
+    m.classList.remove('is-open');
+    m.setAttribute('aria-hidden','true');
+  }
+
+  function renderChipBar() {
+    const bar = $('#vf-chip-bar');
+    if (!bar) return;
+    const total = getFilteredList().length;
+    const xIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+    const plusIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
+    const statusLabel = statusFilter === 'all' ? 'Status: All' : `Status: ${STATUS_LABEL[statusFilter]}`;
+
+    bar.innerHTML = `
+      <div class="filter-chip-active">
+        ${todayFilter ? '<span class="filter-chip-seg">Today</span>' : ''}
+        <span class="filter-chip-seg">${esc(statusLabel)} <span class="filter-chip-count">${total}</span></span>
+        <button type="button" class="filter-chip-seg filter-chip-seg--clear" id="chip-clear-filters" aria-label="Clear filters">${xIcon}</button>
+      </div>
+      <button type="button" class="dropdown-item vf-chip-add" id="chip-btn-add" title="Schedule new viewing" aria-label="Schedule new viewing">${plusIcon}</button>`;
+
+    $('#chip-clear-filters')?.addEventListener('click', () => {
+      todayFilter = false;
+      statusFilter = 'all';
+      renderChipBar();
+      renderTable();
+      renderDetail();
+    });
+    $('#chip-btn-add')?.addEventListener('click', () => openModal('modal-schedule'));
+  }
+
+  function renderTableRow(v) {
+    const sel = v.id === selectedId ? ' is-selected' : '';
+    return `<article class="viewing-card${sel}" data-id="${v.id}" tabindex="0" role="button" aria-pressed="${v.id === selectedId}">
+      <div class="viewing-card-top">
+        <p class="viewing-card-name">${esc(v.viewer)}</p>
+        <p class="viewing-card-time">${esc(fmtDateTimeDisplay(v))}</p>
+      </div>
+      ${statusBadgeHtml(v)}
+    </article>`;
+  }
+
+  function renderTable(){
+    const list = getFilteredList();
+    const mount = $('#viewings-table-mount');
+    if(!list.length){
+      mount.innerHTML = '<div class="empty-state"><strong>No viewings match</strong>Try a different tab, filter, or search term.</div>';
+      return;
+    }
+
+    mount.innerHTML = `<div class="viewing-card-list">${list.map(renderTableRow).join('')}</div>`;
+  }
+
+  function getSelected(){ return viewings.find(v => v.id === selectedId); }
+
+  function openViewing(id) {
+    selectedId = id;
+    if (!getSelected()) return;
+    renderDetail();
+    renderTable();
+  }
+
+
+  function renderFeedbackMarkup(v) {
+    return `
+      <div class="dock-feedback">
+        <p class="dock-feedback-title">Feedback</p>
+        <label class="field">
+          <span class="field-label">How interested was the applicant?</span>
+          <select class="input" id="fb-interest">
+            <option value="" ${!v.feedback?'selected':''} disabled>Select interest level</option>
+            <option ${v.feedback==='Very interested'?'selected':''}>Very interested</option>
+            <option ${v.feedback==='Interested'?'selected':''}>Interested</option>
+            <option ${v.feedback==='Neutral'?'selected':''}>Neutral</option>
+            <option ${v.feedback==='Not interested'?'selected':''}>Not interested</option>
+          </select>
+        </label>
+        <div class="field">
+          <span class="field-label">Overall rating (1–5)</span>
+          <div class="rating-picker" id="fb-rating" role="group" aria-label="Rating 1 to 5">
+            ${[1,2,3,4,5].map(n=>`<button type="button" class="rating-btn ${v.suitability===n?'is-selected':''}" data-rate="${n}" aria-pressed="${v.suitability===n}">${n}</button>`).join('')}
+          </div>
+        </div>
+        <label class="field">
+          <span class="field-label">Feedback notes</span>
+          <textarea class="input textarea" id="fb-summary" rows="3" placeholder="What stood out? Concerns, positives, next steps…">${esc(v.summary||'')}</textarea>
+        </label>
+        <label class="feedback-offer-check">
+          <input type="checkbox" id="fb-offer-check" ${v.offer != null ? 'checked' : ''}>
+          <span>Applicant proposed a price</span>
+        </label>
+        <div id="fb-offer-wrap" ${v.offer != null ? '' : 'hidden'}>
+          <label class="field" style="margin-bottom:0;">
+            <span class="field-label">Proposed price (£)</span>
+            <input type="number" class="input" id="fb-offer-amount" min="0" step="1000" inputmode="numeric"
+              placeholder="e.g. 385000" value="${v.offer != null ? esc(String(v.offer)) : ''}">
+          </label>
+        </div>
+      </div>`;
+  }
+
+  function saveAgentNotes(v) {
+    const notes = $('#detail-internal-note');
+    if (notes) v.notesInternal = notes.value.trim();
+  }
+
+  function saveFeedbackFromForm(v) {
+    const interest = $('#fb-interest');
+    const summary = $('#fb-summary');
+    const offerCheck = $('#fb-offer-check');
+    const offerAmount = $('#fb-offer-amount');
+    if (interest?.value) v.feedback = interest.value;
+    if (summary) v.summary = summary.value.trim();
+    if (offerCheck?.checked) {
+      const amt = Number(offerAmount?.value.replace(/,/g, ''));
+      if (!Number.isFinite(amt) || amt <= 0) {
+        showToast('Price required', 'Enter the proposed price or uncheck the box.');
+        return false;
+      }
+      v.offer = amt;
+    } else {
+      v.offer = null;
+    }
+    return true;
+  }
+
+  function runDockStatusAction(v) {
+    if (v.status === 'scheduled') {
+      v.status = 'confirmed';
+      showToast('Status updated', `${v.viewer} marked as Confirmed.`);
+    } else if (v.status === 'confirmed') {
+      v.status = 'completed';
+      showToast('Status updated', `${v.viewer} marked as Completed.`);
+    } else if (v.status === 'no_show' && v.rebook < 3) {
+      v.rebook += 1;
+      showToast('Rebook email sent', `Attempt ${v.rebook}/3 sent to ${v.viewer}.`);
+    } else if (v.status === 'cancelled') {
+      openModal('modal-schedule');
+      return;
+    }
+    renderTable(); renderDetail();
+  }
+
+  function runDockCta(v, state) {
+    saveAgentNotes(v);
+    if (state.ctaAction === 'send-confirmation') {
+      v.reminderSent = true;
+      showToast('Confirmation sent', `${v.viewer} will receive options to confirm, reschedule, or cancel.`);
+    } else if (state.ctaAction === 'mark-completed') {
+      v.status = 'completed';
+      showToast('Status updated', `${v.viewer} marked as Completed.`);
+    } else if (state.ctaAction === 'save-feedback') {
+      if (!saveFeedbackFromForm(v)) return;
+      showToast('Feedback saved', `Feedback saved for ${v.viewer}.`);
+    } else if (state.ctaAction === 'send-rebook') {
+      v.rebook += 1;
+      showToast('Rebook email sent', `Attempt ${v.rebook}/3 sent to ${v.viewer}.`);
+    } else if (state.ctaAction === 'mark-lost') {
+      showToast('Lead marked as lost', `${v.viewer} marked as a lost lead.`);
+    } else if (state.ctaAction === 'reschedule') {
+      openModal('modal-schedule');
+      return;
+    }
+    renderTable(); renderDetail();
+  }
+
+  function renderDetail() {
+    const v = getSelected();
+    const body = $('#detail-dock-body');
+    const footer = $('#detail-dock-footer');
+    if (!body) return;
+
+    if (!v) {
+      body.innerHTML = `<div class="dock-empty">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><rect x="3" y="4" width="14" height="13" rx="1"/><path d="M3 8h14M7 2v3M13 2v3"/></svg>
+        <p>Select a viewing to see details</p>
+      </div>`;
+      if (footer) footer.innerHTML = '';
+      return;
+    }
+
+    const state = getDockState(v);
+    const mailIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`;
+
+    body.innerHTML = `
+      <div class="dock-hero">
+        <span class="avatar dock-avatar" aria-hidden="true">${esc(viewerInitials(v.viewer))}</span>
+        <h2 class="dock-name">${esc(v.viewer)}</h2>
+      </div>
+      <div class="dock-row">
+        <span class="dock-label">Date &amp; Time</span>
+        <div class="dock-value">
+          <span class="dock-value-main">${esc(state.dateTime)}</span>
+          ${state.showReschedule ? `<button type="button" class="dock-text-btn" id="dock-btn-reschedule">Reschedule</button>` : ''}
+        </div>
+      </div>
+      <div class="dock-row">
+        <span class="dock-label">Status</span>
+        <div class="dock-value">
+          ${statusBadgeHtml(v)}
+          ${state.statusAction ? `<button type="button" class="dock-text-btn" id="dock-btn-status-action">${esc(state.statusAction)}</button>` : ''}
+          ${state.showRebookAttempts ? `<span class="dock-meta-line">Attempts: ${v.rebook}/3</span>` : ''}
+          ${state.showCancelReason ? `<span class="dock-meta-line">${esc(v.cancelReason)}</span>` : ''}
+        </div>
+      </div>
+      <div class="dock-notes-block">
+        <label class="dock-notes-label" for="detail-internal-note">Agent notes</label>
+        <textarea class="input textarea" id="detail-internal-note" rows="4">${esc(v.notesInternal || '')}</textarea>
+        <p class="dock-notes-caption">Only visible to your team, not shared with vendor</p>
+      </div>
+      ${state.showFeedback ? renderFeedbackMarkup(v) : ''}
+    `;
+
+    if (footer) {
+      const ctaInner = state.ctaIcon === 'mail'
+        ? `${esc(state.ctaLabel)}${mailIcon}`
+        : esc(state.ctaLabel);
+      footer.innerHTML = `
+        <button type="button" class="btn btn-primary dock-cta-btn" id="dock-cta">${ctaInner}</button>
+        ${state.ctaNote ? `<p class="dock-footer-note">${esc(state.ctaNote)}</p>` : ''}
+      `;
+    }
+
+    $('#dock-btn-reschedule')?.addEventListener('click', () => openModal('modal-schedule'));
+    $('#dock-btn-status-action')?.addEventListener('click', () => runDockStatusAction(v));
+    $('#dock-cta')?.addEventListener('click', () => runDockCta(v, state));
+
+    $$('#fb-rating .rating-btn').forEach(b => b.addEventListener('click', () => {
+      v.suitability = Number(b.dataset.rate);
+      $$('#fb-rating .rating-btn').forEach(x => {
+        const on = Number(x.dataset.rate) === v.suitability;
+        x.classList.toggle('is-selected', on);
+        x.setAttribute('aria-pressed', String(on));
+      });
+    }));
+
+    const offerCheck = $('#fb-offer-check');
+    const offerWrap = $('#fb-offer-wrap');
+    if (offerCheck && offerWrap) {
+      offerCheck.addEventListener('change', () => { offerWrap.hidden = !offerCheck.checked; });
+    }
+
+  }
+
+  const applicantPickerState = {
+    leadId: null,
+    mode: 'search',
+    activeIndex: -1
+  };
+
+  function filterLeads(query) {
+    const q = query.trim().toLowerCase();
+    if (!q) return leads.slice();
+    const digits = q.replace(/\s/g, '');
+    return leads.filter((l) => {
+      const name = l.name.toLowerCase();
+      const email = (l.email || '').toLowerCase();
+      const phone = (l.phone || '').replace(/\s/g, '');
+      return name.includes(q) || email.includes(q) || phone.includes(digits);
+    });
+  }
+
+  function splitNameParts(text) {
+    const parts = text.trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return { first: '', last: '' };
+    if (parts.length === 1) return { first: parts[0], last: '' };
+    return { first: parts[0], last: parts.slice(1).join(' ') };
+  }
+
+  function setApplicantPickerOpen(open) {
+    const root = $('#applicant-picker');
+    const input = $('#applicant-search');
+    const menu = $('#applicant-listbox');
+    if (!root || !input || !menu) return;
+    root.classList.toggle('is-open', open);
+    input.setAttribute('aria-expanded', String(open));
+    menu.hidden = !open;
+  }
+
+  function renderApplicantCreateOption(index, query) {
+    const q = query.trim();
+    const title = q ? `Create new lead “${q}”` : 'Create new lead';
+    const meta = q ? 'Add as a new applicant' : 'Add a new applicant to the system';
+    const selected = applicantPickerState.mode === 'new';
+    return `<button type="button" class="dropdown-item applicant-picker-option applicant-picker-option--create${selected ? ' is-selected' : ''}" role="option" data-index="${index}" data-action="create" aria-selected="${selected}">
+      <span class="applicant-picker-option-name">${esc(title)}</span>
+      <span class="applicant-picker-option-meta">${esc(meta)}</span>
+    </button>`;
+  }
+
+  function renderApplicantLeadOption(lead, index) {
+    const selected = applicantPickerState.leadId === lead.id;
+    return `<button type="button" class="dropdown-item applicant-picker-option${selected ? ' is-selected' : ''}" role="option" data-index="${index}" data-lead-id="${esc(lead.id)}" aria-selected="${selected}">
+      <span class="applicant-picker-option-name">${esc(lead.name)}</span>
+      <span class="applicant-picker-option-meta">${esc(lead.email || lead.phone || '')}</span>
+    </button>`;
+  }
+
+  function renderApplicantMenu() {
+    const input = $('#applicant-search');
+    const menu = $('#applicant-listbox');
+    if (!input || !menu) return;
+
+    const query = input.value;
+    const matches = filterLeads(query);
+    const items = [renderApplicantCreateOption(0, query)];
+
+    matches.forEach((lead, i) => {
+      items.push(renderApplicantLeadOption(lead, i + 1));
+    });
+
+    menu.innerHTML = items.join('');
+
+    const optionCount = 1 + matches.length;
+    if (applicantPickerState.activeIndex >= optionCount) applicantPickerState.activeIndex = optionCount - 1;
+    highlightApplicantOption(applicantPickerState.activeIndex);
+  }
+
+  function highlightApplicantOption(index) {
+    const menu = $('#applicant-listbox');
+    if (!menu) return;
+    const options = $$('.applicant-picker-option', menu);
+    options.forEach((el, i) => {
+      const on = i === index;
+      el.classList.toggle('is-active', on);
+      if (on) {
+        $('#applicant-search')?.setAttribute('aria-activedescendant', el.id || '');
+        el.scrollIntoView({ block: 'nearest' });
+      }
+    });
+    if (index < 0) $('#applicant-search')?.removeAttribute('aria-activedescendant');
+  }
+
+  function selectExistingLead(lead) {
+    applicantPickerState.leadId = lead.id;
+    applicantPickerState.mode = 'existing';
+    const input = $('#applicant-search');
+    const panel = $('#applicant-new-panel');
+    if (input) input.value = lead.name;
+    if (panel) panel.hidden = true;
+    $('#applicant-picker-field')?.classList.remove('has-error');
+    setApplicantPickerOpen(false);
+    renderApplicantMenu();
+  }
+
+  function enterCreateLeadMode(prefill) {
+    applicantPickerState.leadId = null;
+    applicantPickerState.mode = 'new';
+    const panel = $('#applicant-new-panel');
+    const parts = splitNameParts(prefill || $('#applicant-search')?.value || '');
+    if ($('#lead-first')) $('#lead-first').value = parts.first;
+    if ($('#lead-last')) $('#lead-last').value = parts.last;
+    if (panel) {
+      panel.hidden = false;
+      $('#lead-first')?.focus();
+    }
+    setApplicantPickerOpen(false);
+  }
+
+  function resetApplicantPicker() {
+    applicantPickerState.leadId = null;
+    applicantPickerState.mode = 'search';
+    applicantPickerState.activeIndex = -1;
+    const input = $('#applicant-search');
+    if (input) input.value = '';
+    if ($('#lead-first')) $('#lead-first').value = '';
+    if ($('#lead-last')) $('#lead-last').value = '';
+    if ($('#lead-email')) $('#lead-email').value = '';
+    if ($('#lead-phone')) $('#lead-phone').value = '';
+    const panel = $('#applicant-new-panel');
+    if (panel) panel.hidden = true;
+    $('#applicant-picker-field')?.classList.remove('has-error');
+    setApplicantPickerOpen(false);
+    renderApplicantMenu();
+  }
+
+  function getApplicantSelection() {
+    if (applicantPickerState.mode === 'new') {
+      const first = $('#lead-first')?.value.trim() || '';
+      const last = $('#lead-last')?.value.trim() || '';
+      const email = $('#lead-email')?.value.trim() || '';
+      const phone = $('#lead-phone')?.value.trim() || '';
+      const name = `${first} ${last}`.trim() || $('#applicant-search')?.value.trim() || '';
+      return { mode: 'new', name, first, last, email, phone };
+    }
+    const lead = leads.find((l) => l.id === applicantPickerState.leadId);
+    if (lead) return { mode: 'existing', name: lead.name, lead };
+    const typed = $('#applicant-search')?.value.trim() || '';
+    const match = leads.find((l) => l.name.toLowerCase() === typed.toLowerCase());
+    if (match) return { mode: 'existing', name: match.name, lead: match };
+    return { mode: 'search', name: typed };
+  }
+
+  function setupApplicantPicker() {
+    const root = $('#applicant-picker');
+    const input = $('#applicant-search');
+    const menu = $('#applicant-listbox');
+    const toggle = $('#applicant-toggle');
+    if (!root || !input || !menu) return;
+
+    const openMenu = () => {
+      setApplicantPickerOpen(true);
+      renderApplicantMenu();
+    };
+
+    input.addEventListener('focus', openMenu);
+    input.addEventListener('input', () => {
+      applicantPickerState.leadId = null;
+      applicantPickerState.mode = 'search';
+      $('#applicant-new-panel').hidden = true;
+      applicantPickerState.activeIndex = -1;
+      openMenu();
+    });
+    toggle?.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (root.classList.contains('is-open')) setApplicantPickerOpen(false);
+      else { input.focus(); openMenu(); }
+    });
+
+    menu.addEventListener('click', (e) => {
+      const btn = e.target.closest('.applicant-picker-option');
+      if (!btn) return;
+      if (btn.dataset.action === 'create') {
+        enterCreateLeadMode(input.value);
+        return;
+      }
+      const lead = leads.find((l) => l.id === btn.dataset.leadId);
+      if (lead) selectExistingLead(lead);
+    });
+
+    input.addEventListener('keydown', (e) => {
+      const count = 1 + filterLeads(input.value).length;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (!root.classList.contains('is-open')) openMenu();
+        applicantPickerState.activeIndex = Math.min(applicantPickerState.activeIndex + 1, count - 1);
+        highlightApplicantOption(applicantPickerState.activeIndex);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        applicantPickerState.activeIndex = Math.max(applicantPickerState.activeIndex - 1, 0);
+        highlightApplicantOption(applicantPickerState.activeIndex);
+      } else if (e.key === 'Enter') {
+        if (!root.classList.contains('is-open')) return;
+        e.preventDefault();
+        const active = $$('.applicant-picker-option', menu)[applicantPickerState.activeIndex];
+        active?.click();
+      } else if (e.key === 'Escape') {
+        setApplicantPickerOpen(false);
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!root.contains(e.target)) setApplicantPickerOpen(false);
+    });
+  }
+
+  function setupSchedule(){
+    let viewType = 'Agent accompanied';
+    setupApplicantPicker();
+
+    $$('#modal-schedule [data-type]').forEach(b => b.addEventListener('click', () => {
+      $$('#modal-schedule [data-type]').forEach(x => x.classList.remove('is-active'));
+      b.classList.add('is-active');
+      viewType = b.dataset.type;
+    }));
+
+    $('#btn-save-schedule').addEventListener('click', () => {
+      const date = $('#form-date').value;
+      const time = $('#form-time').value;
+      const warning = $('#schedule-warning');
+      warning.style.display = 'none';
+      if(!date || !time){ warning.textContent = 'Date and time are mandatory.'; warning.style.display = 'block'; return; }
+
+      const target = new Date(`${date}T${time}`);
+      const conflict = viewings.find(x => x.status !== 'cancelled' && Math.abs(toDateTime(x) - target) <= 30 * 60 * 1000);
+      if(conflict){
+        warning.textContent = `Scheduling conflict: within 30 minutes of ${conflict.viewer} (${fmtDate(conflict)}).`;
+        warning.style.display = 'block';
+        return;
+      }
+
+      const applicant = getApplicantSelection();
+      const field = $('#applicant-picker-field');
+      field?.classList.remove('has-error');
+
+      if (applicant.mode === 'new') {
+        if (!applicant.first || !applicant.last) {
+          field?.classList.add('has-error');
+          warning.textContent = 'Enter first and last name for the new lead.';
+          warning.style.display = 'block';
+          $('#applicant-new-panel').hidden = false;
+          return;
+        }
+      } else if (!applicant.name) {
+        field?.classList.add('has-error');
+        warning.textContent = 'Search and select an applicant, or create a new lead.';
+        warning.style.display = 'block';
+        $('#applicant-search')?.focus();
+        return;
+      }
+
+      let viewer = applicant.name;
+      if (applicant.mode === 'new') {
+        const newLeadId = 'lead-' + (leads.length + 1);
+        leads.push({
+          id: newLeadId,
+          name: viewer,
+          email: applicant.email,
+          phone: applicant.phone
+        });
+      }
+
+      const newId = 'v' + (viewings.length + 1);
+      viewings.push(base({
+        id: newId, viewer, date, time,
+        status: 'scheduled', type: viewType, agent: $('#form-agent').value,
+        notesShared: $('#form-notes').value.trim()
+      }));
+      resetApplicantPicker();
+      selectedId = newId;
+      closeModal('modal-schedule');
+      showToast('Viewing scheduled', 'Confirmation email sent to viewer.');
+      renderChipBar(); renderTable();
+      openViewing(newId);
+    });
+  }
+
+  function bindShell(){
+    $('#case-panel-toggle')?.addEventListener('click', () => {
+      const panel = $('#case-panel');
+      const open = panel.classList.contains('is-collapsed');
+      panel.classList.toggle('is-collapsed', !open);
+      $('#case-panel-toggle').setAttribute('aria-expanded', String(open));
+    });
+
+    $$('[data-close-modal]').forEach(btn => btn.addEventListener('click', () => closeModal(btn.dataset.closeModal)));
+    $('#modal-schedule')?.addEventListener('click', (e) => { if (e.target.id === 'modal-schedule') closeModal('modal-schedule'); });
+
+    $('#toast-close').addEventListener('click', () => $('#toast').classList.remove('is-visible'));
+
+    renderChipBar();
+
+    $('#viewings-table-mount').addEventListener('click', (e) => {
+      const row = e.target.closest('[data-id]');
+      if (row) openViewing(row.dataset.id);
+    });
+    $('#viewings-table-mount').addEventListener('keydown', (e) => {
+      const row = e.target.closest('[data-id]');
+      if (!row) return;
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openViewing(row.dataset.id);
+      }
+    });
+  }
+
+  bindShell();
+  setupSchedule();
+  renderChipBar();
+  renderTable();
+  renderDetail();
+})();
+</script>
+</body>
+</html>
