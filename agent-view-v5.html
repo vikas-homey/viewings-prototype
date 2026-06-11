@@ -1456,7 +1456,32 @@
     .client-progress-item.is-done { border-color: #6ee7b7; background: #f0fdf4; color: #059669; }
     .client-progress-item.is-active { border-color: #7c3aed; background: #faf5ff; color: #6d28d9; box-shadow: 0 0 0 1px #7c3aed inset; }
     .client-viewings-view { display: none; }
-    .client-viewings-view.is-visible { display: block; }
+    .client-viewings-view.is-visible {
+      display: flex; flex-direction: column; flex: 1; min-height: 0;
+    }
+    .client-viewings-view.is-visible > *:not(.client-tab-panels) { flex-shrink: 0; }
+    .client-tab-panels { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .client-wrap.is-viewings-workflow {
+      max-width: none; flex: 1; min-height: 0;
+      display: flex; flex-direction: column;
+      padding: 24px 16px 16px;
+    }
+    .app.is-client .client-body.is-viewings-active {
+      overflow: hidden; display: flex; flex-direction: column;
+    }
+    .client-viewings-workspace {
+      flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px;
+    }
+    .client-viewings-main {
+      flex: 1; min-height: 0;
+      background: #f8fafc; border-radius: var(--radius-xl); padding: 16px;
+    }
+    .client-vendor-email-wrap { flex-shrink: 0; margin-bottom: 4px; }
+    .dock-readonly-value {
+      font-size: var(--text-body-size); line-height: var(--lh-body);
+      color: var(--fg-strong); margin: 0; white-space: pre-wrap;
+    }
+    .dock-readonly-value.is-empty { color: var(--fg-subtle); font-style: italic; }
     .client-dashboard-view.is-hidden { display: none; }
     .client-viewings-back {
       display: inline-flex; align-items: center; gap: 6px;
@@ -1510,122 +1535,6 @@
     .client-pill-noshow { background: #fef2f2; color: #b91c1c; }
     .client-pill-offer { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
     .client-pill-rebook { background: #fef3c7; color: #92400e; }
-    /* Client viewing cards — preview cards (vendor read-only) */
-    .client-viewing-list {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: var(--space-4);
-      align-items: start;
-    }
-    .client-v-card {
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-sm);
-      overflow: hidden;
-      transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
-    }
-    .client-v-card.is-open {
-      border-color: #c4b5fd;
-      box-shadow: var(--shadow-md);
-    }
-    .client-v-card-summary {
-      display: flex; flex-direction: column; gap: var(--space-3);
-      padding: var(--space-4);
-      cursor: pointer;
-      text-align: left;
-      background: none; border: none; width: 100%;
-      font-family: inherit;
-      transition: background var(--dur-fast);
-    }
-    .client-v-card-summary:hover { background: var(--bg-subtle); }
-    .client-v-card-top {
-      display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
-      line-height: 1.5; color: var(--fg-strong); width: 100%;
-    }
-    .client-v-card-name { font-size: var(--text-body-size); font-weight: var(--fw-semibold); }
-    .client-v-card-time { font-size: var(--text-info-label-size); font-weight: var(--fw-regular); white-space: nowrap; color: var(--fg-muted); }
-    .client-v-card-badges { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); width: 100%; }
-    .client-v-snippet {
-      font-size: var(--text-info-label-size); line-height: 1.5; color: #334155;
-      margin: 0; width: 100%;
-      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-    }
-    .client-v-snippet.is-missing { font-style: italic; color: var(--danger-600); }
-    .client-v-snippet.is-muted { color: var(--fg-muted); }
-    .client-v-chips {
-      display: flex; flex-wrap: wrap; gap: var(--space-2); width: 100%;
-    }
-    .client-v-chip {
-      font-size: 11px; font-weight: var(--fw-medium); line-height: 1.4;
-      padding: 3px 8px; border-radius: 999px;
-      background: var(--bg-subtle); color: #475569; border: 1px solid var(--border);
-    }
-    .client-v-chip.is-offer { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
-    .client-v-chip.is-interest { background: #faf5ff; color: #6d28d9; border-color: #ddd6fe; }
-    .client-v-card-foot {
-      display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
-      width: 100%; font-size: var(--text-info-label-size); color: var(--purple-600); font-weight: var(--fw-medium);
-    }
-    .client-v-card-foot svg { width: 16px; height: 16px; flex-shrink: 0; transition: transform var(--dur-fast); }
-    .client-v-card.is-open .client-v-card-foot svg { transform: rotate(180deg); }
-    .client-v-card-detail {
-      border-top: 1px solid var(--border);
-      padding: var(--space-4);
-      background: var(--bg-subtle);
-      display: flex; flex-direction: column; gap: var(--space-4);
-    }
-    .client-v-card-detail[hidden] { display: none; }
-    .client-v-preview-title {
-      font-size: var(--text-info-label-size); font-weight: var(--fw-semibold);
-      color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.04em;
-      margin: 0 0 var(--space-2);
-    }
-    .client-v-quote {
-      margin: 0;
-      padding: var(--space-3) var(--space-4);
-      background: var(--bg);
-      border-left: 3px solid var(--purple-400);
-      border-radius: 0 var(--radius-md) var(--radius-md) 0;
-      font-size: var(--text-body-size); line-height: var(--lh-body); color: var(--fg-strong);
-    }
-    .client-v-stat-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3);
-    }
-    .client-v-stat {
-      padding: var(--space-3);
-      background: var(--bg);
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border);
-    }
-    .client-v-stat.is-wide { grid-column: 1 / -1; }
-    .client-v-stat-lbl { font-size: var(--text-info-label-size); color: var(--fg-muted); margin: 0; }
-    .client-v-stat-val {
-      font-size: var(--text-body-size); font-weight: var(--fw-semibold);
-      color: var(--fg-strong); margin: var(--space-1) 0 0;
-    }
-    .client-v-stat-val.is-empty { font-weight: var(--fw-regular); color: var(--fg-subtle); font-style: italic; }
-    .client-v-stat-val.is-price { color: var(--success-600); }
-    .client-v-callout {
-      padding: var(--space-3) var(--space-4);
-      background: #faf5ff;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--purple-100);
-    }
-    .client-v-callout-lbl {
-      font-size: var(--text-info-label-size); font-weight: var(--fw-semibold);
-      color: var(--purple-700); margin: 0 0 var(--space-1);
-    }
-    .client-v-callout p { margin: 0; font-size: var(--text-body-size); line-height: var(--lh-body); color: var(--fg-strong); }
-    .client-v-meta-row {
-      display: flex; justify-content: space-between; gap: var(--space-3);
-      font-size: var(--text-body-size); line-height: var(--lh-body);
-      padding: var(--space-2) 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .client-v-meta-row:last-child { border-bottom: none; }
-    .client-v-meta-row span:first-child { color: var(--fg-muted); }
-    .client-v-meta-row span:last-child { color: var(--fg-strong); text-align: right; }
     .client-privacy-note {
       font-size: var(--text-body-size); color: var(--fg-muted);
       line-height: var(--lh-body); margin: 0 0 var(--space-4);
@@ -1687,8 +1596,7 @@
       .client-task-body { border-left: none; border-top: 1px solid #e2e8f0; }
       .client-wrap { padding: 20px 16px 60px; }
       .client-stats { grid-template-columns: repeat(2, 1fr); }
-      .client-viewing-list { grid-template-columns: 1fr; }
-      .client-v-stat-grid { grid-template-columns: 1fr; }
+      .client-viewings-main { flex-direction: column; padding: 12px; }
     }
   </style>
 </head>
@@ -2045,7 +1953,7 @@
 
   <!-- Client dashboard -->
   <div class="client-body" id="client-body" hidden>
-    <div class="client-wrap">
+    <div class="client-wrap" id="client-wrap">
       <div id="client-dashboard-view" class="client-dashboard-view">
         <div class="client-welcome">
           <div>
@@ -2868,6 +2776,8 @@
   let clientUpcomingSearch = '';
   let clientHistorySearch = '';
   let clientHistoryDateFrom = '';
+  let clientSelectedId = null;
+  let clientDockActivityFull = false;
   const CLIENT_WORKFLOWS = [
     {
       id: 'brochure',
@@ -4832,119 +4742,416 @@
     return !!(v.summary || v.interest || v.buyingSituation || v.priceProposed);
   }
 
-  function clientOfferBadgeHtml(v) {
-    const raw = viewings.find(x => x.id === v.id);
-    if (!raw) return offerBadgeHtml({ status: v.status, offerPrice: v.offerPrice, summary: v.summary });
-    return offerBadgeHtml(raw);
+  function getClientViewingById(id) {
+    return getClientViewings().find(v => v.id === id);
   }
 
-  function clientCardChipsHtml(v) {
-    const chips = [];
-    if (v.interest) chips.push(`<span class="client-v-chip is-interest">${esc(v.interest)}</span>`);
-    if (v.priceProposed && v.proposedPrice != null) chips.push(`<span class="client-v-chip is-offer">${esc(fmtPrice(v.proposedPrice))}</span>`);
-    if (!chips.length) return '';
-    return `<div class="client-v-chips">${chips.join('')}</div>`;
+  function getClientRawViewing(id) {
+    return viewings.find(v => v.id === id);
   }
 
-  function clientCardSnippetHtml(v) {
-    if (v.status === 'completed') {
-      if (v.summary) return `<p class="client-v-snippet">${esc(v.summary)}</p>`;
-      return `<p class="client-v-snippet is-missing">No feedback recorded yet</p>`;
-    }
-    if (v.status === 'cancelled' && v.cancelReason) {
-      return `<p class="client-v-snippet is-muted">${esc(v.cancelReason)}</p>`;
-    }
-    if (v.status === 'no_show') {
-      return `<p class="client-v-snippet is-muted">Viewer did not attend${v.rebookCount != null ? ` · Rebook ${v.rebookCount} of 3` : ''}</p>`;
-    }
-    if (v.note) return `<p class="client-v-snippet is-muted">${esc(v.note)}</p>`;
+  function getClientSearchForTab() {
+    if (clientTab === 'all' || clientTab === 'summary') return clientAllSearch;
+    if (clientTab === 'upcoming') return clientUpcomingSearch;
+    if (clientTab === 'history') return clientHistorySearch;
     return '';
   }
 
-  function clientStatCell(label, value, opts = {}) {
-    const valCls = `client-v-stat-val${!value ? ' is-empty' : ''}${opts.price ? ' is-price' : ''}`;
-    return `<div class="client-v-stat${opts.wide ? ' is-wide' : ''}">
-      <p class="client-v-stat-lbl">${label}</p>
-      <p class="${valCls}">${value ? esc(value) : 'Not recorded'}</p>
-    </div>`;
+  function getClientTabFilteredList() {
+    let list = getClientViewings();
+    if (clientTab === 'upcoming') list = list.filter(clientIsUpcoming);
+    else if (clientTab === 'history') list = list.filter(clientIsHistory);
+    list = clientFilterBySearch(list, getClientSearchForTab());
+    if (clientTab === 'history') list = clientFilterByDateFrom(list, clientHistoryDateFrom);
+    return list.sort((a, b) => new Date(b.date + 'T' + b.timeStart) - new Date(a.date + 'T' + a.timeStart));
   }
 
-  function buildClientCardDetailHtml(v) {
-    const parts = [];
-
-    parts.push(`<div>
-      <h4 class="client-v-preview-title">Viewing details</h4>
-      <div class="client-v-meta-row"><span>Accompanied by</span><span>${esc(v.accompaniedBy)}</span></div>
-      <div class="client-v-meta-row"><span>Assigned agent</span><span>${esc(v.agent)}</span></div>
-      ${v.status === 'cancelled' && v.cancelReason ? `<div class="client-v-meta-row"><span>Cancellation reason</span><span>${esc(v.cancelReason)}</span></div>` : ''}
-      ${v.status === 'no_show' && v.rebookCount != null ? `<div class="client-v-meta-row"><span>Rebook attempts</span><span>${v.rebookCount} of 3</span></div>` : ''}
-    </div>`);
-
-    if (v.status === 'completed' || clientHasAssessmentData(v)) {
-      let assessment = `<div><h4 class="client-v-preview-title">Applicant assessment</h4>`;
-      if (v.summary) {
-        assessment += `<blockquote class="client-v-quote">${esc(v.summary)}</blockquote>`;
-      } else if (v.status === 'completed') {
-        assessment += `<p class="client-v-snippet is-missing" style="-webkit-line-clamp:unset;margin-bottom:var(--space-3)">No feedback recorded yet</p>`;
-      }
-      assessment += `<div class="client-v-stat-grid">
-        ${clientStatCell('Interest level', v.interest)}
-        ${clientStatCell('Buying situation', v.buyingSituation)}
-        ${v.priceProposed ? clientStatCell('Proposed price', v.proposedPrice != null ? fmtPrice(v.proposedPrice) : null, { price: true, wide: !v.interest && !v.buyingSituation }) : ''}
-      </div></div>`;
-      parts.push(assessment);
-    }
-
-    if (v.note) {
-      parts.push(`<div class="client-v-callout">
-        <p class="client-v-callout-lbl">Note from your agent</p>
-        <p>${esc(v.note)}</p>
-      </div>`);
-    }
-
-    return parts.join('');
+  function clientViewingCardHtml(cv) {
+    const raw = getClientRawViewing(cv.id);
+    const sel = cv.id === clientSelectedId ? ' is-selected' : '';
+    const schedule = raw ? fmtCardScheduleLabel(raw) : cv.scheduleLabel;
+    const footer = raw ? viewingCardFooterHtml(raw) : '';
+    const offer = raw ? offerBadgeHtml(raw) : '';
+    return `<article class="viewing-card${sel}" data-client-id="${cv.id}" tabindex="0" role="button" aria-pressed="${cv.id === clientSelectedId}">
+      <div class="viewing-card-top">
+        <span class="viewing-card-name">${esc(cv.label)}</span>
+        <span class="viewing-card-time">${esc(schedule)}</span>
+      </div>
+      <div class="viewing-card-badges">${badgeHtml(cv.status)}${offer}</div>
+      ${footer}
+    </article>`;
   }
 
-  function clientViewingCardHtml(v) {
-    const snippet = clientCardSnippetHtml(v);
-    const chips = clientCardChipsHtml(v);
+  function renderClientDateGroupsHtml(dateGroups) {
+    return dateGroups.map(g => `
+      <div class="viewing-list-date-group">
+        <h3 class="viewing-list-date-title">${esc(g.label)} <span class="viewing-list-group-count">${g.items.length}</span></h3>
+        ${g.items.map(cv => clientViewingCardHtml(cv)).join('')}
+      </div>`).join('');
+  }
+
+  function renderClientPastDateGroupedHtml(items) {
+    const held = items.filter(v => v.status === 'completed');
+    const notHeld = items.filter(v => v.status !== 'completed');
+    const sections = [];
+    if (held.length) {
+      sections.push({
+        label: 'Viewings held',
+        html: renderClientDateGroupsHtml(groupViewingsByDate(held.map(cv => ({ ...cv, time: cv.timeStart })), { descending: true })),
+      });
+    }
+    if (notHeld.length) {
+      sections.push({
+        label: 'Did not take place',
+        html: renderClientDateGroupsHtml(groupViewingsByDate(notHeld.map(cv => ({ ...cv, time: cv.timeStart })), { descending: true })),
+      });
+    }
+    return sections.map(s => `
+      <section class="viewing-list-meta-group" aria-label="${esc(s.label)}">
+        <h2 class="viewing-list-group-title">${esc(s.label)}</h2>
+        ${s.html}
+      </section>`).join('');
+  }
+
+  function renderClientPreviewBucketHtml(label, items, loadMoreTarget) {
+    const total = items.length;
+    const visible = items.slice(0, LIST_PREVIEW_LIMIT);
+    const showLoadMore = total > LIST_PREVIEW_LIMIT;
     return `
-      <article class="client-v-card" data-client-id="${v.id}">
-        <button type="button" class="client-v-card-summary" aria-expanded="false">
-          <div class="client-v-card-top">
-            <span class="client-v-card-name">${esc(v.label)}</span>
-            <span class="client-v-card-time">${esc(v.scheduleLabel)}</span>
-          </div>
-          <div class="client-v-card-badges">${badgeHtml(v.status)}${clientOfferBadgeHtml(v)}</div>
-          ${chips}
-          ${snippet}
-          <span class="client-v-card-foot">
-            <span>View details</span>
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </span>
-        </button>
-        <div class="client-v-card-detail" hidden>${buildClientCardDetailHtml(v)}</div>
-      </article>`;
+      <section class="viewing-list-group" aria-label="${esc(label)}">
+        <h2 class="viewing-list-group-title">${esc(label)} <span class="viewing-list-group-count">${total}</span></h2>
+        ${visible.map(clientViewingCardHtml).join('')}
+        ${showLoadMore ? `
+          <div class="viewing-list-load-more-wrap">
+            <button type="button" class="btn btn-link viewing-list-load-more" data-client-load-more="${loadMoreTarget}">Load more</button>
+          </div>` : ''}
+      </section>`;
   }
 
-  function bindClientCards(container) {
-    $$('.client-v-card', container).forEach(card => {
-      const trigger = $('.client-v-card-summary', card);
-      const detail = $('.client-v-card-detail', card);
-      if (!trigger || !detail || trigger._bound) return;
-      trigger._bound = true;
-      const toggle = () => {
-        const open = card.classList.toggle('is-open');
-        detail.hidden = !open;
-        trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
-      };
-      trigger.addEventListener('click', toggle);
+  function bindClientLoadMoreButtons(mount) {
+    if (!mount) return;
+    mount.querySelectorAll('[data-client-load-more]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        clientTab = btn.dataset.clientLoadMore;
+        renderClientTab(false);
+      });
     });
   }
 
-  function clientViewingListHtml(items) {
-    if (!items.length) return '';
-    return `<div class="client-viewing-list">${items.map(clientViewingCardHtml).join('')}</div>`;
+  function bindClientListCards(container) {
+    $$('.viewing-card[data-client-id]', container).forEach(card => {
+      if (card._bound) return;
+      card._bound = true;
+      const select = () => {
+        clientSelectedId = card.dataset.clientId;
+        clientDockActivityFull = false;
+        $$('.viewing-card[data-client-id]', container).forEach(c => {
+          const on = c.dataset.clientId === clientSelectedId;
+          c.classList.toggle('is-selected', on);
+          c.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        renderClientDock();
+      };
+      card.addEventListener('click', select);
+      card.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(); }
+      });
+    });
+  }
+
+  function renderClientList() {
+    const mount = $('#client-viewings-list');
+    if (!mount) return;
+    const list = getClientTabFilteredList();
+
+    if (!list.length) {
+      clientSelectedId = null;
+      mount.innerHTML = `<div style="text-align:center;padding:40px 16px;color:var(--fg-muted);font-size:13px;">
+        <strong style="display:block;color:var(--fg-strong);margin-bottom:4px;">No viewings match</strong>
+        Try a different search or switch tabs.
+      </div>`;
+      renderClientDock();
+      return;
+    }
+
+    if (!list.some(v => v.id === clientSelectedId)) clientSelectedId = list[0].id;
+
+    if (clientTab === 'all' || clientTab === 'summary') {
+      const buckets = { today: [], upcoming: [], past: [] };
+      list.forEach(cv => {
+        const raw = getClientRawViewing(cv.id);
+        if (raw) buckets[getViewingTimeBucket(raw)].push(cv);
+      });
+      const parts = [];
+      if (buckets.today.length) {
+        parts.push(`
+          <section class="viewing-list-group" aria-label="Today">
+            <h2 class="viewing-list-group-title">Today <span class="viewing-list-group-count">${buckets.today.length}</span></h2>
+            ${buckets.today.map(clientViewingCardHtml).join('')}
+          </section>`);
+      }
+      if (buckets.upcoming.length) parts.push(renderClientPreviewBucketHtml('Upcoming', buckets.upcoming, 'upcoming'));
+      if (buckets.past.length) parts.push(renderClientPreviewBucketHtml('Past', buckets.past, 'history'));
+      mount.innerHTML = parts.join('');
+      bindClientLoadMoreButtons(mount);
+    } else if (clientTab === 'upcoming') {
+      mount.innerHTML = renderClientDateGroupsHtml(
+        groupViewingsByDate(list.map(cv => ({ ...cv, time: cv.timeStart })))
+      );
+    } else if (clientTab === 'history') {
+      mount.innerHTML = renderClientPastDateGroupedHtml(list);
+    }
+
+    bindClientListCards(mount);
+    renderClientDock();
+  }
+
+  function clientDockReadonlyField(label, value, help) {
+    return `<div class="assessment-field">
+      <span class="dock-form-label">${label}</span>
+      <p class="dock-readonly-value${value ? '' : ' is-empty'}">${value ? esc(value) : 'Not recorded'}</p>
+      ${help ? `<p class="dock-help-text">${help}</p>` : ''}
+    </div>`;
+  }
+
+  function buildClientDockHeroHtml(cv) {
+    const agentName = cv.agent || 'Towers Wills';
+    const logisticsHtml = `
+      <div class="dock-hero-logistics">
+        <div class="dock-hero-detail-row">
+          <span>Accompanied by</span><span>${esc(cv.accompaniedBy)}</span>
+        </div>
+        <div class="dock-hero-detail-row">
+          <span>Assigned agent</span>
+          <span class="dock-hero-agent-val">
+            <span class="avatar dock-hero-agent-avatar">${esc(viewerInitials(agentName))}</span>
+            ${esc(agentName)}
+          </span>
+        </div>
+      </div>`;
+    return `
+      <div class="dock-hero">
+        <div class="dock-hero-top">
+          <div class="avatar dock-hero-avatar">${esc(viewerInitials(cv.label))}</div>
+          <div class="dock-hero-meta">
+            <div class="dock-hero-name-row">
+              <div class="dock-hero-name-stack">
+                <h2 class="text-h3">${esc(cv.label)}</h2>
+                <p class="text-body dock-hero-schedule">${esc(cv.scheduleLabel)}</p>
+              </div>
+              ${badgeHtml(cv.status)}
+            </div>
+          </div>
+        </div>
+      </div>
+      ${logisticsHtml}`;
+  }
+
+  function buildClientActivityPreviewHtml(cv) {
+    const all = cv.activity?.length ? cv.activity : [{ agents: ['JA'], text: 'No activity yet', time: '' }];
+    const preview = all.slice(0, 2);
+    const showViewAll = all.length > 2;
+    return `
+      <div class="dock-section dock-section--activity">
+        <div class="dock-section-heading">
+          <h3 class="text-h2">Activity Log</h3>
+          <span class="dock-section-heading-line"></span>
+        </div>
+        <div class="activity-list" id="client-dock-activity-list">
+          ${preview.map(activityEntryHtml).join('')}
+        </div>
+        ${showViewAll ? `
+          <div class="activity-view-all-wrap">
+            <button type="button" class="activity-view-all" id="client-dock-activity-all">
+              View Full Activity
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>` : ''}
+      </div>`;
+  }
+
+  function buildClientActivityFullHtml(cv) {
+    const all = cv.activity?.length ? cv.activity : [{ agents: ['JA'], text: 'No activity yet', time: '' }];
+    return `
+      <div class="dock-section dock-section--activity-full">
+        <div class="activity-list activity-list--full" id="client-dock-activity-list-full">
+          ${all.map(activityEntryHtml).join('')}
+        </div>
+      </div>`;
+  }
+
+  function buildClientAssessmentReadonlyHtml(cv) {
+    if (cv.status !== 'completed' && !clientHasAssessmentData(cv)) return '';
+    const priceVal = cv.priceProposed
+      ? (cv.proposedPrice != null ? fmtPrice(cv.proposedPrice) : null)
+      : 'No price proposed';
+    return `
+      <div class="assessment-section">
+        <div class="assessment-header">
+          <p class="text-h2 assessment-title">Applicant Assessment</p>
+          <span class="assessment-heading-line"></span>
+        </div>
+        <div class="assessment-fields">
+          ${clientDockReadonlyField('Feedback &amp; Notes', cv.summary, 'Recorded by your agent after the viewing')}
+          ${clientDockReadonlyField('Interest Level', cv.interest)}
+          ${clientDockReadonlyField('Buying Situation', cv.buyingSituation)}
+          ${clientDockReadonlyField('Proposed Price', cv.priceProposed ? priceVal : 'No price proposed')}
+        </div>
+      </div>`;
+  }
+
+  function setClientDockHeaderMode(mode) {
+    const title = $('#client-dock-header-title');
+    const back = $('#client-dock-activity-back');
+    const isActivity = mode === 'activity';
+    if (title) title.textContent = isActivity ? 'Activity Log' : 'Viewing Details';
+    if (back) back.hidden = !isActivity;
+  }
+
+  function renderClientDock() {
+    const dock = $('#client-viewing-dock');
+    const header = $('#client-dock-header');
+    const body = $('#client-dock-body');
+    if (!body || !dock) return;
+
+    const cv = clientSelectedId ? getClientViewingById(clientSelectedId) : null;
+
+    if (!cv) {
+      clientDockActivityFull = false;
+      dock.classList.add('is-empty');
+      if (header) header.hidden = true;
+      body.innerHTML = `
+        <div class="dock-empty">
+          <div class="dock-empty-illus" aria-hidden="true">
+            <div class="dock-ghost-card dock-ghost-card--top"></div>
+            <div class="dock-ghost-card dock-ghost-card--mid"></div>
+            <div class="dock-ghost-card dock-ghost-card--bot"></div>
+            <svg class="dock-ghost-cursor" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M5 3l14 9-7 1-3 7L5 3z"/></svg>
+          </div>
+          <div class="dock-empty-text">
+            <p class="text-h3 dock-empty-title">Nothing selected yet</p>
+            <p class="text-body dock-empty-sub">Pick a viewing from the list to see the full details</p>
+          </div>
+        </div>`;
+      return;
+    }
+
+    dock.classList.remove('is-empty');
+    if (header) header.hidden = false;
+
+    if (clientDockActivityFull) {
+      setClientDockHeaderMode('activity');
+      body.innerHTML = buildClientActivityFullHtml(cv);
+      $('#client-dock-activity-back')?.addEventListener('click', () => {
+        clientDockActivityFull = false;
+        renderClientDock();
+      });
+      return;
+    }
+
+    setClientDockHeaderMode('details');
+
+    const noShowHtml = cv.status === 'no_show' ? `
+      <div class="dock-section">
+        <p class="rebook-meta">Rebook attempt ${cv.rebookCount ?? 0} of 3</p>
+      </div>` : '';
+
+    const cancelledHtml = cv.status === 'cancelled' && cv.cancelReason ? `
+      <div class="dock-section">
+        <span class="dock-form-label">Cancellation reason</span>
+        <p class="dock-readonly-value" style="margin-top:var(--space-1)">${esc(cv.cancelReason)}</p>
+      </div>` : '';
+
+    const vendorNoteHtml = cv.note ? `
+      <div class="dock-section dock-section--agent-notes">
+        <span class="dock-agent-notes-label">Note from your agent</span>
+        <p class="dock-readonly-value">${esc(cv.note)}</p>
+      </div>` : '';
+
+    body.innerHTML = `
+      <div class="dock-block-top">
+        ${buildClientDockHeroHtml(cv)}
+        ${vendorNoteHtml}
+      </div>
+      ${noShowHtml}
+      ${cancelledHtml}
+      ${buildClientAssessmentReadonlyHtml(cv)}
+      ${buildClientActivityPreviewHtml(cv)}`;
+
+    $('#client-dock-activity-all')?.addEventListener('click', () => {
+      clientDockActivityFull = true;
+      renderClientDock();
+    });
+  }
+
+  function renderClientWorkspaceShell(topHtml = '') {
+    const showDateFilter = clientTab === 'history';
+    return `
+      ${topHtml}
+      <div class="client-viewings-workspace">
+        <p class="client-privacy-note">The same viewings your agent manages appear here. Applicant assessments reflect what your agent recorded after each visit. Contact details, lead source, and buyer profile fields are not shown.</p>
+        <div class="viewings-main client-viewings-main">
+          <div class="viewings-list-col-wrap">
+            <div class="viewings-controls">
+              <div class="vf-search-wrap" role="search">
+                <svg class="vf-search-icon" width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.3"/><path d="M10.5 10.5L13.5 13.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
+                <input type="search" class="input vf-search-input" id="client-vf-search" placeholder="Type to search..." autocomplete="off" aria-label="Search viewings">
+                <button type="button" class="vf-search-clear" id="client-vf-search-clear" hidden aria-label="Clear search">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><line x1="4" y1="4" x2="12" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="12" y1="4" x2="4" y2="12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                </button>
+              </div>
+              ${showDateFilter ? `<input type="date" class="client-date-filter" id="client-history-date-from" aria-label="Filter from date">` : ''}
+            </div>
+            <div class="viewing-list-col" id="client-viewings-list" role="region" aria-label="Viewings"></div>
+          </div>
+          <aside class="viewing-detail-dock is-empty" id="client-viewing-dock" aria-label="Viewing details">
+            <div class="dock-header" id="client-dock-header" hidden>
+              <div class="dock-header-left">
+                <button type="button" class="btn btn-tertiary dock-activity-back" id="client-dock-activity-back" hidden>
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Back
+                </button>
+                <span class="text-h2 dock-header-title" id="client-dock-header-title">Viewing Details</span>
+              </div>
+            </div>
+            <div class="dock-body" id="client-dock-body"></div>
+          </aside>
+        </div>
+      </div>`;
+  }
+
+  function bindClientWorkspaceControls(panel) {
+    const searchEl = $('#client-vf-search', panel);
+    const clearEl = $('#client-vf-search-clear', panel);
+    if (searchEl) {
+      searchEl.value = getClientSearchForTab();
+      if (clearEl) clearEl.hidden = !searchEl.value;
+      searchEl.addEventListener('input', () => {
+        const q = searchEl.value.trim();
+        if (clientTab === 'all' || clientTab === 'summary') clientAllSearch = q;
+        else if (clientTab === 'upcoming') clientUpcomingSearch = q;
+        else if (clientTab === 'history') clientHistorySearch = q;
+        if (clearEl) clearEl.hidden = !searchEl.value;
+        renderClientList();
+      });
+    }
+    clearEl?.addEventListener('click', () => {
+      if (!searchEl) return;
+      searchEl.value = '';
+      clearEl.hidden = true;
+      if (clientTab === 'all' || clientTab === 'summary') clientAllSearch = '';
+      else if (clientTab === 'upcoming') clientUpcomingSearch = '';
+      else if (clientTab === 'history') clientHistorySearch = '';
+      renderClientList();
+    });
+    const dateEl = $('#client-history-date-from', panel);
+    if (dateEl) {
+      dateEl.value = clientHistoryDateFrom;
+      dateEl.addEventListener('change', () => {
+        clientHistoryDateFrom = dateEl.value;
+        renderClientList();
+      });
+    }
   }
 
   function clientEmptyState(title, desc) {
@@ -5066,6 +5273,8 @@
     clientTab = 'all';
     $('#client-dashboard-view')?.classList.add('is-hidden');
     $('#client-viewings-view')?.classList.add('is-visible');
+    $('#client-wrap')?.classList.add('is-viewings-workflow');
+    $('#client-body')?.classList.add('is-viewings-active');
     renderClientStats();
     renderClientTab(true);
   }
@@ -5074,6 +5283,8 @@
     clientScreen = 'dashboard';
     $('#client-dashboard-view')?.classList.remove('is-hidden');
     $('#client-viewings-view')?.classList.remove('is-visible');
+    $('#client-wrap')?.classList.remove('is-viewings-workflow');
+    $('#client-body')?.classList.remove('is-viewings-active');
     renderClientWorkflowDashboard();
   }
 
@@ -5123,78 +5334,16 @@
     return list.filter(v => new Date(v.date + 'T00:00') >= from);
   }
 
-  function renderClientAllPanel() {
-    const list = [...getClientViewings()].sort((a, b) => new Date(b.date + 'T' + b.timeStart) - new Date(a.date + 'T' + a.timeStart));
-    let html = `
-      <p class="client-privacy-note">The same viewings your agent manages appear here. Applicant assessments reflect what your agent recorded after each visit. Contact details, lead source, and buyer profile fields are not shown.</p>
-      <div class="client-search-row">
-        <div class="client-search-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="search" class="client-search" id="client-all-search" placeholder="Search by applicant or date…" aria-label="Search all viewings">
-        </div>
-      </div>
-      <div id="client-all-cards">`;
-    html += list.length
-      ? clientViewingListHtml(list)
-      : clientEmptyState('No viewings yet', 'Viewings will appear here once scheduled by your agent.');
-    html += '</div>';
-    return html;
-  }
-
-  function renderClientSummaryPanel() {
-    const all = getClientViewings();
-    const recent = [...all].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 4);
-
+  function renderClientSummaryTopHtml() {
     const vendorEmailBlock = lastVendorUpdate
       ? lastVendorUpdate.html
       : `<div class="client-update-card">
           <div class="client-update-meta">Agent update</div>
           <div class="client-update-body">
-            <p>Your agent will send viewing updates here after each vendor email. Upcoming and completed viewings are listed below.</p>
+            <p>Your agent will send viewing updates here after each vendor email. Select a viewing below to see full details.</p>
           </div>
         </div>`;
-
-    return `
-      <div class="client-vendor-email-wrap">${vendorEmailBlock}</div>
-      <div class="client-panel">
-        <div class="client-panel-head">Recent activity</div>
-        <div class="client-list" id="client-summary-list">${clientViewingListHtml(recent)}</div>
-      </div>`;
-  }
-
-  function renderClientUpcomingPanel() {
-    const list = getClientViewings().filter(clientIsUpcoming);
-    let html = `
-      <div class="client-search-row">
-        <div class="client-search-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="search" class="client-search" id="client-upcoming-search" placeholder="Search by viewer or date…" aria-label="Search upcoming viewings">
-        </div>
-      </div>
-      <div id="client-upcoming-cards">`;
-    html += list.length
-      ? clientViewingListHtml(list)
-      : clientEmptyState('No upcoming viewings', 'Viewings will appear here once scheduled by your agent.');
-    html += '</div>';
-    return html;
-  }
-
-  function renderClientHistoryPanel() {
-    const list = getClientViewings().filter(clientIsHistory);
-    let html = `
-      <div class="client-search-row">
-        <div class="client-search-wrap">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="search" class="client-search" id="client-history-search" placeholder="Search by viewer or date…" aria-label="Search viewing history">
-        </div>
-        <input type="date" class="client-date-filter" id="client-history-date-from" aria-label="Filter from date">
-      </div>
-      <div id="client-history-cards">`;
-    html += list.length
-      ? clientViewingListHtml(list)
-      : clientEmptyState('No past viewings yet', 'Completed, cancelled, and no-show viewings will appear here.');
-    html += '</div>';
-    return html;
+    return `<div class="client-vendor-email-wrap">${vendorEmailBlock}</div>`;
   }
 
   function renderClientOffersPanel() {
@@ -5223,82 +5372,27 @@
     return html;
   }
 
-  const clientTabRenderers = {
-    all: renderClientAllPanel,
-    summary: renderClientSummaryPanel,
-    upcoming: renderClientUpcomingPanel,
-    history: renderClientHistoryPanel,
-    offers: renderClientOffersPanel,
-  };
+  const CLIENT_VIEWING_TABS = new Set(['all', 'summary', 'upcoming', 'history']);
 
   function renderClientTab(resetFilters) {
+    clientDockActivityFull = false;
     if (resetFilters) {
       clientAllSearch = '';
       clientUpcomingSearch = '';
       clientHistorySearch = '';
       clientHistoryDateFrom = '';
+      clientSelectedId = null;
     }
     const panel = $('#client-tab-panels');
     if (!panel) return;
-    panel.innerHTML = clientTabRenderers[clientTab]();
-    $$('#client-tabs .client-tab').forEach(el => {
-      const on = el.dataset.clientTab === clientTab;
-      el.classList.toggle('is-active', on);
-      el.setAttribute('aria-selected', on ? 'true' : 'false');
-    });
-    bindClientCards(panel);
 
-    if (clientTab === 'all') {
-      const searchEl = $('#client-all-search', panel);
-      if (searchEl) {
-        searchEl.value = clientAllSearch;
-        searchEl.addEventListener('input', () => {
-          clientAllSearch = searchEl.value.trim();
-          const cards = $('#client-all-cards', panel);
-          const sorted = [...getClientViewings()].sort((a, b) => new Date(b.date + 'T' + b.timeStart) - new Date(a.date + 'T' + a.timeStart));
-          const filtered = clientFilterBySearch(sorted, clientAllSearch);
-          cards.innerHTML = filtered.length ? clientViewingListHtml(filtered) : clientEmptyState('No matches', 'Try a different name or date.');
-          bindClientCards(cards);
-        });
-      }
-    }
-
-    if (clientTab === 'upcoming') {
-      const searchEl = $('#client-upcoming-search', panel);
-      if (searchEl) {
-        searchEl.value = clientUpcomingSearch;
-        searchEl.addEventListener('input', () => {
-          clientUpcomingSearch = searchEl.value.trim();
-          const cards = $('#client-upcoming-cards', panel);
-          const filtered = clientFilterBySearch(getClientViewings().filter(clientIsUpcoming), clientUpcomingSearch);
-          cards.innerHTML = filtered.length ? clientViewingListHtml(filtered) : clientEmptyState('No matches', 'Try a different name or date.');
-          bindClientCards(cards);
-        });
-      }
-    }
-
-    if (clientTab === 'history') {
-      const searchEl = $('#client-history-search', panel);
-      const dateEl = $('#client-history-date-from', panel);
-      const apply = () => {
-        const cards = $('#client-history-cards', panel);
-        let list = getClientViewings().filter(clientIsHistory);
-        list = clientFilterBySearch(list, clientHistorySearch);
-        list = clientFilterByDateFrom(list, clientHistoryDateFrom);
-        cards.innerHTML = list.length ? clientViewingListHtml(list) : clientEmptyState('No matches', 'Try adjusting your search or date filter.');
-        bindClientCards(cards);
-      };
-      if (searchEl) {
-        searchEl.value = clientHistorySearch;
-        searchEl.addEventListener('input', () => { clientHistorySearch = searchEl.value.trim(); apply(); });
-      }
-      if (dateEl) {
-        dateEl.value = clientHistoryDateFrom;
-        dateEl.addEventListener('change', () => { clientHistoryDateFrom = dateEl.value; apply(); });
-      }
-    }
-
-    if (clientTab === 'offers') {
+    if (CLIENT_VIEWING_TABS.has(clientTab)) {
+      const topHtml = clientTab === 'summary' ? renderClientSummaryTopHtml() : '';
+      panel.innerHTML = renderClientWorkspaceShell(topHtml);
+      bindClientWorkspaceControls(panel);
+      renderClientList();
+    } else {
+      panel.innerHTML = renderClientOffersPanel();
       $$('[data-pref-offer]', panel).forEach(btn => {
         btn.addEventListener('click', () => {
           localStorage.setItem(CLIENT_PREF_KEY, btn.dataset.prefOffer);
@@ -5306,6 +5400,12 @@
         });
       });
     }
+
+    $$('#client-tabs .client-tab').forEach(el => {
+      const on = el.dataset.clientTab === clientTab;
+      el.classList.toggle('is-active', on);
+      el.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
   }
 
   function renderClientDashboard() {
@@ -5313,11 +5413,16 @@
     if (clientScreen === 'viewings') {
       $('#client-dashboard-view')?.classList.add('is-hidden');
       $('#client-viewings-view')?.classList.add('is-visible');
+      $('#client-wrap')?.classList.add('is-viewings-workflow');
+      $('#client-body')?.classList.add('is-viewings-active');
       renderClientStats();
-      renderClientTab(false);
+      if ($('#client-viewings-list')) renderClientList();
+      else renderClientTab(false);
     } else {
       $('#client-dashboard-view')?.classList.remove('is-hidden');
       $('#client-viewings-view')?.classList.remove('is-visible');
+      $('#client-wrap')?.classList.remove('is-viewings-workflow');
+      $('#client-body')?.classList.remove('is-viewings-active');
       renderClientWorkflowDashboard();
     }
   }
