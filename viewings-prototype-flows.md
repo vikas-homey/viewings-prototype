@@ -12,6 +12,8 @@ Open `agent-view-v5.html` in a browser to walk through every flow.
 
 **Prototype controls:** click the small **red settings gear icon** in the header (next to the avatar) to open **Prototype controls** — simulated date/time and email settings. Click outside or press Escape to close.
 
+**User flow guide:** a purple banner on the Agent viewings page and Client **Viewing and Feedback** workflow explains that this prototype has multiple flows per viewing state. **Explore user flows** opens an interactive guide (three phases); **Open in Figma** links to the full [User Flows board](https://www.figma.com/board/qf2usEVnmWE00ZC9GkDze3/User-Flows?node-id=366-2738). Each flow has a **Try in prototype** action that jumps to the matching demo viewing or perspective.
+
 ---
 
 ## 1. Perspectives
@@ -695,6 +697,18 @@ Debounced 500ms on: agent notes, feedback, interest, buying situation, proposed 
 
 **Buying situation:** First-time buyer, Has property to sell (no offer yet), Has property under offer, Cash buyer, Investor / Buy-to-let
 
+### 12.5 User flow guide (in-prototype + Figma)
+
+| Phase | Covers | Example flows in guide |
+|-------|--------|------------------------|
+| **1. Viewing setup & confirmation** | Book, confirm, reschedule | Create viewing, Lisa scheduled, viewer confirm, Mark confirmed, Emma reschedule |
+| **2. Applicant assessment** | Feedback, vendor update, client | Sofia assessment, Tom no feedback, Update Vendor, client feedback & offers |
+| **3. Viewing recovery** | No-show, cancelled, lost | Derik rebook, James cancelled CTAs, mark as lost, viewer cancel |
+
+**Figma source of truth:** [User Flows board — Viewings & Feedback node](https://www.figma.com/board/qf2usEVnmWE00ZC9GkDze3/User-Flows?node-id=366-2738)
+
+**Try in prototype** actions: select demo viewing (agent), switch Client/Viewer perspective, open Update Vendor or Create Viewing modal.
+
 ---
 
 ## 13. End-to-end test scenarios
@@ -779,4 +793,4 @@ Debounced 500ms on: agent notes, feedback, interest, buying situation, proposed 
 
 ---
 
-*Last updated to reflect `agent-view-v5.html` — agent viewings CRM (cancelled three-button footer, rebook on cancelled), client Viewing and Feedback workflow, viewer inbox, vendor update modal, prototype settings gear icon, and responsive client detail drawer.*
+*Last updated to reflect `agent-view-v5.html` — agent viewings CRM, client Viewing and Feedback workflow, interactive user flow guide + Figma link, viewer inbox, vendor update modal, and prototype settings gear icon.*
