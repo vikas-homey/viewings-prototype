@@ -1,0 +1,2925 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Viewings and feedback — Homey</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Legacy prototype (Tailwind). For design-system alignment use agent-view-v2.html + design-system/homeywebfoundation.css -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            purple: { 50: '#F5F3FF', 100: '#EDE9FE', 200: '#DDD6FE', 600: '#7C3AED', 700: '#6D28D9' },
+            slate: { 50: '#F8FAFC', 100: '#F1F5F9', 200: '#E2E8F0', 500: '#64748B', 700: '#334155', 900: '#0F172A' },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+/* Homey design tokens — source: DESIGN.md */
+
+:root {
+  --homey-strike-yellow: #FDE047;
+  --homey-storm-purple: #7C3AED;
+  --homey-storm-purple-bright: #9747FF;
+  --homey-storm-purple-deep: #6D28D9;
+  --homey-midnight-black: #221F20;
+  --homey-flash-white: #FFFFFF;
+
+  --purple-50: #F5F3FF;
+  --purple-100: #EDE9FE;
+  --purple-200: #DDD6FE;
+  --purple-300: #C4B5FD;
+  --purple-400: #A78BFA;
+  --purple-500: #8B5CF6;
+  --purple-600: #7C3AED;
+  --purple-700: #6D28D9;
+  --purple-800: #5B21B6;
+  --purple-900: #4C1D95;
+
+  --slate-50: #F8FAFC;
+  --slate-100: #F1F5F9;
+  --slate-200: #E2E8F0;
+  --slate-300: #CBD5E1;
+  --slate-400: #94A3B8;
+  --slate-500: #64748B;
+  --slate-600: #475569;
+  --slate-700: #334155;
+  --slate-800: #1E293B;
+  --slate-900: #0F172A;
+
+  --success-50: #ECFDF5;
+  --success-500: #10B981;
+  --success-600: #059669;
+  --success-700: #047857;
+
+  --warning-50: #FFFBEB;
+  --warning-500: #F59E0B;
+  --warning-600: #D97706;
+
+  --danger-50: #FEF2F2;
+  --danger-500: #EF4444;
+  --danger-600: #DC2626;
+  --danger-700: #B91C1C;
+
+  --info-50: #EFF6FF;
+  --info-500: #3B82F6;
+  --info-600: #2563EB;
+
+  --bg: #FFFFFF;
+  --bg-subtle: var(--slate-50);
+  --bg-muted: var(--slate-100);
+  --border: var(--slate-200);
+  --border-strong: var(--slate-300);
+  --fg: var(--slate-700);
+  --fg-strong: var(--slate-900);
+  --fg-muted: var(--slate-500);
+  --fg-subtle: var(--slate-400);
+
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-full: 9999px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 8px 24px rgba(15, 23, 42, 0.1);
+  --shadow-xl: 0 16px 48px rgba(15, 23, 42, 0.12);
+  --shadow-focus: 0 0 0 3px rgba(124, 58, 237, 0.25);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+  --dur-slow: 280ms;
+
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-display: 'Roboto', var(--font-sans);
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-base: 14px;
+  --fs-md: 16px;
+  --fs-lg: 18px;
+  --fs-xl: 20px;
+  --fs-2xl: 24px;
+  --fs-3xl: 34px;
+}
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-sans);
+      font-size: var(--fs-base);
+      line-height: 1.5;
+      color: var(--fg);
+      background: var(--bg-subtle);
+      min-height: 100vh;
+    }
+
+    .icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* —— UIKit: buttons —— */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      font-family: inherit; font-weight: 600; font-size: var(--fs-sm);
+      padding: 9px 14px; border-radius: var(--radius-md);
+      border: 1px solid transparent; cursor: pointer; white-space: nowrap;
+      transition: background var(--dur-fast) var(--ease-out),
+                  border-color var(--dur-fast) var(--ease-out),
+                  color var(--dur-fast) var(--ease-out);
+    }
+    .btn:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-sm { padding: 6px 12px; font-size: var(--fs-sm); }
+    .btn-primary { background: var(--purple-600); color: var(--bg); border-color: var(--purple-600); }
+    .btn-primary:hover:not(:disabled) { background: var(--purple-700); border-color: var(--purple-700); }
+    .btn-primary:active:not(:disabled) { background: var(--purple-800); }
+    .btn-secondary { background: var(--bg); color: var(--fg-strong); border-color: var(--border); }
+    .btn-secondary:hover:not(:disabled) { background: var(--slate-50); }
+    .btn-tertiary { background: transparent; color: var(--purple-700); }
+    .btn-tertiary:hover:not(:disabled) { background: var(--purple-50); }
+    .btn-ghost { background: transparent; color: var(--fg-strong); }
+    .btn-ghost:hover:not(:disabled) { background: var(--slate-100); }
+    .btn-block { width: 100%; }
+
+    .btn-icon {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 8px; aspect-ratio: 1;
+      font-family: inherit; border: 1px solid transparent; border-radius: var(--radius-md);
+      background: transparent; color: var(--fg); cursor: pointer;
+      transition: background var(--dur-fast) var(--ease-out);
+    }
+    .btn-icon:focus-visible { outline: none; box-shadow: var(--shadow-focus); }
+    .btn-icon:hover:not(:disabled) { background: var(--slate-100); }
+    .btn-icon-bordered {
+      border-color: var(--border); background: var(--bg);
+    }
+    .btn-icon-bordered:hover:not(:disabled) { background: var(--slate-50); }
+
+    .btn-group-segmented {
+      display: inline-flex; gap: 4px; padding: 4px;
+      background: var(--slate-100); border-radius: var(--radius-md);
+    }
+    .btn-group-item {
+      padding: 6px 12px; border: 0; cursor: pointer;
+      font-family: inherit; font-size: var(--fs-sm); font-weight: 600;
+      color: var(--fg-muted); background: transparent;
+      border-radius: var(--radius-sm);
+    }
+    .btn-group-item:hover { color: var(--fg-strong); }
+    .btn-group-item.is-active {
+      background: var(--bg); color: var(--fg-strong); box-shadow: var(--shadow-xs);
+    }
+
+    /* —— UIKit: fields —— */
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: var(--space-4); }
+    .field:last-child { margin-bottom: 0; }
+    .field-label { font-size: var(--fs-sm); font-weight: 600; color: var(--fg-strong); }
+    .input {
+      width: 100%; padding: 10px 12px;
+      font-family: inherit; font-size: var(--fs-base); color: var(--fg-strong);
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius-md); outline: none;
+      transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+    }
+    .input::placeholder { color: var(--fg-subtle); }
+    .input:hover { border-color: var(--border-strong); }
+    .input:focus { border-color: var(--purple-600); box-shadow: var(--shadow-focus); }
+    textarea.input { resize: vertical; min-height: 72px; line-height: 1.5; }
+    select.input {
+      appearance: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+      background-repeat: no-repeat; background-position: right 12px center;
+      padding-right: 36px;
+    }
+    .field-help { font-size: var(--fs-xs); color: var(--fg-muted); }
+
+    /* —— UIKit: badges —— */
+    .badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-size: var(--fs-xs); font-weight: 700;
+      padding: 2px 8px; border-radius: var(--radius-xs);
+      border: 1px solid; line-height: 1.4; white-space: nowrap;
+    }
+    .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .badge.pill { border-radius: var(--radius-full); padding: 3px 10px; }
+    .badge-purple { background: var(--purple-50); color: var(--purple-700); border-color: var(--purple-200); }
+    .badge-success { background: var(--success-50); color: var(--success-700); border-color: color-mix(in srgb, var(--success-600) 35%, var(--success-50)); }
+    .badge-warning { background: var(--warning-50); color: var(--warning-600); border-color: color-mix(in srgb, var(--warning-600) 35%, var(--warning-50)); }
+    .badge-danger { background: var(--danger-50); color: var(--danger-700); border-color: color-mix(in srgb, var(--danger-600) 35%, var(--danger-50)); }
+    .badge-slate { background: var(--slate-100); color: var(--slate-700); border-color: var(--slate-200); }
+
+    /* —— UIKit: card —— */
+    .card {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: var(--space-5);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* —— UIKit: tabs segmented —— */
+    .tabs-segmented {
+      display: inline-flex; gap: 4px; padding: 4px;
+      background: var(--slate-100); border-radius: var(--radius-md);
+    }
+    .tab-segmented {
+      padding: 6px 12px; border: 0; cursor: pointer;
+      font-family: inherit; font-size: var(--fs-sm); font-weight: 600;
+      color: var(--fg-muted); background: transparent;
+      border-radius: var(--radius-sm);
+    }
+    .tab-segmented.is-active {
+      background: var(--bg); color: var(--fg-strong); box-shadow: var(--shadow-xs);
+    }
+
+    /* —— UIKit: breadcrumb —— */
+    .breadcrumb { display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); }
+    .breadcrumb-item { color: var(--fg-muted); text-decoration: none; font-weight: 500; }
+    .breadcrumb-item:hover { color: var(--fg-strong); }
+    .breadcrumb-item.is-current { color: var(--fg-strong); font-weight: 600; }
+    .breadcrumb-sep { width: 12px; height: 12px; color: var(--fg-subtle); flex-shrink: 0; }
+
+    /* —— UIKit: avatar —— */
+    .avatar {
+      display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      background: var(--purple-100); color: var(--purple-700);
+      font-weight: 700; flex-shrink: 0;
+      border: 1px solid var(--purple-200);
+      overflow: hidden;
+    }
+    .avatar-sm { width: 24px; height: 24px; font-size: 10px; }
+    .avatar-md { width: 32px; height: 32px; font-size: 12px; }
+
+    /* —— UIKit: modal —— */
+    .modal-scrim {
+      position: fixed; inset: 0;
+      background: color-mix(in srgb, var(--slate-900) 50%, transparent);
+      display: none; align-items: center; justify-content: center;
+      padding: var(--space-6); z-index: 200;
+    }
+    .modal-scrim.is-open { display: flex; }
+    .modal {
+      background: var(--bg); border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-xl);
+      width: 100%; max-width: 480px;
+      max-height: 90vh; overflow: auto;
+      display: flex; flex-direction: column;
+    }
+    .modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: var(--space-5) var(--space-6); gap: 12px;
+      border-bottom: 1px solid var(--slate-100);
+    }
+    .modal-title { font-size: var(--fs-lg); font-weight: 700; color: var(--fg-strong); margin: 0; }
+    .modal-body { padding: var(--space-6); color: var(--fg); }
+    .modal-footer {
+      display: flex; gap: 8px; justify-content: flex-end;
+      padding: var(--space-4) var(--space-6);
+      border-top: 1px solid var(--slate-100);
+    }
+
+    /* —— UIKit: toast —— */
+    .toast-region {
+      position: fixed; bottom: var(--space-6); right: var(--space-6);
+      display: flex; flex-direction: column; gap: 10px;
+      z-index: 300; max-width: 420px;
+      pointer-events: none;
+    }
+    .toast-region .toast { pointer-events: auto; }
+    .toast {
+      display: none; gap: 12px; align-items: flex-start;
+      padding: 12px 16px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); box-shadow: var(--shadow-md);
+    }
+    .toast.is-visible { display: flex; }
+    .toast-icon {
+      width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+      color: var(--bg); display: inline-flex; align-items: center; justify-content: center;
+      margin-top: 1px;
+    }
+    .toast-icon svg { width: 12px; height: 12px; }
+    .toast-success .toast-icon { background: var(--success-500); }
+    .toast-body { flex: 1; }
+    .toast-title { font-size: var(--fs-base); font-weight: 600; color: var(--fg-strong); }
+    .toast-msg { font-size: var(--fs-sm); color: var(--fg-muted); margin-top: 2px; }
+    .toast-close {
+      background: transparent; border: 0; color: var(--fg-muted);
+      cursor: pointer; padding: 0 4px; line-height: 1;
+      display: inline-flex; align-items: center; justify-content: center;
+    }
+
+    /* —— Page layout: app shell —— */
+    .app {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      grid-template-rows: 48px 1fr;
+      min-height: 100vh;
+    }
+
+    .global-header {
+      grid-column: 2;
+      grid-row: 1;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--space-6);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+    .header-actions-global { display: flex; align-items: center; gap: var(--space-2); }
+
+    .body-row {
+      grid-column: 2;
+      grid-row: 2;
+      display: flex;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .icon-rail {
+      grid-column: 1;
+      grid-row: 1 / -1;
+      width: 56px;
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: var(--space-3) 0;
+      gap: var(--space-2);
+    }
+    .rail-logo {
+      width: 32px; height: 32px;
+      background: var(--purple-600);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-4);
+    }
+    .rail-item {
+      width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: var(--radius-md);
+      color: var(--fg-muted);
+      cursor: pointer;
+    }
+    .rail-item:hover { background: var(--slate-100); color: var(--fg); }
+    .rail-item.active { background: var(--purple-50); color: var(--purple-700); }
+
+    /* Case panel */
+    .case-panel {
+      width: 380px;
+      flex-shrink: 0;
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .panel-section {
+      padding: var(--space-4);
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-section:last-child { border-bottom: none; flex: 1; }
+
+    .client-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: var(--space-3);
+    }
+    .client-identity { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+    .client-name { font-size: var(--fs-md); font-weight: 600; line-height: 1.25; color: var(--fg-strong); }
+    .client-actions { display: flex; gap: var(--space-2); }
+
+    .contact-row {
+      display: flex; align-items: center; gap: var(--space-2);
+      font-size: var(--fs-base); margin-bottom: var(--space-2);
+    }
+    .contact-row a { color: var(--purple-700); text-decoration: none; }
+    .contact-row a:hover { text-decoration: underline; }
+    .contact-row svg { color: var(--fg-muted); flex-shrink: 0; }
+    .contact-row a svg { color: var(--purple-700); }
+
+    .follow-up-row { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-1); }
+    .follow-up-btn {
+      font-family: inherit; font-size: var(--fs-base); color: var(--fg);
+      background: none; border: none; cursor: pointer;
+      display: flex; align-items: center; gap: 4px; padding: 4px 0;
+    }
+    .follow-up-btn:hover { color: var(--purple-700); }
+
+    .section-title-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: var(--space-3);
+    }
+    .section-title { font-size: var(--fs-md); font-weight: 600; color: var(--fg-strong); }
+    .property-address {
+      font-size: var(--fs-base); font-weight: 500; line-height: 1.4;
+      display: flex; align-items: flex-start; gap: var(--space-2);
+      margin-bottom: var(--space-3); color: var(--fg-strong);
+    }
+    .property-meta { display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--fs-base); }
+    .property-meta-row { display: flex; gap: var(--space-2); }
+    .property-meta-row .label { width: 56px; color: var(--fg-muted); flex-shrink: 0; }
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      font-size: var(--fs-base); cursor: pointer;
+      background: var(--bg); color: var(--fg-strong);
+      font-family: inherit;
+    }
+    .status-pill:hover { background: var(--slate-50); }
+    .show-more {
+      font-size: var(--fs-base); color: var(--purple-700);
+      background: none; border: none; cursor: pointer;
+      display: flex; align-items: center; gap: 4px;
+      margin-top: var(--space-2); padding: 0;
+      font-family: inherit;
+    }
+    .show-more:hover { color: var(--purple-800); }
+
+    .phase-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      padding: 0 var(--space-4);
+      background: var(--bg);
+    }
+    .phase-tab {
+      padding: var(--space-3) var(--space-4);
+      font-size: var(--fs-base); font-weight: 500;
+      color: var(--fg-muted);
+      background: none; border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .phase-tab:hover { color: var(--fg-strong); }
+    .phase-tab.active {
+      color: var(--purple-700);
+      border-bottom-color: var(--purple-600);
+      font-weight: 600;
+    }
+
+    .workflow-list {
+      padding: var(--space-3) var(--space-4) var(--space-4);
+      display: flex; flex-direction: column; gap: var(--space-2);
+    }
+    .workflow-card {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-3) 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background: var(--bg);
+      cursor: pointer;
+      text-align: left;
+      font-family: inherit;
+      width: 100%;
+      transition: border-color var(--dur-fast), background var(--dur-fast);
+    }
+    .workflow-card:hover { border-color: var(--border-strong); background: var(--slate-50); }
+    .workflow-card.active {
+      background: var(--purple-50);
+      border-color: var(--purple-200);
+    }
+    .workflow-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .workflow-dot.progress { background: var(--info-600); }
+    .workflow-dot.pending { background: var(--warning-600); }
+    .workflow-card.active .workflow-dot.progress {
+      box-shadow: 0 0 0 3px var(--purple-100);
+    }
+    .workflow-label { flex: 1; font-size: var(--fs-base); font-weight: 500; color: var(--fg-strong); }
+    .workflow-chevron { color: var(--fg-subtle); flex-shrink: 0; }
+
+    /* Workflow main */
+    .workflow-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: var(--bg-subtle);
+    }
+    .workflow-page-header {
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: var(--space-5) var(--space-8);
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+    }
+    .workflow-page-header h1 {
+      font-size: var(--fs-2xl); font-weight: 600;
+      line-height: 1.2; color: var(--fg-strong);
+    }
+    .workflow-body {
+      flex: 1;
+      overflow: auto;
+      padding: var(--space-6) var(--space-8);
+    }
+
+    .viewings-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+      flex-wrap: wrap;
+    }
+    .vendor-update-hint {
+      font-size: var(--fs-xs);
+      color: var(--fg-muted);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .vendor-update-hint .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--warning-600);
+    }
+    .header-actions { display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-4);
+      flex-wrap: wrap;
+      gap: var(--space-3);
+    }
+    .legend { display: flex; flex-wrap: wrap; gap: var(--space-3); font-size: var(--fs-xs); color: var(--fg-muted); }
+    .legend-item { display: flex; align-items: center; gap: 4px; }
+
+    /* Viewings list */
+    .viewings-list { display: flex; flex-direction: column; gap: var(--space-2); }
+    .viewing-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      cursor: pointer;
+      transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: var(--space-3);
+      align-items: start;
+    }
+    .viewing-card:hover { border-color: var(--purple-200); background: var(--slate-50); }
+    .viewing-card.selected {
+      border-color: var(--purple-600);
+      box-shadow: var(--shadow-focus);
+    }
+    .viewing-datetime { font-weight: 600; font-size: var(--fs-md); margin-bottom: 4px; color: var(--fg-strong); }
+    .viewing-buyer { color: var(--fg); margin-bottom: var(--space-2); }
+    .viewing-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+    .viewing-card-right {
+      text-align: right; font-size: var(--fs-xs); color: var(--fg-muted);
+      max-width: 140px;
+    }
+    .viewing-card-right.is-warning { color: var(--warning-600); font-weight: 600; }
+
+    /* Layout exploration */
+    .layout-explorer {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-4);
+      margin-bottom: var(--space-4);
+      box-shadow: var(--shadow-sm);
+    }
+    .layout-explorer-top {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-3);
+    }
+    .layout-explorer-title {
+      display: flex; align-items: center; gap: var(--space-2);
+      font-size: var(--fs-sm); font-weight: 600; color: var(--fg-strong);
+    }
+    .layout-select-wrap { min-width: 260px; flex: 1; max-width: 360px; }
+    .layout-select-wrap .field { margin-bottom: 0; }
+    .layout-hint {
+      font-size: var(--fs-sm); color: var(--fg-muted); line-height: 1.45;
+      padding-top: var(--space-3);
+      border-top: 1px solid var(--slate-100);
+    }
+    .layout-hint strong { color: var(--fg-strong); font-weight: 600; }
+
+    .tag {
+      display: inline-block;
+      font-size: 8px; font-weight: 700;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      padding: 4px 8px; border-radius: var(--radius-xs);
+    }
+    .tag-purple { background: var(--purple-50); color: var(--purple-700); }
+
+    .layout-views { min-width: 0; }
+    .layout-view { display: none; }
+    .layout-view.is-active { display: block; }
+
+    /* Grouped by day */
+    .day-group { margin-bottom: var(--space-5); }
+    .day-group-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: var(--space-2) var(--space-3);
+      background: var(--slate-100);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-2);
+    }
+    .day-group-header h3 { font-size: var(--fs-sm); font-weight: 600; color: var(--fg-strong); margin: 0; }
+    .day-group-header .count { font-size: var(--fs-xs); color: var(--fg-muted); font-weight: 500; }
+    .day-group-header.is-today { background: var(--purple-50); border: 1px solid var(--purple-200); }
+    .day-group-header.is-today h3 { color: var(--purple-700); }
+    .day-group-cards { display: flex; flex-direction: column; gap: var(--space-2); padding-left: var(--space-1); }
+
+    /* Status board */
+    .status-board {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(160px, 1fr));
+      gap: var(--space-3);
+      overflow-x: auto;
+      padding-bottom: var(--space-2);
+    }
+    @media (max-width: 1100px) {
+      .status-board { grid-template-columns: repeat(2, 1fr); }
+    }
+    .board-column {
+      background: var(--slate-50);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      min-height: 200px;
+      display: flex; flex-direction: column;
+    }
+    .board-column-head {
+      padding: var(--space-3);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--space-2);
+    }
+    .board-column-head h3 { font-size: var(--fs-xs); font-weight: 600; color: var(--fg-strong); margin: 0; }
+    .board-column-body {
+      padding: var(--space-2);
+      display: flex; flex-direction: column; gap: var(--space-2);
+      flex: 1;
+    }
+    .board-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+      cursor: pointer;
+      transition: background var(--dur-fast), border-color var(--dur-fast);
+    }
+    .board-card:hover { background: var(--slate-50); border-color: var(--purple-200); }
+    .board-card.selected { border-color: var(--purple-600); box-shadow: var(--shadow-focus); }
+    .board-card-time { font-size: var(--fs-xs); font-weight: 600; color: var(--fg-strong); margin-bottom: 4px; }
+    .board-card-buyer { font-size: var(--fs-sm); color: var(--fg); margin-bottom: var(--space-2); }
+    .board-card-meta { display: flex; flex-wrap: wrap; gap: 4px; }
+
+    /* Upcoming / past split */
+    .split-section { margin-bottom: var(--space-6); }
+    .split-section-head {
+      font-size: var(--fs-sm); font-weight: 600; color: var(--fg-strong);
+      margin-bottom: var(--space-3);
+      display: flex; align-items: center; gap: var(--space-2);
+    }
+    .split-section-head .badge { font-weight: 700; }
+
+    /* Table layout */
+    .viewings-table-wrap {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .viewings-table {
+      width: 100%; border-collapse: collapse; font-size: var(--fs-sm);
+    }
+    .viewings-table th {
+      text-align: left; font-weight: 600; font-size: var(--fs-xs);
+      padding: 10px 14px; background: var(--bg-subtle);
+      color: var(--fg-strong); border-bottom: 1px solid var(--border);
+    }
+    .viewings-table td {
+      padding: 12px 14px; border-bottom: 1px solid var(--slate-100);
+      color: var(--fg); vertical-align: middle;
+    }
+    .viewings-table tbody tr { cursor: pointer; transition: background var(--dur-fast); }
+    .viewings-table tbody tr:hover td { background: var(--slate-50); }
+    .viewings-table tbody tr.selected td { background: var(--purple-50); }
+    .viewings-table tbody tr:last-child td { border-bottom: 0; }
+    .viewings-table .td-buyer { font-weight: 600; color: var(--fg-strong); }
+    .viewings-table .td-muted { color: var(--fg-muted); font-size: var(--fs-xs); }
+
+    /* Diary (legacy exploration) */
+    .layout-view[data-layout="diary"] .diary-legacy-note {
+      font-size: var(--fs-xs); color: var(--warning-600);
+      background: var(--warning-50);
+      border: 1px solid #FDE68A;
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+      margin-bottom: var(--space-3);
+    }
+
+    /* Diary */
+    .diary-week {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .diary-week-header {
+      padding: var(--space-3) var(--space-4);
+      font-weight: 600;
+      color: var(--fg-strong);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .diary-days { display: grid; grid-template-columns: repeat(5, 1fr); min-height: 320px; }
+    .diary-day {
+      border-right: 1px solid var(--border);
+      padding: var(--space-2);
+      min-height: 280px;
+    }
+    .diary-day:last-child { border-right: none; }
+    .diary-day-label {
+      font-size: var(--fs-xs);
+      font-weight: 600;
+      color: var(--fg-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: var(--space-2);
+      text-align: center;
+    }
+    .diary-day-label.today { color: var(--purple-700); }
+    .diary-event {
+      background: var(--purple-50);
+      border-left: 3px solid var(--purple-600);
+      border-radius: var(--radius-xs);
+      padding: var(--space-2);
+      margin-bottom: 6px;
+      font-size: var(--fs-xs);
+      cursor: pointer;
+    }
+    .diary-event:hover { background: var(--purple-100); }
+    .diary-event.cancelled {
+      opacity: 0.55;
+      border-left-color: var(--fg-subtle);
+      background: var(--slate-100);
+    }
+    .diary-event-time { font-weight: 600; margin-bottom: 2px; color: var(--fg-strong); }
+    .diary-event-buyer { color: var(--fg); margin-bottom: 4px; }
+
+    /* Detail panel */
+    .layout-with-panel {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: var(--space-6);
+      align-items: start;
+    }
+    @media (max-width: 1200px) {
+      .layout-with-panel { grid-template-columns: 1fr; }
+    }
+
+    .detail-panel {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      position: sticky;
+      top: 0;
+    }
+    .detail-panel.hidden { display: none; }
+    @media (max-width: 1200px) {
+      .detail-panel:not(.hidden) {
+        position: fixed; inset: 0; z-index: 100;
+        background: color-mix(in srgb, var(--slate-900) 40%, transparent);
+        display: flex !important; justify-content: flex-end;
+        border-radius: 0; border: none; box-shadow: none;
+      }
+      .detail-panel:not(.hidden) .detail-panel-inner {
+        width: 100%; max-width: 400px; height: 100%; overflow: auto;
+        background: var(--bg);
+        border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+        box-shadow: var(--shadow-xl);
+      }
+    }
+    .detail-header {
+      padding: var(--space-4);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: var(--space-3);
+    }
+    .detail-header h2 { font-size: var(--fs-lg); font-weight: 600; color: var(--fg-strong); }
+    .detail-meta { font-size: var(--fs-sm); color: var(--fg-muted); margin-top: 4px; }
+    .detail-body { padding: var(--space-4); }
+    .detail-section { margin-bottom: var(--space-6); }
+    .detail-section:last-child { margin-bottom: 0; }
+    .detail-section-title {
+      font-size: var(--fs-xs);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--fg-muted);
+      margin-bottom: var(--space-3);
+    }
+    .status-buttons { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+    .status-btn {
+      font-family: inherit;
+      font-size: var(--fs-sm);
+      padding: 6px 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: var(--bg);
+      cursor: pointer;
+      color: var(--fg);
+      font-weight: 500;
+    }
+    .status-btn:hover { background: var(--slate-50); }
+    .status-btn.active {
+      border-color: var(--purple-600);
+      background: var(--purple-50);
+      color: var(--purple-700);
+      font-weight: 600;
+    }
+    .feedback-locked {
+      background: var(--bg-subtle);
+      border: 1px dashed var(--border-strong);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      font-size: var(--fs-sm);
+      color: var(--fg-muted);
+      text-align: center;
+    }
+    .feedback-actions { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-4); }
+
+    .rating-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--space-3); flex-wrap: wrap;
+    }
+    .rating-value {
+      font-size: var(--fs-sm); font-weight: 600; color: var(--fg-strong);
+      font-variant-numeric: tabular-nums;
+    }
+    .rating-picker { display: flex; gap: 4px; }
+    .rating-btn {
+      min-width: 32px; height: 32px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      background: var(--bg);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: var(--fs-sm);
+      font-weight: 600;
+      color: var(--fg-muted);
+    }
+    .rating-btn:hover { background: var(--slate-50); border-color: var(--border-strong); }
+    .rating-btn.is-selected {
+      background: var(--purple-50);
+      border-color: var(--purple-400);
+      color: var(--purple-700);
+    }
+
+    .internal-note {
+      background: var(--bg-subtle);
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+    }
+    .internal-note .detail-section-title { color: var(--warning-600); }
+    .internal-note .field-help { margin-bottom: var(--space-2); }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3);
+    }
+    .form-row .field { margin-bottom: 0; }
+
+    .modal-note { font-size: var(--fs-xs); color: var(--fg-muted); margin-top: var(--space-2); }
+
+    /* Offers & MOS */
+    .offers-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      margin-bottom: var(--space-5);
+      box-shadow: var(--shadow-sm);
+    }
+    .offers-card-head {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-4);
+    }
+    .offers-card-head h2 { font-size: var(--fs-lg); font-weight: 700; color: var(--fg-strong); margin: 0; }
+    .offers-card-head p { font-size: var(--fs-sm); color: var(--fg-muted); margin: 4px 0 0; max-width: 520px; }
+    .offer-rows { display: flex; flex-direction: column; gap: var(--space-2); }
+    .offer-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: var(--space-3);
+      align-items: center;
+      padding: var(--space-3) var(--space-4);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg-subtle);
+      transition: border-color var(--dur-fast), background var(--dur-fast);
+    }
+    .offer-row:hover { border-color: var(--purple-200); }
+    .offer-row.is-final {
+      border-color: var(--purple-400);
+      background: var(--purple-50);
+      box-shadow: 0 0 0 1px var(--purple-200);
+    }
+    .offer-row-buyer { font-weight: 600; color: var(--fg-strong); font-size: var(--fs-sm); }
+    .offer-row-meta { font-size: var(--fs-xs); color: var(--fg-muted); margin-top: 2px; }
+    .offer-row-price { font-size: var(--fs-md); font-weight: 700; color: var(--fg-strong); font-variant-numeric: tabular-nums; text-align: right; }
+    .offer-row-price.is-empty { color: var(--fg-subtle); font-weight: 500; font-size: var(--fs-sm); }
+    .offer-price-field { position: relative; }
+    .offer-price-field .input { padding-left: 28px; }
+    .offer-price-prefix {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      font-size: var(--fs-base); font-weight: 600; color: var(--fg-muted); pointer-events: none;
+    }
+    .mos-loading-scrim {
+      position: fixed; inset: 0; z-index: 400;
+      background: color-mix(in srgb, var(--slate-900) 55%, transparent);
+      display: none; align-items: center; justify-content: center; padding: var(--space-6);
+    }
+    .mos-loading-scrim.is-open { display: flex; }
+    .mos-loading-card {
+      background: var(--bg); border-radius: var(--radius-xl);
+      padding: var(--space-10) var(--space-8);
+      text-align: center; max-width: 360px; width: 100%;
+      box-shadow: var(--shadow-xl);
+    }
+    .mos-spinner {
+      width: 44px; height: 44px; margin: 0 auto var(--space-5);
+      border: 3px solid var(--purple-100);
+      border-top-color: var(--purple-600);
+      border-radius: 50%;
+      animation: mos-spin .85s linear infinite;
+    }
+    @keyframes mos-spin { to { transform: rotate(360deg); } }
+    .mos-loading-card h2 { font-size: var(--fs-lg); font-weight: 700; color: var(--fg-strong); margin: 0 0 8px; }
+    .mos-loading-card p { font-size: var(--fs-sm); color: var(--fg-muted); margin: 0; }
+
+    /* Responsive shell (Tailwind complements) */
+    @media (max-width: 1023px) {
+      .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+      .icon-rail {
+        grid-row: 2; grid-column: 1;
+        width: 100%; height: 56px; flex-direction: row;
+        border-right: none; border-top: 1px solid var(--border);
+        padding: 0 var(--space-4); justify-content: center;
+        position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+        background: var(--bg);
+      }
+      .rail-logo { margin-bottom: 0; margin-right: var(--space-4); }
+      .global-header { grid-column: 1; padding: 0 var(--space-4); }
+      .body-row {
+        grid-column: 1; flex-direction: column;
+        padding-bottom: 56px;
+      }
+      .case-panel {
+        width: 100%; max-height: none;
+        border-right: none; border-bottom: 1px solid var(--border);
+      }
+      .case-panel.is-collapsed .panel-section,
+      .case-panel.is-collapsed .phase-tabs,
+      .case-panel.is-collapsed .workflow-list { display: none; }
+      .case-panel-toggle { display: flex; }
+      .workflow-page-header { padding: var(--space-4); }
+      .workflow-body { padding: var(--space-4); }
+      .viewing-card { grid-template-columns: 1fr; }
+      .viewing-card-right { text-align: left; max-width: none; margin-top: var(--space-2); }
+      .status-board { grid-template-columns: 1fr 1fr; }
+      .diary-days { grid-template-columns: repeat(2, 1fr); overflow-x: auto; }
+      .form-row { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 639px) {
+      .stats-row { grid-template-columns: 1fr; }
+      .status-board { grid-template-columns: 1fr; }
+      .header-actions { width: 100%; }
+      .header-actions .btn { flex: 1; }
+      .layout-explorer-top { flex-direction: column; }
+      .layout-select-wrap { max-width: none; width: 100%; }
+      .viewings-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .viewings-table { min-width: 640px; }
+    }
+    .case-panel-toggle {
+      display: none; width: 100%; padding: var(--space-3) var(--space-4);
+      font-family: inherit; font-size: var(--fs-sm); font-weight: 600;
+      color: var(--fg-strong); background: var(--slate-50); border: none;
+      border-bottom: 1px solid var(--border); cursor: pointer;
+      align-items: center; justify-content: space-between; gap: var(--space-2);
+    }
+    .stats-row {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-3); margin-bottom: var(--space-5);
+    }
+    .stat-card {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: var(--space-3) var(--space-4);
+      box-shadow: var(--shadow-xs);
+    }
+    .stat-card .stat-value { font-size: var(--fs-xl); font-weight: 700; color: var(--fg-strong); }
+    .stat-card .stat-label { font-size: var(--fs-xs); color: var(--fg-muted); margin-top: 2px; }
+    .stat-card.is-warning { border-color: #FDE68A; background: var(--warning-50); }
+    .filters-bar {
+      display: flex; flex-wrap: wrap; gap: var(--space-3);
+      align-items: flex-end; margin-bottom: var(--space-4);
+    }
+    .filters-bar .field { margin-bottom: 0; flex: 1; min-width: 180px; }
+    .filter-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .filter-chip {
+      font-family: inherit; font-size: var(--fs-xs); font-weight: 600;
+      padding: 6px 12px; border-radius: var(--radius-full);
+      border: 1px solid var(--border); background: var(--bg);
+      color: var(--fg-muted); cursor: pointer;
+    }
+    .filter-chip.is-active {
+      background: var(--purple-50); border-color: var(--purple-200); color: var(--purple-700);
+    }
+    .empty-state {
+      text-align: center; padding: var(--space-10) var(--space-6);
+      color: var(--fg-muted); font-size: var(--fs-sm);
+    }
+    .empty-state strong { display: block; color: var(--fg-strong); margin-bottom: var(--space-2); }
+    .detail-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: color-mix(in srgb, var(--slate-900) 45%, transparent);
+      z-index: 99;
+    }
+    .detail-backdrop.is-visible { display: block; }
+    @media (min-width: 1201px) {
+      .detail-backdrop { display: none !important; }
+    }
+
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+    .btn-icon-sm { width: 32px; height: 32px; padding: 6px; }
+    .detail-section .field-help { margin-top: var(--space-2); }
+
+    /* —— v2 Command centre —— */
+    .v2-cmd {
+      display: grid;
+      grid-template-columns: 260px 1fr 300px;
+      gap: 16px;
+      align-items: start;
+    }
+    .v2-col {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 200px);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .v2-col-head {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 600;
+      font-size: var(--fs-sm);
+      color: var(--fg-strong);
+      flex-shrink: 0;
+    }
+    .v2-col-body {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
+    }
+    .v2-col-body-pad {
+      padding: 16px;
+    }
+    .v2-item {
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--slate-100);
+      cursor: pointer;
+      transition: background var(--dur-fast);
+    }
+    .v2-item:hover { background: var(--slate-50); }
+    .v2-item.is-active { background: var(--purple-50); }
+    .v2-item-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px;
+    }
+    .v2-item-dot--scheduled { background: var(--purple-500); }
+    .v2-item-dot--confirmed { background: var(--success-500); }
+    .v2-item-dot--cancelled, .v2-item-dot--no_show { background: var(--slate-300); }
+    .v2-item-buyer { font-weight: 600; font-size: 13px; color: var(--fg-strong); }
+    .v2-item-meta { font-size: 12px; color: var(--fg-muted); }
+    .v2-item-signals { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+    .v2-signal {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 2px 6px; border-radius: var(--radius-xs); border: 1px solid transparent;
+    }
+    .v2-signal--reminder { background: var(--purple-50); color: var(--purple-700); border-color: var(--purple-200); }
+    .v2-signal--feedback { background: var(--warning-50); color: var(--warning-600); border-color: #FDE68A; }
+    .v2-signal--rebook { background: var(--info-50); color: var(--info-600); border-color: #BFDBFE; }
+    .v2-signal--offer { background: var(--success-50); color: var(--success-700); border-color: #A7F3D0; }
+
+    .v2-detail-head {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .v2-detail-name {
+      font-size: 18px; font-weight: 700; color: var(--fg-strong);
+      display: flex; flex-direction: row; gap: 8px; flex-wrap: wrap; align-items: center;
+    }
+    .v2-lead-chip {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 2px 8px; border-radius: var(--radius-full);
+      background: var(--info-50); color: var(--info-600); border: 1px solid #BFDBFE;
+    }
+    .v2-detail-meta { font-size: 13px; color: var(--fg-muted); margin-top: 2px; }
+
+    .v2-section { margin-bottom: 20px; }
+    .v2-section-title {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+      color: var(--fg-muted); margin-bottom: 12px;
+    }
+    .v2-section-title-warn { color: var(--warning-600); }
+    .v2-section-title-info { color: var(--info-600); }
+
+    .v2-action-card {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--slate-100);
+    }
+    .v2-action-type {
+      display: flex; flex-direction: row; gap: 8px; align-items: center;
+      font-size: 11px; text-transform: uppercase; font-weight: 700;
+      color: var(--fg-muted); margin-bottom: 8px;
+    }
+    .v2-action-icon {
+      width: 20px; height: 20px; border-radius: var(--radius-xs);
+      display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .v2-action-icon--reminder { background: var(--purple-100); color: var(--purple-700); }
+    .v2-action-icon--feedback { background: var(--warning-50); color: var(--warning-600); }
+    .v2-action-icon--rebook { background: var(--info-50); color: var(--info-600); }
+    .v2-action-buyer { font-size: 13px; font-weight: 600; color: var(--fg-strong); }
+    .v2-action-sub { font-size: 12px; color: var(--fg-muted); margin-bottom: 8px; }
+    .v2-action-sent {
+      font-size: 12px; color: var(--success-700); font-weight: 600;
+      display: flex; flex-direction: row; gap: 4px; align-items: center;
+    }
+    .v2-section-divider {
+      padding: 8px 16px;
+      font-size: 11px; text-transform: uppercase; font-weight: 700;
+      color: var(--fg-subtle); background: var(--slate-50);
+      border-bottom: 1px solid var(--border);
+    }
+    .v2-vendor-item {
+      display: flex; flex-direction: row; gap: 8px; align-items: center;
+      padding: 5px 0; font-size: 13px;
+    }
+    .v2-vendor-item input[type="checkbox"] { accent-color: var(--purple-600); }
+    .v2-mos-info {
+      background: var(--purple-50); border: 1px solid var(--purple-200);
+      border-radius: var(--radius-md); padding: 12px; margin-bottom: 12px;
+    }
+    .v2-mos-amount { font-size: 16px; font-weight: 700; color: var(--purple-700); }
+    .v2-empty-state {
+      text-align: center; padding: 40px 16px;
+      color: var(--fg-muted); font-size: 13px;
+    }
+
+    .v2-status-btn {
+      font-family: inherit; font-size: var(--fs-sm); padding: 6px 12px;
+      border-radius: var(--radius-md); border: 1px solid var(--border);
+      background: var(--bg); cursor: pointer; color: var(--fg); font-weight: 500;
+    }
+    .v2-status-btn:hover { background: var(--slate-50); }
+    .v2-status-btn.active {
+      border-color: var(--purple-600); background: var(--purple-50);
+      color: var(--purple-700); font-weight: 600;
+    }
+    .v2-rating-btn {
+      min-width: 32px; height: 32px; border: 1px solid var(--border);
+      border-radius: var(--radius-xs); background: var(--bg); cursor: pointer;
+      font-family: inherit; font-size: var(--fs-sm); font-weight: 600; color: var(--fg-muted);
+    }
+    .v2-rating-btn:hover { background: var(--slate-50); border-color: var(--border-strong); }
+    .v2-rating-btn.is-selected {
+      background: var(--purple-50); border-color: var(--purple-400); color: var(--purple-700);
+    }
+
+    @media (max-width: 1300px) {
+      .v2-cmd { grid-template-columns: 220px 1fr 260px; }
+    }
+    @media (max-width: 1100px) {
+      .v2-cmd { grid-template-columns: 1fr 1fr; }
+      .v2-auto-col { grid-column: 1 / -1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app min-h-screen">
+    <nav class="icon-rail" aria-label="Main navigation">
+      <div class="rail-logo" aria-hidden="true"></div>
+      <div class="rail-item active" title="Cases">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 7l7-4 7 4v10l-7 4-7-4V7Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="rail-item" title="Calendar">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3" y="4" width="14" height="13" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M3 8h14M7 2v3M13 2v3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      </div>
+      <div class="rail-item" title="Contacts">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M4 17c0-3.3 2.7-5 6-5s6 1.7 6 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      </div>
+    </nav>
+
+    <header class="global-header">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a class="breadcrumb-item" href="#">Dashboard</a>
+        <svg class="breadcrumb-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+        <a class="breadcrumb-item" href="#">PU-0001</a>
+        <svg class="breadcrumb-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+        <span class="breadcrumb-item is-current" aria-current="page">Agency</span>
+      </nav>
+      <div class="header-actions-global">
+        <button type="button" class="btn-icon" aria-label="Help">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="7.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 13.5V10M10 6.5h.01" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </button>
+        <button type="button" class="btn-icon" aria-label="Notifications">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M15 6.5a5 5 0 0 0-10 0c0 5.25-1.25 6.75-1.25 6.75h12.5S15 11.75 15 6.5ZM8.75 17a1.25 1.25 0 0 0 2.5 0" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="avatar avatar-md" title="John Doe">JD</div>
+      </div>
+    </header>
+
+    <div class="body-row flex min-h-0 flex-1 overflow-hidden max-lg:flex-col">
+      <button type="button" class="case-panel-toggle" id="case-panel-toggle" aria-expanded="true">
+        <span>Case: Mr Hussain Somani · 12 Duarte Close</span>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+      <aside class="case-panel max-lg:w-full lg:w-[min(380px,100%)] lg:shrink-0" id="case-panel">
+        <section class="panel-section">
+          <div class="client-header">
+            <div class="client-identity">
+              <div class="avatar avatar-sm">HS</div>
+              <span class="client-name">Mr Hussain Somani</span>
+            </div>
+            <div class="client-actions">
+              <button type="button" class="btn-icon btn-icon-bordered" aria-label="Edit client">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 13.33h5.33M2 13.33l2.93-1.27a1.87 1.87 0 0 0 .6-.42l5.8-6.1a1.67 1.67 0 0 0 0-2.3 1.58 1.58 0 0 0-2.26 0l-5.8 6.1c-.12.13-.22.27-.3.43L2 13.33Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+              </button>
+              <button type="button" class="btn-icon btn-icon-bordered" aria-label="More options">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="4" r="1" fill="currentColor"/><circle cx="8" cy="8" r="1" fill="currentColor"/><circle cx="8" cy="12" r="1" fill="currentColor"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="contact-row">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5.66 2.67H3.33C2.6 2.67 2 3.27 2 4c0 5.52 4.48 10 10 10 .73 0 1.33-.6 1.33-1.33v-2.33l-2.83-.94-1.28 1.28a10.42 10.42 0 0 1-4.9-4.9L5.6 4.5 4.66 1.67" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <a href="tel:+447790259198">+44 7790 259198</a>
+            <button type="button" class="btn-icon" aria-label="Copy phone">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5.33 5.33V3.47c0-.56 0-.84.11-.96a.67.67 0 0 1 .29-.18c.16-.06.44-.06 1-.06h4.8c.56 0 .84 0 1.05.1a1 1 0 0 1 .44.45c.1.21.1.49.1 1.05v4.8c0 .56 0 .84-.1 1.05a1 1 0 0 1-.44.44c-.21.11-.49.11-1.05.11H9.87m-5.4 2.93h4.8c.56 0 .84 0 1.05-.1a1 1 0 0 0 .44-.45c.1-.21.1-.49.1-1.05v-4.8c0-.56 0-.84-.1-1.05a1 1 0 0 0-.44-.44c-.21-.11-.49-.11-1.05-.11h-4.8c-.56 0-.84 0-1.05.1a1 1 0 0 0-.44.45c-.1.21-.1.49-.1 1.05v4.8c0 .56 0 .84.1 1.05a1 1 0 0 0 .44.44c.21.11.49.11 1.05.11Z" stroke="currentColor" stroke-width="1.2"/></svg>
+            </button>
+          </div>
+          <div class="contact-row">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M1.33 4.67l5.42 3.61a2 2 0 0 0 2.22 0l5.36-3.61M2.67 12h10.66c.74 0 1.34-.6 1.34-1.33V5.33c0-.73-.6-1.33-1.34-1.33H2.67c-.74 0-1.34.6-1.34 1.33v5.34c0 .73.6 1.33 1.34 1.33Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <a href="mailto:hussain@example.com">hussain.somani@email.com</a>
+            <button type="button" class="btn-icon" aria-label="Copy email">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5.33 5.33V3.47c0-.56 0-.84.11-.96a.67.67 0 0 1 .29-.18c.16-.06.44-.06 1-.06h4.8c.56 0 .84 0 1.05.1a1 1 0 0 1 .44.45c.1.21.1.49.1 1.05v4.8c0 .56 0 .84-.1 1.05a1 1 0 0 1-.44.44c-.21.11-.49.11-1.05.11H9.87m-5.4 2.93h4.8c.56 0 .84 0 1.05-.1a1 1 0 0 0 .44-.45c.1-.21.1-.49.1-1.05v-4.8c0-.56 0-.84-.1-1.05a1 1 0 0 0-.44-.44c-.21-.11-.49-.11-1.05-.11h-4.8c-.56 0-.84 0-1.05.1a1 1 0 0 0-.44.45c-.1.21-.1.49-.1 1.05v4.8c0 .56 0 .84.1 1.05a1 1 0 0 0 .44.44c.21.11.49.11 1.05.11Z" stroke="currentColor" stroke-width="1.2"/></svg>
+            </button>
+          </div>
+          <div class="follow-up-row">
+            <button type="button" class="follow-up-btn">
+              Add follow-up
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 3.33v9.34M3.33 8h9.34" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-title-row">
+            <span class="section-title">Property</span>
+            <button type="button" class="btn-icon btn-icon-bordered btn-icon-sm" aria-label="Expand property">
+              <svg width="16" height="16" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M4.5 6.75L9 11.25l4.5-4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+          <div class="property-address">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.33L2.67 6.67v6.66h10.66V6.67L8 1.33Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+            <span>12 Duarte Close Harrow HA1 4GW</span>
+            <button type="button" class="btn-icon" aria-label="Copy address">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5.33 5.33V3.47c0-.56 0-.84.11-.96a.67.67 0 0 1 .29-.18c.16-.06.44-.06 1-.06h4.8c.56 0 .84 0 1.05.1a1 1 0 0 1 .44.45c.1.21.1.49.1 1.05v4.8c0 .56 0 .84-.1 1.05a1 1 0 0 1-.44.44c-.21.11-.49.11-1.05.11H9.87m-5.4 2.93h4.8c.56 0 .84 0 1.05-.1a1 1 0 0 0 .44-.45c.1-.21.1-.49.1-1.05v-4.8c0-.56 0-.84-.1-1.05a1 1 0 0 0-.44-.44c-.21-.11-.49-.11-1.05-.11h-4.8c-.56 0-.84 0-1.05.1a1 1 0 0 0-.44.45c-.1.21-.1.49-.1 1.05v4.8c0 .56 0 .84.1 1.05a1 1 0 0 0 .44.44c.21.11.49.11 1.05.11Z" stroke="currentColor" stroke-width="1.2"/></svg>
+            </button>
+          </div>
+          <div class="property-meta">
+            <div class="property-meta-row"><span class="label">Price</span><span>£400,000</span></div>
+            <div class="property-meta-row"><span class="label">Type</span><span>Sale</span></div>
+            <div class="property-meta-row"><span class="label">Tenure</span><span>Leasehold</span></div>
+            <div class="property-meta-row">
+              <span class="label">Status</span>
+              <button type="button" class="status-pill">
+                Onboarding
+                <svg width="14" height="14" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M4.5 6.75L9 11.25l4.5-4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+          </div>
+          <button type="button" class="show-more">
+            Show more
+            <svg width="14" height="14" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M4.5 6.75L9 11.25l4.5-4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>
+        </section>
+
+        <nav class="phase-tabs" aria-label="Case phase">
+          <button type="button" class="phase-tab active">Agency</button>
+          <button type="button" class="phase-tab">Conveyancing</button>
+          <button type="button" class="phase-tab">Hub</button>
+        </nav>
+
+        <div class="workflow-list" aria-label="Agency workflows">
+          <button type="button" class="workflow-card">
+            <span class="workflow-dot progress" aria-hidden="true"></span>
+            <span class="workflow-label">Instruction</span>
+            <svg class="workflow-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          </button>
+          <button type="button" class="workflow-card">
+            <span class="workflow-dot pending" aria-hidden="true"></span>
+            <span class="workflow-label">Marketing</span>
+            <svg class="workflow-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          </button>
+          <button type="button" class="workflow-card active" aria-current="page">
+            <span class="workflow-dot progress" aria-hidden="true"></span>
+            <span class="workflow-label">Viewings and feedback</span>
+            <svg class="workflow-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          </button>
+          <button type="button" class="workflow-card">
+            <span class="workflow-dot pending" aria-hidden="true"></span>
+            <span class="workflow-label">Offer and MOS</span>
+            <svg class="workflow-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          </button>
+          <button type="button" class="workflow-card">
+            <span class="workflow-dot pending" aria-hidden="true"></span>
+            <span class="workflow-label">Commission invoicing</span>
+            <svg class="workflow-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </aside>
+
+      <main class="workflow-main flex min-w-0 flex-1 flex-col">
+        <header class="workflow-page-header">
+          <button type="button" class="btn-icon btn-icon-bordered" aria-label="Back to workflows">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M11.25 13.5L6.75 9l4.5-4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <h1>Viewings and feedback</h1>
+        </header>
+
+        <div class="workflow-body">
+          <header class="viewings-header flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <p class="vendor-update-hint" id="vendor-update-hint"><span class="dot" aria-hidden="true"></span> <span id="vendor-update-text">Last vendor update sent 3 days ago</span></p>
+            <div class="header-actions flex flex-wrap gap-2 sm:gap-3">
+              <button type="button" class="btn btn-secondary" id="btn-vendor-update">Send vendor update</button>
+              <button type="button" class="btn btn-primary" id="btn-schedule">Schedule viewing</button>
+            </div>
+          </header>
+
+          <div class="stats-row" id="stats-row" aria-live="polite"></div>
+
+          <section class="offers-card" id="offers-selection-card" aria-label="Offer selection"></section>
+
+          <div class="filters-bar">
+            <label class="field flex-1 min-w-[200px]">
+              <span class="field-label">Search viewings</span>
+              <input class="input" type="search" id="search-viewings" placeholder="Buyer name or notes…" autocomplete="off">
+            </label>
+            <div class="filter-chips" id="filter-chips" role="group" aria-label="Filter by status"></div>
+          </div>
+
+          <div class="layout-explorer" role="region" aria-label="Layout exploration">
+            <div class="layout-explorer-top">
+              <div class="layout-explorer-title">
+                <span class="tag tag-purple">Prototype</span>
+                <span>Layout exploration</span>
+              </div>
+              <div class="layout-select-wrap w-full sm:max-w-xs">
+                <label class="field">
+                  <span class="field-label">View variation</span>
+                  <select class="input layout-select" id="layout-switcher" aria-describedby="layout-hint">
+                    <option value="list" selected>Chronological list (recommended)</option>
+                    <option value="grouped">Grouped by day</option>
+                    <option value="board">Status board</option>
+                    <option value="split">Upcoming and past</option>
+                    <option value="table">Compact table</option>
+                    <option value="diary">Week grid — legacy (not recommended)</option>
+                    <option value="v2-command">v2 draft — Command centre</option>
+                  </select>
+                </label>
+              </div>
+              <div class="legend hidden sm:flex">
+                <span class="legend-item"><span class="badge badge-success">Confirmed</span></span>
+                <span class="legend-item"><span class="badge badge-purple">Scheduled</span></span>
+                <span class="legend-item"><span class="badge badge-warning">Needs action</span></span>
+              </div>
+            </div>
+            <p class="layout-hint" id="layout-hint"></p>
+          </div>
+
+          <div class="layout-with-panel grid gap-4 xl:grid-cols-[1fr_min(360px,100%)] lg:gap-6">
+            <section class="layout-views min-w-0" id="layout-views">
+              <div class="layout-view is-active" data-layout="list"><div id="render-list" class="viewings-list"></div></div>
+              <div class="layout-view" data-layout="grouped"><div id="render-grouped"></div></div>
+              <div class="layout-view" data-layout="board"><div id="render-board"></div></div>
+              <div class="layout-view" data-layout="split"><div id="render-split"></div></div>
+              <div class="layout-view" data-layout="table"><div id="render-table"></div></div>
+              <div class="layout-view" data-layout="diary">
+                <p class="diary-legacy-note">Legacy exploration only — a full week grid is costly to build and maintain. Prefer list, grouped by day, or status board for v1.</p>
+                <div id="render-diary"></div>
+              </div>
+              <div class="layout-view" data-layout="v2-command"><div id="render-v2"></div></div>
+            </section>
+
+            <div class="detail-backdrop" id="detail-backdrop" aria-hidden="true"></div>
+            <aside class="detail-panel hidden" id="detail-panel">
+              <div class="detail-panel-inner">
+                <header class="detail-header">
+                  <div>
+                    <h2 id="detail-buyer">—</h2>
+                    <p class="detail-meta" id="detail-meta">—</p>
+                  </div>
+                  <button type="button" class="btn-icon" id="detail-close" aria-label="Close panel">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </header>
+                <div class="detail-body">
+                  <section class="detail-section">
+                    <h3 class="detail-section-title">Viewing status</h3>
+                    <div class="status-buttons" id="status-buttons" role="group" aria-label="Viewing status"></div>
+                    <p class="field-help">Confirm only after the viewing took place — unlocks feedback options.</p>
+                  </section>
+                  <section class="detail-section" id="feedback-section"></section>
+                  <section class="detail-section" id="offer-section"></section>
+                  <section class="detail-section internal-note">
+                    <h3 class="detail-section-title">Internal notes</h3>
+                    <p class="field-help">Private — not included in vendor update</p>
+                    <label class="field">
+                      <span class="field-label sr-only">Internal notes</span>
+                      <textarea class="input" id="internal-notes" rows="3" placeholder="Vendor prefers no Saturday viewings…"></textarea>
+                    </label>
+                  </section>
+                  <button type="button" class="btn btn-primary btn-block" id="btn-save-viewing">Save viewing</button>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal-scrim" id="schedule-modal" role="dialog" aria-modal="true" aria-labelledby="schedule-title">
+    <div class="modal">
+      <header class="modal-header">
+        <h2 class="modal-title" id="schedule-title">Schedule viewing</h2>
+        <button type="button" class="btn-icon" id="modal-close" aria-label="Close">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </header>
+      <div class="modal-body">
+        <label class="field">
+          <span class="field-label">Buyer / applicant</span>
+          <select class="input" id="buyer">
+            <option>Emma Richardson — £850k budget</option>
+            <option>David Chen — £820k budget</option>
+            <option>Priya Sharma — £875k budget</option>
+            <option>+ Add new applicant</option>
+          </select>
+        </label>
+        <div class="form-row">
+          <label class="field">
+            <span class="field-label">Date</span>
+            <input class="input" type="date" id="date" value="2026-05-17">
+          </label>
+          <label class="field">
+            <span class="field-label">Time</span>
+            <input class="input" type="time" id="time" value="14:00">
+          </label>
+        </div>
+        <label class="field">
+          <span class="field-label">Duration</span>
+          <select class="input" id="duration">
+            <option value="30">30 minutes</option>
+            <option value="45">45 minutes</option>
+            <option value="60">60 minutes</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label">Accompanied by</span>
+          <select class="input" id="accompanied">
+            <option>Agent</option>
+            <option>Owner / vendor</option>
+          </select>
+        </label>
+        <label class="field">
+          <span class="field-label">Assignee</span>
+          <select class="input" id="modal-assignee">
+            <option>Sarah K. (agent)</option>
+            <option>James P. (agent)</option>
+            <option>Unassigned</option>
+          </select>
+        </label>
+        <p class="modal-note">Linked to 12 Duarte Close · PU-0001</p>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="modal-cancel">Cancel</button>
+        <button type="button" class="btn btn-primary" id="modal-save">Save viewing</button>
+      </footer>
+    </div>
+  </div>
+
+  <div class="modal-scrim" id="vendor-modal" role="dialog" aria-modal="true" aria-labelledby="vendor-modal-title">
+    <div class="modal">
+      <header class="modal-header">
+        <h2 class="modal-title" id="vendor-modal-title">Send vendor update</h2>
+        <button type="button" class="btn-icon" id="vendor-modal-close" aria-label="Close">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </header>
+      <div class="modal-body">
+        <p style="font-size:var(--fs-sm);color:var(--fg-muted);margin-bottom:16px;">Select which viewings to include in the vendor update email. Only confirmed viewings with feedback are pre-selected.</p>
+        <div id="vendor-modal-list"></div>
+      </div>
+      <footer class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="vendor-modal-cancel">Cancel</button>
+        <button type="button" class="btn btn-primary" id="vendor-modal-send">Send update</button>
+      </footer>
+    </div>
+  </div>
+
+  <div class="mos-loading-scrim" id="mos-loading" role="status" aria-live="polite" aria-busy="true">
+    <div class="mos-loading-card">
+      <div class="mos-spinner" aria-hidden="true"></div>
+      <h2>Generating MOS</h2>
+      <p>Preparing the memorandum of sale from the selected offer…</p>
+    </div>
+  </div>
+
+  <div class="toast-region" aria-live="polite">
+    <div class="toast toast-success" id="toast" role="status">
+      <span class="toast-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </span>
+      <div class="toast-body">
+        <div class="toast-title" id="toast-title">Done</div>
+        <div class="toast-msg" id="toast-msg">Vendor update email sent successfully</div>
+      </div>
+      <button type="button" class="toast-close" id="toast-close" aria-label="Dismiss">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+  <script>
+(function () {
+  'use strict';
+
+  const STATUSES = [
+    { key: 'scheduled', label: 'Scheduled', badge: 'badge-purple' },
+    { key: 'confirmed', label: 'Confirmed', badge: 'badge-success' },
+    { key: 'cancelled', label: 'Cancelled', badge: 'badge-slate' },
+    { key: 'no_show', label: 'No show', badge: 'badge-danger' },
+  ];
+
+  const FILTERS = [
+    { key: 'all', label: 'All' },
+    { key: 'scheduled', label: 'Scheduled' },
+    { key: 'confirmed', label: 'Confirmed' },
+    { key: 'needs_feedback', label: 'Needs feedback' },
+    { key: 'closed', label: 'Closed' },
+  ];
+
+  const ACCOMPANIED = { agent: 'Agent', owner: 'Owner' };
+  const ASSIGNEES = ['Sarah K. (agent)', 'James P. (agent)', 'Unassigned'];
+  const FINAL_OFFER_KEY = 'homey-vf-final-offer-PU-0001';
+  const LISTING_PRICE = 400000;
+
+  let vendorUpdateDaysAgo = 3;
+  let selectedId = '1';
+  let activeFilter = 'all';
+  let searchQuery = '';
+  let activeLayout = 'list';
+  let mosDone = false;
+
+  let viewings = [
+    {
+      id: '1',
+      buyer: 'Emma Richardson',
+      date: '2026-05-15',
+      timeStart: '14:00',
+      timeEnd: '14:30',
+      status: 'confirmed',
+      accompanied: 'agent',
+      feedback: 'received',
+      rating: 4,
+      interest: 'Very interested',
+      buyerNotes: 'Loved the garden, concerned about road noise. Wants second viewing with partner.',
+      internalNotes: 'Vendor prefers no Saturday viewings. Emma is cash buyer, chain-free.',
+      note: '4 of 5 · Very interested',
+      offerPrice: 395000,
+      flags: [],
+    },
+    {
+      id: '2',
+      buyer: 'David Chen',
+      date: '2026-05-16',
+      timeStart: '10:00',
+      timeEnd: '10:30',
+      status: 'scheduled',
+      accompanied: 'owner',
+      feedback: 'none',
+      rating: 0,
+      interest: '',
+      buyerNotes: '',
+      internalNotes: 'Second viewing — bring comparables.',
+      note: '2nd viewing',
+      offerPrice: null,
+      flags: ['second'],
+    },
+    {
+      id: '3',
+      buyer: 'Priya Sharma',
+      date: '2026-05-16',
+      timeStart: '11:00',
+      timeEnd: '11:30',
+      status: 'scheduled',
+      accompanied: 'agent',
+      feedback: 'none',
+      rating: 0,
+      interest: '',
+      buyerNotes: '',
+      internalNotes: '',
+      note: 'Same day clash',
+      offerPrice: 388000,
+      flags: ['clash'],
+    },
+    {
+      id: '4',
+      buyer: 'Tom Bradley',
+      date: '2026-05-12',
+      timeStart: '15:30',
+      timeEnd: '16:00',
+      status: 'no_show',
+      accompanied: 'agent',
+      feedback: 'none',
+      rating: 0,
+      interest: '',
+      buyerNotes: '',
+      internalNotes: 'Cancelled by viewer via phone.',
+      note: 'Cancelled by viewer',
+      offerPrice: null,
+      flags: [],
+    },
+    {
+      id: '5',
+      buyer: 'Lisa Okonkwo',
+      date: '2026-05-10',
+      timeStart: '11:00',
+      timeEnd: '11:30',
+      status: 'confirmed',
+      accompanied: 'agent',
+      feedback: 'request_sent',
+      rating: 0,
+      interest: '',
+      buyerNotes: '',
+      internalNotes: '',
+      note: 'Awaiting response',
+      offerPrice: 382500,
+      flags: [],
+    },
+  ];
+
+  viewings.forEach(v => { v.assignee = v.assignee || 'Sarah K. (agent)'; v.reminderSent = false; v.rebookSent = false; });
+
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+
+  const layoutSwitcher = $('#layout-switcher');
+  const layoutHint = $('#layout-hint');
+  const layoutViews = $$('.layout-view');
+  const layoutViewsRoot = $('#layout-views');
+  const detailPanel = $('#detail-panel');
+  const detailBackdrop = $('#detail-backdrop');
+  const feedbackSection = $('#feedback-section');
+  const offerSection = $('#offer-section');
+  const scheduleModal = $('#schedule-modal');
+  const mosLoading = $('#mos-loading');
+  const toast = $('#toast');
+  const toastTitle = $('#toast-title');
+  const toastMsg = $('#toast-msg');
+
+  const layoutHints = {
+    list: '<strong>Chronological list:</strong> Simple scrollable cards, newest first. Easiest to build and scan after a busy day of viewings.',
+    grouped: '<strong>Grouped by day:</strong> Viewings clustered under day headers — good when several happen on the same date without building a calendar grid.',
+    board: '<strong>Status board:</strong> Columns by workflow stage. Helps agents see what needs action at a glance.',
+    split: '<strong>Upcoming and past:</strong> Separates future viewings from history — focused for agents checking what is next today.',
+    table: '<strong>Compact table:</strong> Dense scan of all fields — best when there are many viewings and agents need to compare quickly.',
+    diary: '<strong>Week grid (legacy):</strong> Calendar-style week view — included for comparison only; not recommended for v1 due to engineering cost.',
+    'v2-command': '<strong>v2 draft — Command centre:</strong> Three-panel view addressing all FigJam gaps: compact list with action signals, detail form with assignee + lead chip + reminder/rebook actions, and live automation feed with vendor update selector and MOS/retract controls.',
+  };
+
+  function parseDate(iso) {
+    const [y, m, d] = iso.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  function formatDate(iso, short) {
+    const dt = parseDate(iso);
+    const opts = short
+      ? { weekday: 'short', day: 'numeric', month: 'short' }
+      : { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' };
+    return dt.toLocaleDateString('en-GB', opts);
+  }
+
+  function formatTime(t) {
+    const [h, m] = t.split(':').map(Number);
+    const dt = new Date(2000, 0, 1, h, m);
+    return dt.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase();
+  }
+
+  function formatDateTime(v) {
+    return `${formatDate(v.date, true)} · ${formatTime(v.timeStart)} – ${formatTime(v.timeEnd)}`;
+  }
+
+  function formatDateTimeShort(v) {
+    return `${formatDate(v.date, true)} · ${formatTime(v.timeStart)}`;
+  }
+
+  function statusInfo(key) {
+    return STATUSES.find((s) => s.key === key) || STATUSES[0];
+  }
+
+  function feedbackBadge(v) {
+    if (v.feedback === 'received') return '<span class="badge badge-success">Feedback received</span>';
+    if (v.feedback === 'request_sent') return '<span class="badge badge-warning">Request sent</span>';
+    if (v.status === 'confirmed') return '<span class="badge badge-slate">No feedback</span>';
+    return '';
+  }
+
+  function accompaniedPill(v) {
+    const label = ACCOMPANIED[v.accompanied] || 'Agent';
+    return `<span class="badge badge-purple pill">${label} accompanied</span>`;
+  }
+
+  function isUpcoming(v) {
+    const today = parseDate('2026-05-15');
+    return parseDate(v.date) >= today && !['cancelled', 'no_show'].includes(v.status);
+  }
+
+  function needsFeedback(v) {
+    return v.status === 'confirmed' && v.feedback !== 'received';
+  }
+
+  function isClosed(v) {
+    return ['cancelled', 'no_show'].includes(v.status);
+  }
+
+  function boardColumn(v) {
+    if (isClosed(v)) return 'closed';
+    if (needsFeedback(v)) return 'needs_feedback';
+    if (v.status === 'scheduled') return 'scheduled';
+    return 'confirmed';
+  }
+
+  function filteredViewings() {
+    let list = [...viewings];
+    const q = searchQuery.trim().toLowerCase();
+    if (q) {
+      list = list.filter(
+        (v) =>
+          v.buyer.toLowerCase().includes(q) ||
+          v.note.toLowerCase().includes(q) ||
+          v.internalNotes.toLowerCase().includes(q) ||
+          v.buyerNotes.toLowerCase().includes(q),
+      );
+    }
+    if (activeFilter === 'all') return list;
+    if (activeFilter === 'needs_feedback') return list.filter(needsFeedback);
+    if (activeFilter === 'closed') return list.filter(isClosed);
+    return list.filter((v) => v.status === activeFilter);
+  }
+
+  function sortedViewings(list) {
+    return [...list].sort((a, b) => {
+      const da = a.date + a.timeStart;
+      const db = b.date + b.timeStart;
+      return db.localeCompare(da);
+    });
+  }
+
+  function esc(s) {
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function getFinalOfferId() {
+    return localStorage.getItem(FINAL_OFFER_KEY);
+  }
+
+  function setFinalOfferId(id) {
+    if (id) localStorage.setItem(FINAL_OFFER_KEY, id);
+    else localStorage.removeItem(FINAL_OFFER_KEY);
+  }
+
+  function formatOfferPrice(amount) {
+    if (amount == null || amount === '' || Number.isNaN(Number(amount))) return null;
+    return '£' + Number(amount).toLocaleString('en-GB');
+  }
+
+  function parseOfferInput(raw) {
+    const cleaned = String(raw).replace(/[£,\s]/g, '').trim();
+    if (!cleaned) return null;
+    const n = Number(cleaned);
+    return Number.isFinite(n) && n > 0 ? Math.round(n) : null;
+  }
+
+  function viewingsWithOffers() {
+    return viewings.filter((v) => v.offerPrice != null && !['cancelled', 'no_show'].includes(v.status));
+  }
+
+  function offerBadge(v) {
+    if (getFinalOfferId() === v.id) return '<span class="badge badge-purple pill">Final offer</span>';
+    if (v.offerPrice != null) return '<span class="badge badge-success pill">' + esc(formatOfferPrice(v.offerPrice)) + '</span>';
+    return '';
+  }
+
+  function emptyState(msg) {
+    return `<div class="empty-state"><strong>No viewings match</strong>${esc(msg)}</div>`;
+  }
+
+  function viewingCard(v, opts = {}) {
+    const sel = v.id === selectedId ? ' selected' : '';
+    const warn = v.flags.includes('clash') ? ' is-warning' : '';
+    const timeOnly = opts.timeOnly;
+    const dt = timeOnly
+      ? `${formatTime(v.timeStart)} – ${formatTime(v.timeEnd)}`
+      : formatDateTime(v);
+    return `<article class="viewing-card${sel}" data-id="${v.id}" tabindex="0">
+      <div>
+        <div class="viewing-datetime">${esc(dt)}</div>
+        <div class="viewing-buyer">${esc(v.buyer)}</div>
+        <div class="viewing-meta">
+          <span class="badge ${statusInfo(v.status).badge}">${statusInfo(v.status).label}</span>
+          ${accompaniedPill(v)}
+          ${feedbackBadge(v)}
+          ${offerBadge(v)}
+        </div>
+      </div>
+      <div class="viewing-card-right${warn}">${esc(v.note || '')}</div>
+    </article>`;
+  }
+
+  function renderList(list) {
+    const el = $('#render-list');
+    if (!list.length) {
+      el.innerHTML = emptyState('Try clearing filters or schedule a new viewing.');
+      return;
+    }
+    el.innerHTML = sortedViewings(list).map((v) => viewingCard(v)).join('');
+  }
+
+  function renderGrouped(list) {
+    const el = $('#render-grouped');
+    if (!list.length) {
+      el.innerHTML = emptyState('No viewings for this filter.');
+      return;
+    }
+    const groups = new Map();
+    sortedViewings(list).forEach((v) => {
+      const k = v.date;
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(v);
+    });
+    const today = '2026-05-15';
+  let html = '';
+    for (const [date, items] of groups) {
+      const isToday = date === today;
+      html += `<div class="day-group">
+        <div class="day-group-header${isToday ? ' is-today' : ''}">
+          <h3>${esc(formatDate(date, true))}</h3>
+          <span class="count">${items.length} viewing${items.length > 1 ? 's' : ''}</span>
+        </div>
+        <div class="day-group-cards">${items.map((v) => viewingCard(v, { timeOnly: true })).join('')}</div>
+      </div>`;
+    }
+    el.innerHTML = html;
+  }
+
+  function renderBoard(list) {
+    const cols = {
+      scheduled: { title: 'Scheduled', items: [] },
+      confirmed: { title: 'Confirmed', items: [] },
+      needs_feedback: { title: 'Needs feedback', items: [] },
+      closed: { title: 'Closed', items: [] },
+    };
+    list.forEach((v) => cols[boardColumn(v)].items.push(v));
+    const el = $('#render-board');
+    if (!list.length) {
+      el.innerHTML = emptyState('Nothing on the board for this filter.');
+      return;
+    }
+    el.innerHTML = `<div class="status-board">${Object.entries(cols)
+      .map(
+        ([key, col]) => `<div class="board-column">
+        <div class="board-column-head"><h3>${col.title}</h3><span class="count">${col.items.length}</span></div>
+        <div class="board-column-body">${
+          col.items.length
+            ? col.items
+                .map((v) => {
+                  const sel = v.id === selectedId ? ' selected' : '';
+                  return `<div class="board-card${sel}" data-id="${v.id}" tabindex="0">
+                    <div class="board-card-time">${esc(formatDateTimeShort(v))}</div>
+                    <div class="board-card-buyer">${esc(v.buyer)}</div>
+                    <div class="board-card-meta">${feedbackBadge(v) || `<span class="badge ${statusInfo(v.status).badge}">${statusInfo(v.status).label}</span>`}</div>
+                  </div>`;
+                })
+                .join('')
+            : key === 'needs_feedback'
+              ? '<p class="field-help">Confirmed viewings waiting for buyer feedback appear here.</p>'
+              : ''
+        }</div>
+      </div>`,
+      )
+      .join('')}</div>`;
+  }
+
+  function renderSplit(list) {
+    const el = $('#render-split');
+    const up = list.filter(isUpcoming);
+    const past = list.filter((v) => !isUpcoming(v));
+    if (!list.length) {
+      el.innerHTML = emptyState('No upcoming or past viewings match.');
+      return;
+    }
+    el.innerHTML = `
+      <section class="split-section">
+        <h2 class="split-section-head">Upcoming <span class="badge badge-purple">${up.length}</span></h2>
+        <div class="viewings-list">${up.length ? up.map(viewingCard).join('') : '<p class="field-help">No upcoming viewings scheduled.</p>'}</div>
+      </section>
+      <section class="split-section">
+        <h2 class="split-section-head">Past <span class="badge badge-slate">${past.length}</span></h2>
+        <div class="viewings-list">${past.length ? sortedViewings(past).map(viewingCard).join('') : '<p class="field-help">No past viewings yet.</p>'}</div>
+      </section>`;
+  }
+
+  function renderTable(list) {
+    const el = $('#render-table');
+    if (!list.length) {
+      el.innerHTML = emptyState('Adjust filters to see table rows.');
+      return;
+    }
+    const fb = (v) => {
+      if (v.feedback === 'received') return '<span class="badge badge-success">Received</span>';
+      if (v.feedback === 'request_sent') return '<span class="badge badge-warning">Sent</span>';
+      return '<span class="badge badge-slate">None</span>';
+    };
+    el.innerHTML = `<div class="viewings-table-wrap overflow-x-auto">
+      <table class="viewings-table">
+        <thead><tr>
+          <th>Date and time</th><th>Buyer</th><th>Status</th><th>Offer</th><th>Accompanied by</th><th>Feedback</th><th>Notes</th>
+        </tr></thead>
+        <tbody>${sortedViewings(list)
+          .map((v) => {
+            const sel = v.id === selectedId ? ' class="selected"' : '';
+            return `<tr data-id="${v.id}" tabindex="0"${sel}>
+              <td>${esc(formatDate(v.date, true))}, ${esc(formatTime(v.timeStart))}</td>
+              <td class="td-buyer">${esc(v.buyer)}</td>
+              <td><span class="badge ${statusInfo(v.status).badge}">${statusInfo(v.status).label}</span></td>
+              <td class="td-muted">${v.offerPrice != null ? esc(formatOfferPrice(v.offerPrice)) : '—'}${getFinalOfferId() === v.id ? ' <span class="badge badge-purple">Final</span>' : ''}</td>
+              <td class="td-muted">${esc(ACCOMPANIED[v.accompanied])}</td>
+              <td>${fb(v)}</td>
+              <td class="td-muted">${esc(v.note || '—')}</td>
+            </tr>`;
+          })
+          .join('')}</tbody>
+      </table>
+    </div>`;
+  }
+
+  function renderDiary(list) {
+    const el = $('#render-diary');
+    const weekStart = parseDate('2026-05-12');
+    const days = [];
+    for (let i = 0; i < 5; i++) {
+      const d = new Date(weekStart);
+      d.setDate(d.getDate() + i);
+      const iso = d.toISOString().slice(0, 10);
+      days.push({ iso, label: d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' }) });
+    }
+    const byDay = Object.fromEntries(days.map((d) => [d.iso, []]));
+    list.forEach((v) => {
+      if (byDay[v.date]) byDay[v.date].push(v);
+    });
+    el.innerHTML = `<div class="diary-week">
+      <div class="diary-week-header">
+        <span>12 – 16 May 2026</span>
+        <button type="button" class="btn btn-tertiary btn-sm" id="diary-today">Today</button>
+      </div>
+      <div class="diary-days">${days
+        .map((d) => {
+          const isToday = d.iso === '2026-05-15';
+          const events = (byDay[d.iso] || [])
+            .map((v) => {
+              const cancelled = isClosed(v) ? ' cancelled' : '';
+              return `<div class="diary-event${cancelled}" data-id="${v.id}">
+                <div class="diary-event-time">${esc(formatTime(v.timeStart))}</div>
+                <div class="diary-event-buyer">${esc(v.buyer)}</div>
+                <span class="badge ${statusInfo(v.status).badge}">${statusInfo(v.status).label}</span>
+              </div>`;
+            })
+            .join('');
+          return `<div class="diary-day">
+            <div class="diary-day-label${isToday ? ' today' : ''}">${esc(d.label)}</div>
+            ${events}
+          </div>`;
+        })
+        .join('')}</div>
+    </div>`;
+    const todayBtn = $('#diary-today', el);
+    if (todayBtn) todayBtn.addEventListener('click', () => showToast('Diary', 'Jumped to today (prototype).'));
+  }
+
+  function renderV2(list) {
+    const el = $('#render-v2');
+    if (!el) return;
+
+    const sv = selectedId ? viewings.find(x => x.id === selectedId) : null;
+    const allV = viewings;
+
+    // Build column 1: compact list
+    const col1Items = sortedViewings(list).map(v => {
+      const dotClass = `v2-item-dot--${v.status}`;
+      const isActive = v.id === selectedId;
+      const signals = [];
+      if (v.status === 'scheduled' && !v.reminderSent) signals.push('<span class="v2-signal v2-signal--reminder">Reminder</span>');
+      if (v.status === 'confirmed' && v.feedback !== 'received') signals.push('<span class="v2-signal v2-signal--feedback">Feedback</span>');
+      if ((v.status === 'cancelled' || v.status === 'no_show') && !v.rebookSent) signals.push('<span class="v2-signal v2-signal--rebook">Rebook?</span>');
+      if (v.offerPrice != null) signals.push('<span class="v2-signal v2-signal--offer">Offer</span>');
+      return `<div class="v2-item${isActive ? ' is-active' : ''}" data-v2id="${esc(v.id)}">
+        <div class="v2-item-dot ${dotClass}"></div>
+        <div style="min-width:0;flex:1;">
+          <div class="v2-item-buyer">${esc(v.buyer)}</div>
+          <div class="v2-item-meta">${esc(formatDateTimeShort(v))}</div>
+          ${signals.length ? `<div class="v2-item-signals">${signals.join('')}</div>` : ''}
+        </div>
+      </div>`;
+    }).join('') || `<div class="v2-empty-state">No viewings</div>`;
+
+    // Build column 2: detail form
+    let col2Body = `<div class="v2-empty-state">Select a viewing from the list</div>`;
+    if (sv) {
+      const isLead = sv.offerPrice != null || sv.feedback === 'received' || sv.interest === 'Very interested';
+      const finalId = getFinalOfferId();
+      const isFinal = finalId === sv.id;
+
+      // Status buttons
+      const statusBtns = STATUSES.map(s =>
+        `<button type="button" class="v2-status-btn${sv.status === s.key ? ' active' : ''}" data-v2-status="${s.key}">${s.label}</button>`
+      ).join('');
+
+      // Assignee
+      const assigneeOpts = ASSIGNEES.map(a =>
+        `<option${sv.assignee === a ? ' selected' : ''}>${esc(a)}</option>`
+      ).join('');
+
+      // Auto-reminder (Scheduled only)
+      const reminderSection = sv.status === 'scheduled' ? `
+        <div class="v2-section">
+          <div class="v2-section-title v2-section-title-info">Auto-reminder</div>
+          ${sv.reminderSent
+            ? '<div class="v2-action-sent">✓ Reminder email sent</div>'
+            : `<p style="font-size:12px;color:var(--fg-muted);margin-bottom:8px;">A viewing reminder hasn't been sent yet.</p>
+               <button type="button" class="btn btn-secondary btn-sm" id="v2-send-reminder">Send reminder email</button>`
+          }
+        </div>` : '';
+
+      // Rebook (Cancelled / No show only)
+      const rebookSection = (sv.status === 'cancelled' || sv.status === 'no_show') ? `
+        <div class="v2-section">
+          <div class="v2-section-title v2-section-title-warn">Rebook</div>
+          ${sv.rebookSent
+            ? '<div class="v2-action-sent">✓ Rebook email sent</div>'
+            : `<p style="font-size:12px;color:var(--fg-muted);margin-bottom:8px;">Offer to rebook this viewing.</p>
+               <button type="button" class="btn btn-secondary btn-sm" id="v2-send-rebook">Send rebook email</button>`
+          }
+        </div>` : '';
+
+      // Feedback form (Confirmed only)
+      const interestOpts = ['Very interested','Considering','Not interested'].map(opt =>
+        `<option${sv.interest === opt ? ' selected' : ''}>${esc(opt)}</option>`
+      ).join('');
+      const ratingBtns = [1,2,3,4,5].map(i =>
+        `<button type="button" class="v2-rating-btn${sv.rating && i <= sv.rating ? ' is-selected' : ''}" data-v2-rating="${i}">${i}</button>`
+      ).join('');
+      const feedbackForm = sv.status === 'confirmed' ? `
+        <div class="v2-section">
+          <div class="v2-section-title">Buyer feedback</div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px;">
+            <button type="button" class="btn btn-secondary btn-sm" id="v2-btn-feedback-email" ${sv.feedback !== 'none' ? 'disabled' : ''}>Send feedback request email</button>
+            <button type="button" class="btn btn-tertiary btn-sm" id="v2-btn-feedback-manual">Log feedback manually</button>
+          </div>
+          <label class="field" style="margin-bottom:8px;">
+            <span class="field-label" style="font-size:12px;">Interest level</span>
+            <select class="input" id="v2-interest" style="font-size:13px;">
+              ${interestOpts}
+            </select>
+          </label>
+          <div class="field" style="margin-bottom:8px;">
+            <span class="field-label" style="font-size:12px;">Rating</span>
+            <div style="display:flex;gap:4px;margin-top:4px;" id="v2-rating-picker">${ratingBtns}</div>
+          </div>
+          <label class="field">
+            <span class="field-label" style="font-size:12px;">Buyer notes</span>
+            <textarea class="input" id="v2-buyer-notes" rows="3" placeholder="Buyer comments…" style="font-size:13px;">${esc(sv.buyerNotes)}</textarea>
+          </label>
+        </div>` : '';
+
+      // Offer price
+      const displayVal = sv.offerPrice != null ? sv.offerPrice.toLocaleString('en-GB') : '';
+      const offerForm = `
+        <div class="v2-section">
+          <div class="v2-section-title">Offer price</div>
+          <label class="field offer-price-field" style="margin-bottom:8px;">
+            <span class="sr-only">Proposed offer</span>
+            <span class="offer-price-prefix" aria-hidden="true">£</span>
+            <input class="input" type="text" id="v2-offer-price" inputmode="numeric" placeholder="e.g. 395000" value="${esc(displayVal)}" style="font-size:13px;">
+          </label>
+          ${isFinal ? '<p class="field-help"><span class="badge badge-purple pill">Final offer</span> — selected for MOS</p>' : ''}
+          ${sv.offerPrice != null && !isFinal ? '<button type="button" class="btn btn-secondary btn-sm" id="v2-btn-select-final">Select as final offer</button>' : ''}
+        </div>`;
+
+      col2Body = `
+        <div class="v2-detail-head">
+          <div class="v2-detail-name">
+            ${esc(sv.buyer)}
+            ${isLead ? '<span class="v2-lead-chip">Lead</span>' : ''}
+          </div>
+          <div class="v2-detail-meta">${esc(formatDateTime(sv))}</div>
+        </div>
+        <div class="v2-col-body-pad">
+          <div class="v2-section">
+            <div class="v2-section-title">Assignee</div>
+            <select class="input" id="v2-assignee" style="font-size:13px;">
+              ${assigneeOpts}
+            </select>
+          </div>
+          <div class="v2-section">
+            <div class="v2-section-title">Viewing status</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">${statusBtns}</div>
+          </div>
+          ${reminderSection}
+          ${rebookSection}
+          ${feedbackForm}
+          ${offerForm}
+          <div class="v2-section">
+            <div class="v2-section-title v2-section-title-warn">Internal notes</div>
+            <textarea class="input" id="v2-internal-notes" rows="3" placeholder="Private notes…" style="font-size:13px;">${esc(sv.internalNotes)}</textarea>
+          </div>
+          <button type="button" class="btn btn-primary btn-block" id="v2-btn-save">Save viewing</button>
+          <div style="margin-top:8px;">
+            <button type="button" class="btn btn-secondary btn-sm" id="v2-btn-schedule" style="width:100%;">+ Schedule new viewing</button>
+          </div>
+        </div>`;
+    }
+
+    // Build column 3: automation feed
+    const pendingReminders = allV.filter(v => v.status === 'scheduled' && !v.reminderSent);
+    const pendingFeedback = allV.filter(v => v.status === 'confirmed' && v.feedback === 'none');
+    const pendingRebook = allV.filter(v => (v.status === 'cancelled' || v.status === 'no_show') && !v.rebookSent);
+
+    const reminderCards = pendingReminders.map(v => `
+      <div class="v2-action-card">
+        <div class="v2-action-type">
+          <span class="v2-action-icon v2-action-icon--reminder">✉</span>
+          Reminder
+        </div>
+        <div class="v2-action-buyer">${esc(v.buyer)}</div>
+        <div class="v2-action-sub">${esc(formatDateTimeShort(v))}</div>
+        <button type="button" class="btn btn-secondary btn-sm" data-v2-auto-reminder="${v.id}">Send reminder</button>
+      </div>`).join('');
+
+    const feedbackCards = pendingFeedback.map(v => `
+      <div class="v2-action-card">
+        <div class="v2-action-type">
+          <span class="v2-action-icon v2-action-icon--feedback">?</span>
+          Feedback request
+        </div>
+        <div class="v2-action-buyer">${esc(v.buyer)}</div>
+        <div class="v2-action-sub">${esc(formatDateTimeShort(v))}</div>
+        <button type="button" class="btn btn-secondary btn-sm" data-v2-auto-feedback="${v.id}">Send feedback email</button>
+      </div>`).join('');
+
+    const rebookCards = pendingRebook.map(v => `
+      <div class="v2-action-card">
+        <div class="v2-action-type">
+          <span class="v2-action-icon v2-action-icon--rebook">↩</span>
+          Rebook prompt
+        </div>
+        <div class="v2-action-buyer">${esc(v.buyer)}</div>
+        <div class="v2-action-sub">${esc(statusInfo(v.status).label)} · ${esc(formatDateTimeShort(v))}</div>
+        <button type="button" class="btn btn-secondary btn-sm" data-v2-auto-rebook="${v.id}">Send rebook email</button>
+      </div>`).join('');
+
+    const autoEmpty = !pendingReminders.length && !pendingFeedback.length && !pendingRebook.length
+      ? '<div class="v2-empty-state">No pending actions</div>' : '';
+
+    // Vendor update checkboxes
+    const vendorViewings = allV.filter(v => !['cancelled','no_show'].includes(v.status));
+    const vendorItems = vendorViewings.map(v => {
+      const preChecked = v.status === 'confirmed' && v.feedback === 'received';
+      return `<div class="v2-vendor-item">
+        <input type="checkbox" id="v2vmu-${v.id}" data-v2vmid="${v.id}" ${preChecked ? 'checked' : ''}>
+        <label for="v2vmu-${v.id}">${esc(v.buyer)} <span class="badge ${statusInfo(v.status).badge}">${statusInfo(v.status).label}</span></label>
+      </div>`;
+    }).join('') || '<p style="font-size:12px;color:var(--fg-muted);">No eligible viewings.</p>';
+
+    // MOS section
+    const finalId = getFinalOfferId();
+    const finalV2 = finalId ? viewings.find(v => v.id === finalId) : null;
+    const mosSection = finalV2
+      ? `<div class="v2-col-body-pad">
+          <div class="v2-mos-info">
+            <div style="font-size:11px;font-weight:700;color:var(--purple-700);text-transform:uppercase;margin-bottom:4px;">Final offer</div>
+            <div class="v2-mos-amount">${esc(formatOfferPrice(finalV2.offerPrice))}</div>
+            <div style="font-size:12px;color:var(--fg-muted);margin-top:2px;">${esc(finalV2.buyer)}</div>
+          </div>
+          ${mosDone
+            ? `<div class="v2-action-sent" style="margin-bottom:8px;">✓ MOS generated</div>
+               <button type="button" class="btn btn-sm btn-block" style="background:var(--danger-50);color:var(--danger-700);border-color:var(--danger-500);" id="v2-col-retract">Retract MOS</button>`
+            : `<button type="button" class="btn btn-primary btn-sm btn-block" id="v2-col-generate-mos">Generate MOS</button>`
+          }
+        </div>`
+      : `<div class="v2-col-body-pad"><p style="font-size:12px;color:var(--fg-muted);">Select a final offer to generate MOS.</p></div>`;
+
+    el.innerHTML = `<div class="v2-cmd">
+      <!-- Column 1: Viewing list -->
+      <div class="v2-col">
+        <div class="v2-col-head">
+          <span>Viewings</span>
+          <span style="font-size:11px;color:var(--fg-muted);font-weight:500;">${list.length}</span>
+        </div>
+        <div class="v2-col-body">${col1Items}</div>
+      </div>
+
+      <!-- Column 2: Detail -->
+      <div class="v2-col" style="overflow:hidden;">
+        <div class="v2-col-body" style="display:flex;flex-direction:column;">
+          ${sv ? col2Body : `<div class="v2-empty-state">${col2Body}</div>`}
+        </div>
+      </div>
+
+      <!-- Column 3: Automations -->
+      <div class="v2-col v2-auto-col">
+        <div class="v2-col-head"><span>Automations</span></div>
+        <div class="v2-col-body">
+          ${autoEmpty}
+          ${reminderCards}
+          ${feedbackCards}
+          ${rebookCards}
+          <div class="v2-section-divider">Vendor update</div>
+          <div style="padding:12px 16px;">
+            ${vendorItems}
+            <button type="button" class="btn btn-secondary btn-sm btn-block" style="margin-top:10px;" id="v2-send-vendor-update">Send vendor update</button>
+          </div>
+          <div class="v2-section-divider">MOS</div>
+          ${mosSection}
+        </div>
+      </div>
+    </div>`;
+
+    // Wire events
+    $$('[data-v2id]', el).forEach(item => {
+      item.addEventListener('click', () => {
+        selectedId = item.dataset.v2id;
+        renderAll();
+      });
+    });
+
+    $$('[data-v2-status]', el).forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (!sv) return;
+        sv.status = btn.dataset.v2Status;
+        if (sv.status !== 'confirmed') sv.feedback = sv.feedback === 'received' ? 'received' : 'none';
+        if (sv.status === 'no_show') sv.note = 'No show';
+        if (sv.status === 'cancelled') sv.note = 'Cancelled';
+        renderAll();
+      });
+    });
+
+    $('#v2-send-reminder', el)?.addEventListener('click', () => {
+      if (!sv) return;
+      sv.reminderSent = true;
+      showToast('Reminder sent', `Reminder email sent to ${sv.buyer}.`);
+      renderAll();
+    });
+
+    $('#v2-send-rebook', el)?.addEventListener('click', () => {
+      if (!sv) return;
+      sv.rebookSent = true;
+      showToast('Rebook email sent', `Rebook offer sent to ${sv.buyer}.`);
+      renderAll();
+    });
+
+    $('#v2-btn-feedback-email', el)?.addEventListener('click', () => {
+      if (!sv) return;
+      sv.feedback = 'request_sent';
+      sv.note = 'Awaiting response';
+      showToast('Feedback request sent', `Email sent to ${sv.buyer}.`);
+      renderAll();
+    });
+
+    $('#v2-btn-feedback-manual', el)?.addEventListener('click', () => {
+      if (!sv) return;
+      sv.feedback = 'received';
+      if (!sv.rating) sv.rating = 4;
+      showToast('Feedback logged', 'Saved manually for this viewing.');
+      renderAll();
+    });
+
+    $$('[data-v2-rating]', el).forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (!sv) return;
+        sv.rating = Number(btn.dataset.v2Rating);
+        if (sv.interest) sv.note = `${sv.rating} of 5 · ${sv.interest}`;
+        $$('[data-v2-rating]', el).forEach(b => {
+          b.classList.toggle('is-selected', Number(b.dataset.v2Rating) <= sv.rating);
+        });
+      });
+    });
+
+    $('#v2-btn-select-final', el)?.addEventListener('click', () => {
+      if (!sv) return;
+      setFinalOfferId(sv.id);
+      showToast('Final offer selected', `${sv.buyer} at ${formatOfferPrice(sv.offerPrice)}.`);
+      renderAll();
+    });
+
+    $('#v2-col-retract', el)?.addEventListener('click', () => {
+      mosDone = false;
+      setFinalOfferId(null);
+      showToast('MOS retracted', 'Memorandum of sale has been retracted.');
+      renderAll();
+    });
+
+    $('#v2-assignee', el)?.addEventListener('change', (e) => {
+      if (!sv) return;
+      sv.assignee = e.target.value;
+    });
+
+    $('#v2-btn-save', el)?.addEventListener('click', () => {
+      if (!sv) return;
+      const internalNotes = $('#v2-internal-notes', el);
+      if (internalNotes) sv.internalNotes = internalNotes.value;
+      const interest = $('#v2-interest', el);
+      if (interest) {
+        sv.interest = interest.value;
+        if (sv.rating) sv.note = `${sv.rating} of 5 · ${sv.interest}`;
+      }
+      const buyerNotes = $('#v2-buyer-notes', el);
+      if (buyerNotes) sv.buyerNotes = buyerNotes.value;
+      const offerInput = $('#v2-offer-price', el);
+      if (offerInput) {
+        const parsed = parseOfferInput(offerInput.value);
+        sv.offerPrice = parsed;
+      }
+      const assigneeEl = $('#v2-assignee', el);
+      if (assigneeEl) sv.assignee = assigneeEl.value;
+      showToast('Viewing saved', `Changes saved for ${sv.buyer}.`);
+      renderAll();
+    });
+
+    $$('[data-v2-auto-reminder]', el).forEach(btn => {
+      btn.addEventListener('click', () => {
+        const v = viewings.find(x => x.id === btn.dataset.v2AutoReminder);
+        if (!v) return;
+        v.reminderSent = true;
+        showToast('Reminder sent', `Reminder email sent to ${v.buyer}.`);
+        renderAll();
+      });
+    });
+
+    $$('[data-v2-auto-feedback]', el).forEach(btn => {
+      btn.addEventListener('click', () => {
+        const v = viewings.find(x => x.id === btn.dataset.v2AutoFeedback);
+        if (!v) return;
+        v.feedback = 'request_sent';
+        v.note = 'Awaiting response';
+        showToast('Feedback request sent', `Email sent to ${v.buyer}.`);
+        renderAll();
+      });
+    });
+
+    $$('[data-v2-auto-rebook]', el).forEach(btn => {
+      btn.addEventListener('click', () => {
+        const v = viewings.find(x => x.id === btn.dataset.v2AutoRebook);
+        if (!v) return;
+        v.rebookSent = true;
+        showToast('Rebook email sent', `Rebook offer sent to ${v.buyer}.`);
+        renderAll();
+      });
+    });
+
+    $('#v2-send-vendor-update', el)?.addEventListener('click', () => {
+      const checked = $$('[data-v2vmid]:checked', el);
+      vendorUpdateDaysAgo = 0;
+      showToast(
+        'Vendor update sent',
+        checked.length
+          ? `Email includes ${checked.length} viewing${checked.length > 1 ? 's' : ''}.`
+          : 'Vendor update email sent (no viewings selected).',
+      );
+      renderStats();
+    });
+
+    $('#v2-col-generate-mos', el)?.addEventListener('click', generateMos);
+
+    $('#v2-btn-schedule', el)?.addEventListener('click', () => {
+      scheduleModal.classList.add('is-open');
+    });
+  }
+
+  function renderOffersSelection() {
+    const el = $('#offers-selection-card');
+    if (!el) return;
+    const offers = viewingsWithOffers();
+    const finalId = getFinalOfferId();
+    const finalV = finalId ? viewings.find((v) => v.id === finalId) : null;
+    const rows =
+      offers.length === 0
+        ? '<p class="field-help">No offer prices yet. Log a buyer&apos;s proposed price on a confirmed viewing in the detail panel.</p>'
+        : offers
+            .map((v) => {
+              const isFinal = finalId === v.id;
+              return `<div class="offer-row${isFinal ? ' is-final' : ''}" data-offer-id="${v.id}">
+                <div>
+                  <div class="offer-row-buyer">${esc(v.buyer)}</div>
+                  <div class="offer-row-meta">${esc(formatDateTimeShort(v))} · ${esc(statusInfo(v.status).label)}</div>
+                </div>
+                <div class="offer-row-price">${esc(formatOfferPrice(v.offerPrice))}</div>
+                <button type="button" class="btn ${isFinal ? 'btn-primary' : 'btn-secondary'} btn-sm" data-select-offer="${v.id}" ${isFinal ? 'disabled' : ''}>
+                  ${isFinal ? 'Selected' : 'Select as final'}
+                </button>
+              </div>`;
+            })
+            .join('');
+    el.innerHTML = `
+      <div class="offers-card-head">
+        <div>
+          <h2>Offer selection</h2>
+          <p>Each viewer can propose a price. Choose one offer as final (shared with the vendor) before generating the memorandum of sale. Listing price: ${formatOfferPrice(LISTING_PRICE)}.</p>
+        </div>
+        <button type="button" class="btn btn-primary" id="btn-generate-mos" ${finalId ? '' : 'disabled'}>
+          Generate MOS
+        </button>
+      </div>
+      ${finalV ? `<p class="field-help" style="margin-bottom:12px"><strong>Final offer:</strong> ${esc(finalV.buyer)} at ${esc(formatOfferPrice(finalV.offerPrice))}</p>` : ''}
+      <div class="offer-rows">${rows}</div>`;
+
+    $$('[data-select-offer]', el).forEach((btn) => {
+      btn.addEventListener('click', () => {
+        setFinalOfferId(btn.dataset.selectOffer);
+        showToast('Final offer selected', 'Vendor and agent can both confirm this offer before MOS.');
+        renderAll();
+      });
+    });
+    $('#btn-generate-mos', el)?.addEventListener('click', generateMos);
+  }
+
+  function generateMos() {
+    const finalId = getFinalOfferId();
+    if (!finalId) return;
+    const v = viewings.find((x) => x.id === finalId);
+    if (!v) return;
+    mosLoading.classList.add('is-open');
+    mosLoading.setAttribute('aria-busy', 'true');
+    setTimeout(() => {
+      mosLoading.classList.remove('is-open');
+      mosLoading.setAttribute('aria-busy', 'false');
+      mosDone = true;
+      showToast('MOS ready', `Memorandum of sale generated for ${v.buyer} at ${formatOfferPrice(v.offerPrice)}.`);
+      renderAll();
+    }, 2800);
+  }
+
+  function renderStats() {
+    const all = viewings;
+    const upcoming = all.filter(isUpcoming).length;
+    const needFb = all.filter(needsFeedback).length;
+    const offerCount = viewingsWithOffers().length;
+    const received = all.filter((v) => v.feedback === 'received').length;
+    $('#stats-row').innerHTML = `
+      <div class="stat-card"><div class="stat-value">${upcoming}</div><div class="stat-label">Upcoming</div></div>
+      <div class="stat-card${needFb ? ' is-warning' : ''}"><div class="stat-value">${needFb}</div><div class="stat-label">Needs feedback</div></div>
+      <div class="stat-card"><div class="stat-value">${offerCount}</div><div class="stat-label">Offers received</div></div>
+      <div class="stat-card"><div class="stat-value">${received}</div><div class="stat-label">Feedback received</div></div>`;
+    $('#vendor-update-text').textContent =
+      vendorUpdateDaysAgo === 0
+        ? 'Vendor update sent today'
+        : `Last vendor update sent ${vendorUpdateDaysAgo} day${vendorUpdateDaysAgo === 1 ? '' : 's'} ago`;
+  }
+
+  function renderFilters() {
+    $('#filter-chips').innerHTML = FILTERS.map(
+      (f) =>
+        `<button type="button" class="filter-chip${f.key === activeFilter ? ' is-active' : ''}" data-filter="${f.key}">${f.label}</button>`,
+    ).join('');
+  }
+
+  function renderAll() {
+    const list = filteredViewings();
+    renderStats();
+    renderOffersSelection();
+    renderList(list);
+    renderGrouped(list);
+    renderBoard(list);
+    renderSplit(list);
+    renderTable(list);
+    renderDiary(list);
+    renderV2(list);
+    if (selectedId && list.some((v) => v.id === selectedId)) {
+      renderDetail(selectedId);
+    } else if (list.length) {
+      selectViewing(list[0].id, false);
+    } else {
+      closeDetail();
+    }
+  }
+
+  function switchLayout(name) {
+    activeLayout = name;
+    layoutViews.forEach((v) => v.classList.toggle('is-active', v.dataset.layout === name));
+    layoutHint.innerHTML = layoutHints[name] || '';
+    // v2 command centre has its own built-in detail column, so hide the standard panel
+    if (name === 'v2-command') {
+      detailPanel.classList.add('hidden');
+      detailBackdrop.classList.remove('is-visible');
+      document.body.style.overflow = '';
+    }
+  }
+
+  function openDetail() {
+    detailPanel.classList.remove('hidden');
+    if (window.matchMedia('(max-width: 1200px)').matches) {
+      detailBackdrop.classList.add('is-visible');
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  function closeDetail() {
+    detailPanel.classList.add('hidden');
+    detailBackdrop.classList.remove('is-visible');
+    document.body.style.overflow = '';
+    $$('.viewing-card, .board-card, .viewings-table tbody tr').forEach((el) => el.classList.remove('selected'));
+  }
+
+  function selectViewing(id, open = true) {
+    selectedId = id;
+    $$('.viewing-card, .board-card, .viewings-table tbody tr').forEach((el) => {
+      el.classList.toggle('selected', el.dataset.id === id);
+    });
+    renderDetail(id);
+    if (open) openDetail();
+  }
+
+  function renderFeedbackUI(v) {
+    const confirmed = v.status === 'confirmed';
+    if (!confirmed) {
+      feedbackSection.innerHTML =
+        '<h3 class="detail-section-title">Buyer feedback</h3><div class="feedback-locked">Mark viewing as <strong>Confirmed</strong> after it takes place to send a feedback request or log feedback.</div>';
+      return;
+    }
+    const locked = v.feedback === 'received';
+    feedbackSection.innerHTML = `
+      <h3 class="detail-section-title">Buyer feedback</h3>
+      <div class="feedback-actions">
+        <button type="button" class="btn btn-secondary btn-block" id="btn-feedback-email" ${v.feedback !== 'none' ? 'disabled' : ''}>Send feedback request email</button>
+        <button type="button" class="btn btn-tertiary btn-block" id="btn-feedback-manual">Log feedback manually</button>
+      </div>
+      <label class="field">
+        <span class="field-label">Interest level</span>
+        <select class="input" id="interest" ${locked ? 'disabled' : ''}>
+          <option value="Very interested" ${v.interest === 'Very interested' ? 'selected' : ''}>Very interested</option>
+          <option value="Considering" ${v.interest === 'Considering' ? 'selected' : ''}>Considering</option>
+          <option value="Not interested" ${v.interest === 'Not interested' ? 'selected' : ''}>Not interested</option>
+        </select>
+      </label>
+      <div class="field">
+        <span class="field-label">Rating</span>
+        <div class="rating-row">
+          <span class="rating-value" id="rating-display" aria-live="polite">${v.rating ? v.rating + ' of 5' : 'Not rated'}</span>
+          <div class="rating-picker" id="rating-picker" role="group" aria-label="Rating out of 5"></div>
+        </div>
+      </div>
+      <label class="field">
+        <span class="field-label">Buyer notes</span>
+        <textarea class="input" id="buyer-notes" rows="4" placeholder="Buyer comments…" ${locked ? 'disabled' : ''}>${esc(v.buyerNotes)}</textarea>
+      </label>`;
+
+    const picker = $('#rating-picker');
+    const rating = v.rating || 0;
+    for (let i = 1; i <= 5; i++) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'rating-btn' + (i <= rating ? ' is-selected' : '');
+      btn.dataset.rating = String(i);
+      btn.setAttribute('aria-label', `${i} of 5`);
+      btn.textContent = String(i);
+      if (!locked) btn.addEventListener('click', () => updateRating(v.id, i));
+      picker.appendChild(btn);
+    }
+
+    $('#btn-feedback-email')?.addEventListener('click', () => {
+      v.feedback = 'request_sent';
+      v.note = 'Awaiting response';
+      showToast('Feedback request sent', `Email sent to ${v.buyer}.`);
+      renderAll();
+    });
+    $('#btn-feedback-manual')?.addEventListener('click', () => {
+      v.feedback = 'received';
+      if (!v.rating) updateRating(v.id, 4, false);
+      showToast('Feedback logged', 'Saved manually for this viewing.');
+      renderAll();
+    });
+  }
+
+  function updateRating(id, n, rerender = true) {
+    const v = viewings.find((x) => x.id === id);
+    if (!v) return;
+    v.rating = n;
+    const display = $('#rating-display');
+    if (display) display.textContent = n + ' of 5';
+    $$('#rating-picker .rating-btn').forEach((btn) => {
+      btn.classList.toggle('is-selected', Number(btn.dataset.rating) <= n);
+    });
+    if (v.interest) v.note = `${n} of 5 · ${v.interest}`;
+    if (rerender) renderAll();
+  }
+
+  function renderDetail(id) {
+    const v = viewings.find((x) => x.id === id);
+    if (!v) return;
+    $('#detail-buyer').textContent = v.buyer;
+    $('#detail-meta').textContent = formatDateTime(v);
+    $('#internal-notes').value = v.internalNotes || '';
+
+    $('#status-buttons').innerHTML = STATUSES.map(
+      (s) =>
+        `<button type="button" class="status-btn${v.status === s.key ? ' active' : ''}" data-status="${s.key}">${s.label}</button>`,
+    ).join('');
+
+    $$('#status-buttons .status-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        v.status = btn.dataset.status;
+        if (v.status !== 'confirmed') v.feedback = v.feedback === 'received' ? 'received' : 'none';
+        if (v.status === 'no_show') v.note = 'No show';
+        if (v.status === 'cancelled') v.note = 'Cancelled';
+        renderAll();
+      });
+    });
+
+    renderFeedbackUI(v);
+    renderOfferUI(v);
+  }
+
+  function renderOfferUI(v) {
+    const canOffer = v.status === 'confirmed';
+    const isFinal = getFinalOfferId() === v.id;
+    if (!canOffer) {
+      offerSection.innerHTML =
+        '<h3 class="detail-section-title">Offer price</h3><div class="feedback-locked">Confirm the viewing first — then record the buyer&apos;s proposed offer.</div>';
+      return;
+    }
+    const displayVal = v.offerPrice != null ? v.offerPrice.toLocaleString('en-GB') : '';
+    offerSection.innerHTML = `
+      <h3 class="detail-section-title">Offer price</h3>
+      <p class="field-help">Proposed purchase price from this viewer. Visible in offer selection for you and the vendor.</p>
+      <label class="field offer-price-field">
+        <span class="field-label">Proposed offer</span>
+        <span class="offer-price-prefix" aria-hidden="true">£</span>
+        <input class="input" type="text" id="offer-price-input" inputmode="numeric" placeholder="e.g. 395000" value="${esc(displayVal)}">
+      </label>
+      ${isFinal ? '<p class="field-help"><span class="badge badge-purple pill">Final offer</span> — selected for MOS</p>' : ''}
+      ${v.offerPrice != null && !isFinal ? `<button type="button" class="btn btn-secondary btn-block" id="btn-select-offer-detail">Select as final offer</button>` : ''}
+      ${isFinal && mosDone ? `<button type="button" class="btn btn-sm btn-block" style="margin-top:8px;background:var(--danger-50);color:var(--danger-700);border-color:var(--danger-500);" id="btn-retract-mos">Retract MOS</button>` : ''}`;
+
+    $('#btn-select-offer-detail')?.addEventListener('click', () => {
+      setFinalOfferId(v.id);
+      showToast('Final offer selected', `${v.buyer} at ${formatOfferPrice(v.offerPrice)}.`);
+      renderAll();
+    });
+    $('#btn-retract-mos')?.addEventListener('click', () => {
+      mosDone = false;
+      setFinalOfferId(null);
+      showToast('MOS retracted', 'Memorandum of sale has been retracted. You can select a new offer and regenerate.');
+      renderAll();
+    });
+  }
+
+  function showToast(title, msg) {
+    toastTitle.textContent = title;
+    toastMsg.textContent = msg;
+    toast.classList.add('is-visible');
+    setTimeout(() => toast.classList.remove('is-visible'), 3500);
+  }
+
+  function addViewingFromModal() {
+    const buyer = $('#buyer').value.split(' — ')[0].trim();
+    const date = $('#date').value;
+    const time = $('#time').value;
+    const dur = parseInt($('#duration').value, 10) || 30;
+    const [h, m] = time.split(':').map(Number);
+    const end = new Date(2000, 0, 1, h, m + dur);
+    const timeEnd = `${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`;
+    const accompanied = $('#accompanied').value.toLowerCase().includes('owner') ? 'owner' : 'agent';
+    const id = String(Date.now());
+    const assigneeEl = $('#modal-assignee');
+    const assignee = assigneeEl ? assigneeEl.value : ASSIGNEES[0];
+    const nv = {
+      id,
+      buyer,
+      date,
+      timeStart: time,
+      timeEnd,
+      status: 'scheduled',
+      accompanied,
+      feedback: 'none',
+      rating: 0,
+      interest: '',
+      buyerNotes: '',
+      internalNotes: '',
+      note: 'New viewing',
+      offerPrice: null,
+      flags: [],
+      assignee,
+      reminderSent: false,
+      rebookSent: false,
+    };
+    viewings.push(nv);
+    selectedId = id;
+    activeFilter = 'all';
+    searchQuery = '';
+    $('#search-viewings').value = '';
+    scheduleModal.classList.remove('is-open');
+    showToast('Viewing scheduled', `${buyer} on ${formatDate(date, true)} at ${formatTime(time)}.`);
+    renderAll();
+    selectViewing(id);
+  }
+
+  // Events
+  layoutSwitcher.addEventListener('change', () => switchLayout(layoutSwitcher.value));
+
+  layoutViewsRoot.addEventListener('click', (e) => {
+    const card = e.target.closest('.viewing-card, .board-card, .diary-event:not(.cancelled), .viewings-table tbody tr');
+    if (!card?.dataset.id) return;
+    selectViewing(card.dataset.id);
+  });
+
+  $('#filter-chips').addEventListener('click', (e) => {
+    const chip = e.target.closest('.filter-chip');
+    if (!chip) return;
+    activeFilter = chip.dataset.filter;
+    renderFilters();
+    renderAll();
+  });
+
+  $('#search-viewings').addEventListener('input', (e) => {
+    searchQuery = e.target.value;
+    renderAll();
+  });
+
+  $('#detail-close').addEventListener('click', closeDetail);
+  detailBackdrop.addEventListener('click', closeDetail);
+
+  $('#btn-schedule').addEventListener('click', () => scheduleModal.classList.add('is-open'));
+  ['modal-close', 'modal-cancel'].forEach((id) => {
+    $(`#${id}`).addEventListener('click', () => scheduleModal.classList.remove('is-open'));
+  });
+  scheduleModal.addEventListener('click', (e) => {
+    if (e.target === scheduleModal) scheduleModal.classList.remove('is-open');
+  });
+  $('#modal-save').addEventListener('click', addViewingFromModal);
+
+  $('#btn-vendor-update').addEventListener('click', () => {
+    openVendorModal();
+  });
+
+  function openVendorModal() {
+    const vendorModal = $('#vendor-modal');
+    const listEl = $('#vendor-modal-list');
+    const eligible = viewings.filter((v) => !['cancelled', 'no_show'].includes(v.status));
+    listEl.innerHTML = eligible.length
+      ? eligible.map(v => {
+          const preChecked = v.status === 'confirmed' && v.feedback === 'received';
+          return `<div class="v2-vendor-item">
+            <input type="checkbox" id="vmu-${v.id}" data-vmid="${v.id}" ${preChecked ? 'checked' : ''}>
+            <label for="vmu-${v.id}" style="font-size:13px;cursor:pointer;">
+              <strong>${esc(v.buyer)}</strong> — ${esc(formatDateTimeShort(v))}
+              <span class="badge ${statusInfo(v.status).badge}" style="margin-left:6px;">${statusInfo(v.status).label}</span>
+            </label>
+          </div>`;
+        }).join('')
+      : '<p style="font-size:13px;color:var(--fg-muted);">No eligible viewings found.</p>';
+    vendorModal.classList.add('is-open');
+    $('#vendor-modal-close').addEventListener('click', () => vendorModal.classList.remove('is-open'));
+    $('#vendor-modal-cancel').addEventListener('click', () => vendorModal.classList.remove('is-open'));
+    $('#vendor-modal-send').addEventListener('click', () => {
+      const checked = $$('[data-vmid]:checked', vendorModal);
+      vendorUpdateDaysAgo = 0;
+      vendorModal.classList.remove('is-open');
+      showToast(
+        'Vendor update sent',
+        checked.length
+          ? `Email includes ${checked.length} viewing${checked.length > 1 ? 's' : ''}.`
+          : 'Vendor update email sent (no viewings selected).',
+      );
+      renderStats();
+    });
+  }
+
+  $('#btn-save-viewing').addEventListener('click', () => {
+    const v = viewings.find((x) => x.id === selectedId);
+    if (!v) return;
+    v.internalNotes = $('#internal-notes').value;
+    const interest = $('#interest');
+    if (interest) {
+      v.interest = interest.value;
+      if (v.rating) v.note = `${v.rating} of 5 · ${v.interest}`;
+    }
+    const notes = $('#buyer-notes');
+    if (notes) v.buyerNotes = notes.value;
+    const offerInput = $('#offer-price-input');
+    if (offerInput) {
+      const parsed = parseOfferInput(offerInput.value);
+      v.offerPrice = parsed;
+      if (parsed && getFinalOfferId() === v.id && v.note && !v.note.includes('·')) {
+        v.note = formatOfferPrice(parsed);
+      }
+    }
+    showToast('Viewing saved', 'Changes saved for ' + v.buyer + '.');
+    renderAll();
+  });
+
+  $('#toast-close').addEventListener('click', () => toast.classList.remove('is-visible'));
+
+  $('#case-panel-toggle')?.addEventListener('click', () => {
+    const panel = $('#case-panel');
+    const open = panel.classList.toggle('is-collapsed');
+    $('#case-panel-toggle').setAttribute('aria-expanded', String(!open));
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (scheduleModal.classList.contains('is-open')) scheduleModal.classList.remove('is-open');
+      else if (!detailPanel.classList.contains('hidden')) closeDetail();
+    }
+  });
+
+  // Init
+  renderFilters();
+  switchLayout('list');
+  renderAll();
+  if (viewings.some((v) => v.id === selectedId)) selectViewing(selectedId, window.matchMedia('(min-width: 1201px)').matches);
+})();
+  </script>
+
+</body>
+</html>
