@@ -21,7 +21,7 @@ Three switchable perspectives (header segmented control: **Agent** | **Client** 
 | Perspective | User | What they see |
 |-------------|------|----------------|
 | **Agent** | John Doe (Towers Wills) | Case panel, viewings list + detail dock, all modals |
-| **Client** | Mr Hussain Somani (vendor/seller) | Read-only dashboard: stats, tabs (Summary / Upcoming / History / Offers) |
+| **Client** | Mr Hussain Somani (vendor/seller) | Seller dashboard + **Viewing and Feedback** workflow (list + read-only detail dock) |
 | **Viewer** | Applicant (e.g. Lisa Okinovo) | Simulated confirmation email inbox with confirm / reschedule / cancel actions |
 
 **Important naming:**
@@ -313,7 +313,7 @@ Edit lead name, email, phone linked to viewing.
 - **Only `summary` (feedback)** shared for completed viewings with feedback
 - No shows / cancelled / pending: status line only (*no feedback to share*); **no** agent notes, interest, buying situation, or internal fields
 - Email uses Homey template (agency footer, View feedback CTA, Powered by Homey)
-- Client **Summary** tab shows sent email HTML; Update Vendor button tooltip → “sent today”
+- Vendor update is stored in `lastVendorUpdate` (agent modal only); **not** shown on the client dashboard in v5 — vendor sees viewing data via the Viewing and Feedback workflow instead
 
 ---
 
@@ -337,28 +337,286 @@ Edit lead name, email, phone linked to viewing.
 
 ---
 
-## 9. Client (vendor) dashboard flows
+## 9. Client (vendor) dashboard — Viewing and Feedback
 
-**Property:** 12 Duarte Close — read-only viewings for Mr Hussain Somani.
+**Property:** 12 Duarte Close, Harrow HA1 4GW  
+**User:** Mr Hussain Somani (seller / vendor)  
+**Access:** Header perspective switch → **Client**
 
-### 9.1 Tabs
+The client experience has two screens: a **task dashboard** (property overview + workflow tasks) and the **Viewing and Feedback** workflow (full viewing management UI). All client data is projected from the same in-memory `viewings[]` array the agent uses, via a vendor-safe `toClientViewing()` mapper.
 
-| Tab | Content |
-|-----|---------|
-| **Summary** | Last **vendor update email** (after agent sends) or placeholder; recent activity cards |
-| **Upcoming** | `scheduled` + `confirmed`; search |
-| **History** | `completed`, `cancelled`, `no_show`; search + date-from filter |
-| **Offers** | Viewings with `offerPrice`; express preference (localStorage) |
+---
 
-### 9.2 Status pills (client-facing)
+### 9.1 Seller dashboard (home)
 
-Confirmed / Scheduled · Viewing took place / Feedback received · Did not attend (+ Rebook X/3) · Cancelled
+#### Layout
 
-### 9.3 Data surfaced to client
+| Area | Content |
+|------|---------|
+| **Welcome** | “Hello {first name}” + subheading |
+| **Property card** | Address, tags (Sale, Leasehold, guide price), ref PU-0001, agent Towers Wills, illustration |
+| **Alert banner** | Prompts vendor to open **Viewing and Feedback** when upcoming viewings exist |
+| **Pending tasks** | Workflow task cards (only **Viewing and Feedback** is interactive) |
+| **Case progress** | Brochure → Contract → Seller Enquiry Form → Viewing and Feedback → Offer selected → Memorandum of sale |
 
-On expandable viewing cards: interest, buying situation, viewing type, date/time, offer price when relevant, **feedback summary** when completed, optional agent note (`vendorNote`).
+#### Workflow tasks (`CLIENT_WORKFLOWS`)
 
-**Not shared with vendor via update email:** agent notes (`notesInternal`), interest/buying situation/price fields (those appear on client dashboard from assessment data, but vendor **email** only carries feedback summaries).
+| Task | Status | Interactive |
+|------|--------|-------------|
+| Brochure | Completed | No |
+| Contract | Completed | No |
+| Seller Enquiry Form | Completed | No |
+| **Viewing and Feedback** | In progress | **Yes** — opens viewing workflow |
+
+**Task list tabs:** `Pending tasks` | `Completed` (with count badge).
+
+#### Case progress logic
+
+- Brochure, Contract, Seller Enquiry Form → always shown as **done**
+- **Viewing and Feedback** → **active** while no offer preference expressed
+- When vendor **expresses an offer preference** (see §9.8), progress advances: Viewing and Feedback marked done, **Offer selected** becomes active
+
+#### Entry into viewings workflow
+
+1. Client perspective → dashboard  
+2. Click **Viewing and Feedback** task card  
+3. Full-screen workflow replaces dashboard (`clientScreen = 'viewings'`)  
+4. **Back to tasks** returns to dashboard and clears any open detail selection
+
+---
+
+### 9.2 Viewing and Feedback — page layout
+
+Mirrors the **agent viewings page** pattern: list column + detail dock, but **read-only** for the vendor.
+
+| Region | Behaviour |
+|--------|-----------|
+| **Page chrome** | Back link, title “Viewing and Feedback” |
+| **Content width** | Centered column matching agent workflow width: `max-width: calc(100vw − 276px)` (equivalent to viewport minus icon rail + case panel) |
+| **Controls** | Stacked **vertically** (see §9.3) |
+| **Main area** | Scrollable viewing **list** (left) + **detail dock** (right on large screens) |
+
+The workflow fills the viewport height; only the list column and dock body scroll internally (dashboard scroll is disabled while this screen is open).
+
+---
+
+### 9.3 Search and filters (vertical stack)
+
+Controls appear in this order, top to bottom:
+
+1. **Search** — full-width field with clear button; filters by applicant **first name** or date string (live as you type)
+2. **Time filter** — toggle row: `All` | `Upcoming` | `Past` | `Offers (n)`  
+   - `Offers` label includes count of viewings with a recorded offer  
+3. **Date from** — date input, **only visible when `Past` is selected**; filters history to viewings on or after that date
+
+There is no separate Offers tab or page — offers are a **filter** on the same list + dock experience.
+
+---
+
+### 9.4 List behaviour by time filter
+
+| Filter | Included statuses | List grouping | Sort order |
+|--------|-------------------|---------------|------------|
+| **All** | Every viewing | **Today** section; **Upcoming** preview (3 cards + Load more → switches to Upcoming); **Past** preview (3 cards + Load more → switches to Past) | Within buckets: by date/time |
+| **Upcoming** | `scheduled`, `confirmed` | Date groups (e.g. “Fri 30 May”) | Ascending by date |
+| **Past** | `completed`, `cancelled`, `no_show` | Meta groups: **Viewings held** then **Did not take place**, each with date sub-groups | Descending by date |
+| **Offers** | Viewings where `offerPrice != null` and not `cancelled` | Flat list (no date buckets) | **Highest offer first** |
+
+**Empty states:** contextual copy per filter (e.g. Offers: “Offer prices appear here once your agent records them after a viewing”).
+
+**Default selection:** first card in the filtered list is auto-selected when the filter changes (unless current selection remains in the list).
+
+---
+
+### 9.5 Viewing cards (list)
+
+Uses the same card component as the agent list (**Figma 4172:22372**), with vendor-safe labels:
+
+| Card element | Source |
+|--------------|--------|
+| **Name** | Applicant **first name only** (`viewerFirstName`) |
+| **Time** | Relative schedule label (e.g. “Today, 12:30pm - 1:30pm”) |
+| **Status badge** | Same five statuses as agent (Scheduled, Confirmed, Completed, No Show, Cancelled) |
+| **Offer badge** | Shown when `offerPrice` set on completed viewing — see §9.6 |
+| **Footer** | Completed: feedback summary text, or *“No Feedback Recorded”* (red italic) if empty |
+
+Clicking a card selects it (purple border) and populates the detail dock.
+
+---
+
+### 9.6 Offer badges on cards
+
+Same logic as agent list (`getOfferBadgeVariant`):
+
+| Variant | Colour | When |
+|---------|--------|------|
+| **Information** (grey) | No feedback summary on completed viewing | e.g. Tom £295k |
+| **Pending** (blue) | Feedback recorded, not the highest offer | e.g. Amy £300k |
+| **Success** (green) | Feedback recorded **and** highest offer on the case | e.g. Sofia £325k |
+
+**Seed offers (demo):** Sofia £325k (green), Amy £300k (blue), Tom £295k (grey, no feedback).
+
+---
+
+### 9.7 Detail dock (read-only)
+
+Read-only mirror of the agent detail dock (**Figma 4144:19379**). **No** editable inputs, **no** three-dot menu, **no** autosave, **no** footer CTAs.
+
+#### Header
+
+- Title: **Viewing Details** (or **Activity Log** in full-activity mode)
+- **Close (×)** on overlay breakpoints (see §9.9)
+- **Back** when viewing full activity log
+
+#### Body sections (when a viewing is selected)
+
+| Section | Content |
+|---------|---------|
+| **Hero** | Avatar (initials), first name, schedule, status badge |
+| **Logistics** | Accompanied by, assigned agent (with avatar) |
+| **Note from your agent** | `vendorNote` when present — separate from internal agent notes |
+| **No show** | Rebook attempt X of 3 |
+| **Cancelled** | Cancellation reason |
+| **Applicant Assessment** | Read-only fields: Feedback & Notes, Interest Level, Buying Situation, Proposed Price |
+| **Offer recorded** | Offer amount (£), **Express preference** button or “★ Your preference” badge |
+| **Activity log** | Last 2 entries + **View Full Activity** |
+
+Assessment section appears for `completed` viewings or when any assessment data exists (`summary`, `interest`, `buyingSituation`, `priceProposed`).
+
+#### Empty dock (large desktop only)
+
+When nothing is selected on wide screens: ghost-card illustration + *“Nothing selected yet — Pick a viewing from the list”*.
+
+On overlay breakpoints, the dock is **hidden until** a viewing is selected (no empty ghost in the drawer).
+
+---
+
+### 9.8 Offer preference flow
+
+| Step | Behaviour |
+|------|-----------|
+| 1 | Vendor opens a viewing with `offerPrice` in the detail dock (any filter, or **Offers** filter) |
+| 2 | Reviews full context: feedback, interest, buying situation, proposed price, offer amount |
+| 3 | Clicks **Express preference** in the **Offer recorded** section |
+| 4 | Preference saved to `localStorage` (`CLIENT_PREF_KEY` = `homey-vf-pref-offer-PU-0001`) |
+| 5 | Dock updates to **★ Your preference**; case progress advances toward **Offer selected** |
+| 6 | On **Offers** filter, a yellow **preference banner** appears at top of workspace |
+
+Preference is **per property case** in the prototype (single localStorage key). Only one preferred offer at a time; expressing a new preference overwrites the previous.
+
+---
+
+### 9.9 Responsive layout and detail dock modes
+
+| Breakpoint | Layout |
+|------------|--------|
+| **> 1100px** | List + dock **side by side** (dock fixed 413px). Empty dock visible when no selection. |
+| **≤ 1100px** | List **full width**. Selecting a card opens dock as a **right-side drawer** (~420px) with **dimmed backdrop** blocking background interaction. Close via ×, backdrop tap, or **Escape**. Body scroll locked. |
+| **≤ 640px** | Drawer becomes **full-screen** modal. Time-filter buttons wrap 2-per-row. Tighter page padding. |
+
+**Escape key behaviour:** closes activity full-view first, then closes the detail dock.
+
+**Resize:** crossing the 1100px breakpoint re-syncs overlay vs inline dock state.
+
+---
+
+### 9.10 Privacy and data boundaries
+
+Client viewings are built by `toClientViewing(v)` — a **vendor-safe projection** from the viewing record only. **Never** reads from the `leads[]` array.
+
+#### Shown to vendor
+
+| Field | Notes |
+|-------|-------|
+| Applicant **first name** | Not full name |
+| Schedule, status, accompanied by, agent | Logistics |
+| `summary`, `interest`, `buyingSituation`, `proposedPrice`, `priceProposed` | From agent assessment |
+| `offerPrice` | Recorded offer |
+| `vendorNote` | Optional note for vendor |
+| `cancelReason`, rebook count | On cancelled / no-show |
+| `activity[]` | Sanitised activity log entries |
+
+#### Never shown to vendor
+
+| Field | Notes |
+|-------|-------|
+| Applicant email, phone, full name | Lead PII |
+| Lead source, buyer profile fields | CRM data |
+| `notesInternal` | Agent-only notes |
+| Edit controls, status menu, delete/reschedule | Agent actions |
+
+#### Agent vendor email vs client dashboard
+
+- Agent **Send Vendor Update** email shares **feedback summaries only** for eligible viewings (see §7.8)  
+- Client dashboard shows **richer assessment data** (interest, buying situation, proposed price) in the read-only dock — sourced from what the agent recorded on the viewing, not from lead records  
+- Sent vendor email HTML is **not** rendered on the client dashboard in v5
+
+---
+
+### 9.11 Live sync with agent perspective
+
+When the agent creates viewings, updates assessment, changes status, or sends vendor updates, switching to (or refreshing) **Client** perspective reflects changes immediately:
+
+- `renderClientDashboard()` re-renders the list and dock when the client is already in the viewings workflow  
+- Offer badge colours and counts update when agent edits `summary` or `offerPrice`  
+- New viewings appear under the appropriate time filter
+
+---
+
+### 9.12 Client viewing flows — step by step
+
+#### Flow A — Review all viewings
+
+1. **Client** → open **Viewing and Feedback**  
+2. Default filter **All** — scan Today / Upcoming / Past sections  
+3. Click a card → read assessment and activity in dock  
+4. Use **Load more** on Upcoming or Past to switch filters
+
+#### Flow B — Check upcoming schedule
+
+1. Filter **Upcoming**  
+2. Search by applicant name if needed  
+3. Select viewing → confirm date, time, accompanied by, agent
+
+#### Flow C — Review past viewings and feedback
+
+1. Filter **Past**  
+2. Optional: set **Date from** to narrow history  
+3. Browse **Viewings held** vs **Did not take place**  
+4. Select completed viewing → read feedback summary and assessment fields
+
+#### Flow D — Compare offers and express preference
+
+1. Filter **Offers (n)**  
+2. List sorted highest offer first — each card still shows feedback footer and offer badge colour  
+3. Select Sofia (£325k, green) → review full assessment in dock  
+4. Click **Express preference**  
+5. Banner confirms preference; case progress shows **Offer selected** active on dashboard
+
+#### Flow E — Mobile
+
+1. Open workflow on narrow viewport  
+2. Tap viewing card → full-screen detail modal  
+3. Scroll assessment + offer sections  
+4. Close with × or swipe-away backdrop  
+5. Return to list to compare another offer
+
+---
+
+### 9.13 Client test scenarios (quick)
+
+| # | Scenario | Steps | Expected |
+|---|----------|-------|----------|
+| C1 | Dashboard entry | Client → click Viewing and Feedback | Workflow opens, All filter, first viewing selected |
+| C2 | Privacy | Inspect any dock | First name only; no email/phone; no internal notes |
+| C3 | Feedback footer | Past → Tom Bradley | Card shows *No Feedback Recorded*; grey offer badge |
+| C4 | Offer comparison | Offers filter | Sofia, Amy, Tom ordered by price; green/blue/grey badges |
+| C5 | Express preference | Offers → Sofia → Express preference | Badge on dock; banner on Offers filter; progress → Offer selected |
+| C6 | Agent sync | Agent fills Sofia feedback → Client refresh | Card footer and dock assessment update |
+| C7 | Responsive drawer | Resize to <1100px, select card | Drawer slides from right; backdrop blocks list |
+| C8 | Mobile fullscreen | Resize to <640px, select card | Full-screen modal; close returns to list |
+| C9 | Search | Search “Sofia” on All | Filters to Sofia’s viewing |
+| C10 | Past date filter | Past → date from 28 May 2026 | Only viewings on/after that date |
 
 ---
 
@@ -430,7 +688,14 @@ Debounced 500ms on: agent notes, feedback, interest, buying situation, proposed 
 3. **Agent** → Mark complete *or* advance simulated time past 13:00
 4. **Agent** → Fill feedback & notes on Sofia/Tom (autosaves)
 5. **Agent** → **Update Vendor** → select today/past viewings → Send update
-6. **Client** → Summary shows vendor email; check Upcoming / Offers
+6. **Client** → open **Viewing and Feedback** → filter **Past** → read Sofia feedback in dock → filter **Offers** → **Express preference** on Sofia
+
+### Client viewing & feedback
+1. **Client** → dashboard alert mentions upcoming count → click **Viewing and Feedback** task
+2. **All** filter → Today / Upcoming / Past sections → select Lisa → logistics in dock
+3. **Past** → **Viewings held** → Sofia → full assessment (feedback, interest, buying situation, £325k offer)
+4. **Offers (3)** → preference banner after expressing preference → case progress **Offer selected**
+5. Resize to **<1100px** → card opens drawer; **Escape** closes
 
 ### Filter & list
 1. Search “Sofia” · toggle **Today** · open **Filter** → Status: Completed · apply chip
@@ -470,6 +735,12 @@ Debounced 500ms on: agent notes, feedback, interest, buying situation, proposed 
 | Applicant picker | Basic dropdown | + New Lead + name list |
 | Prototype settings | Inline header bars | Compact red button → popover |
 | Reminder toggle in dock | Visible | Removed from UI (data field remains) |
+| Client dashboard | — | Task dashboard + **Viewing and Feedback** workflow |
+| Client viewings UI | — | Agent-parity list + read-only dock; **All / Upcoming / Past / Offers** filters (no separate Offers tab) |
+| Client privacy | — | First name only; no lead PII; `toClientViewing()` projection |
+| Client offer preference | — | Express preference in dock; `localStorage`; case progress → Offer selected |
+| Client responsive | — | Drawer @ ≤1100px; full-screen dock @ ≤640px; vertical filter stack |
+| Client vendor email | — | Not shown on dashboard (agent sends via Update Vendor modal only) |
 
 ---
 
@@ -484,4 +755,4 @@ Debounced 500ms on: agent notes, feedback, interest, buying situation, proposed 
 
 ---
 
-*Last updated to reflect `agent-view-v5.html` — viewings prototype with split vendor update, advanced filters, prototype controls popover, and confirmation email settings.*
+*Last updated to reflect `agent-view-v5.html` — agent viewings CRM, client Viewing and Feedback workflow (list + read-only dock, Offers filter, offer preference), viewer inbox, vendor update modal, and responsive detail drawer.*
