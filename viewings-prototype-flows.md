@@ -12,7 +12,7 @@ Open `agent-view-v5.html` in a browser to walk through every flow.
 
 **Prototype controls:** click the small **red settings gear icon** in the header (next to the avatar) to open **Prototype controls** — simulated date/time and email settings. Click outside or press Escape to close.
 
-**User flow guide:** a purple banner on the Agent viewings page and Client **Viewing and Feedback** workflow explains that this prototype has multiple flows per viewing state. **Explore user flows** opens an interactive guide (three phases); **Open in Figma** links to the full [User Flows board](https://www.figma.com/board/qf2usEVnmWE00ZC9GkDze3/User-Flows?node-id=366-2738). Each flow has a **Try in prototype** action that jumps to the matching demo viewing or perspective.
+**Scenario guide (in-prototype):** a purple banner on the Agent viewings page and Client **Viewing and Feedback** workflow opens **View scenarios** — an integrated modal (not a separate HTML file). Pick **Tab view** or **Dropdown view**, choose one of **13 scenarios** across **three phases**, then read **What happens** (numbered steps) and optional **Remember** rules. **Try in prototype** (footer button, when available) jumps to the matching demo viewing or perspective. **Open in Figma** links to the full [User Flows board](https://www.figma.com/board/qf2usEVnmWE00ZC9GkDze3/User-Flows?node-id=366-2738). Full catalogue: §12.5.
 
 ---
 
@@ -40,6 +40,7 @@ All three perspectives read from the same in-memory `viewings` and `leads` data.
 ### 2.1 Viewings page
 
 - **Title row:** `Viewings` with **Update Vendor** (secondary) and **Create Viewing** (primary)
+- **Scenario banner** (purple): “Pick a scenario to see what should happen at each step” — **View scenarios** opens the scenario guide modal; **Open in Figma** opens the User Flows board
 - **Left column:** search, time filters, advanced filter menu, scrollable viewing cards
 - **Right column:** detail dock (~413px); **empty on first load** (`selectedId = null`) — ghost cards + “Nothing selected yet”
 - Selecting a card opens full viewing details in the dock
@@ -176,6 +177,8 @@ Default **Simulated now**: 29 May 2026, 11:00.
 ---
 
 ## 6. Agent flows — by viewing status
+
+Behaviour below is grouped by **viewing status** in the UI. The in-prototype **scenario guide** (§12.5) groups the same journeys by **phase**: setup & confirmation (`scheduled` / `confirmed` / auto-complete), feedback & vendor update (`completed` + client), and cancel / no-show / recovery.
 
 ### 6.1 Scheduled
 
@@ -411,6 +414,7 @@ Mirrors the **agent viewings page** pattern: list column + detail dock, but **re
 | Region | Behaviour |
 |--------|-----------|
 | **Page chrome** | Back link, title “Viewing and Feedback” |
+| **Scenario banner** | Compact purple banner (same as agent) — **View scenarios** + **Open in Figma** |
 | **Content width** | Centered column matching agent workflow width: `max-width: calc(100vw − 276px)` (equivalent to viewport minus icon rail + case panel) |
 | **Controls** | Stacked **vertically** (see §9.3) |
 | **Main area** | Scrollable viewing **list** (left) + **detail dock** (right on large screens) |
@@ -697,21 +701,206 @@ Debounced 500ms on: agent notes, feedback, interest, buying situation, proposed 
 
 **Buying situation:** First-time buyer, Has property to sell (no offer yet), Has property under offer, Cash buyer, Investor / Buy-to-let
 
-### 12.5 User flow guide (in-prototype + Figma)
+### 12.5 Scenario guide (in-prototype)
 
-| Phase | Covers | Example flows in guide |
-|-------|--------|------------------------|
-| **1. Viewing setup & confirmation** | Book, confirm, reschedule | Create viewing, Lisa scheduled, viewer confirm, Mark confirmed, Emma reschedule |
-| **2. Applicant assessment** | Feedback, vendor update, client | Sofia assessment, Tom no feedback, Update Vendor, client feedback & offers |
-| **3. Viewing recovery** | No-show, cancelled, lost | Derik rebook, James cancelled CTAs, mark as lost, viewer cancel |
+The scenario guide is **built into `agent-view-v5.html`** (`SCENARIO_PHASES` in script). It replaces the earlier three-column “user flows” navigator with a simpler read-first pattern: pick a scenario → read steps → optionally try the demo.
 
-**Figma source of truth:** [User Flows board — Viewings & Feedback node](https://www.figma.com/board/qf2usEVnmWE00ZC9GkDze3/User-Flows?node-id=366-2738)
+#### Access
 
-**Try in prototype** actions: select demo viewing (agent), switch Client/Viewer perspective, open Update Vendor or Create Viewing modal.
+| Location | Banner style | Actions |
+|----------|--------------|---------|
+| Agent → Viewings page | Full banner below title row | **View scenarios**, **Open in Figma** |
+| Client → Viewing and Feedback | Compact banner above list | Same |
+
+Modal id: `modal-user-flow`. Opens via **View scenarios** or any `.btn-user-flow-guide` button.
+
+#### Modal layout
+
+1. **Picker style** — segmented control: **Tab view** | **Dropdown view** (preference persists while modal is open)
+2. **Tab view** — phase tabs (`tabs-underline`) + scrollable scenario list (title + one-line intro per scenario)
+3. **Dropdown view** — single `<select>` with optgroups per phase
+4. **Detail panel** — scenario title, intro, badges (phase, who, status), numbered **What happens** list, optional **Remember** rules box
+5. **Footer** — **Open in Figma** (left), **Try in prototype** (when mapped; label varies), **Close**
+
+#### Three phases (13 scenarios)
+
+| Phase id | Phase title | Scenarios |
+|----------|-------------|-----------|
+| `setup` | Setup and confirmation | 3 |
+| `assessment` | Feedback and vendor update | 5 |
+| `recovery` | Cancel, no show, and recovery | 5 |
+
+**Figma (full branching diagrams):** [User Flows board — Viewings & Feedback node](https://www.figma.com/board/qf2usEVnmWE00ZC9GkDze3/User-Flows?node-id=366-2738)
+
+#### Try in prototype — demo mapping
+
+| Scenario id | Try action | Demo target |
+|-------------|------------|-------------|
+| `schedule` | Open Create Viewing | `modal-new-viewing` |
+| `confirm-email` | Switch to Viewer | Lisa Okinovo (`lead-lisa`) |
+| `auto-complete` | Try in prototype (agent) | Mark Jensen (`v-mark`) |
+| `log-feedback` | Try in prototype (agent) | Sofia Romano (`v-sofia`) |
+| `no-feedback` | Try in prototype (agent) | Tom Bradley (`v-tom`), Past filter |
+| `vendor-update` | Open Update Vendor | `modal-vendor-update` |
+| `client-reads` | Switch to Client | Sofia (`v-sofia`), Past filter |
+| `client-offers` | Switch to Client | Sofia (`v-sofia`), Offers filter |
+| `viewer-cancel` | Switch to Viewer | Nina (`lead-nina`) |
+| `viewer-reschedule` | Switch to Viewer | Emma (`lead-emma`) |
+| `agent-cancel` | Try in prototype (agent) | James Parker (`v-james`) |
+| `no-show` | Try in prototype (agent) | Derik Alrhtia (`v-derik`) |
+| `mark-lost` | Try in prototype (agent) | James Parker (`v-james`) |
+
+Scenarios without a row above have no **Try in prototype** button (spec-only).
+
+#### Phase 1 — Setup and confirmation
+
+**`schedule` — Schedule a new viewing**  
+Who: Agent · Status: Scheduled
+
+1. Agent opens Create viewing and enters date and time (required).
+2. Agent selects an existing viewer or creates a new lead (name, email, phone).
+3. Property address is prefilled from the case and cannot be edited.
+4. Agent chooses viewing type (agent accompanied by default) and assigns who will conduct it.
+5. On save, the viewing appears in the list with status Scheduled.
+6. A confirmation email is sent to the viewer (manual or automatic, depending on agency settings).
+
+*Remember:* Warn the agent if another non-cancelled viewing is within 30 minutes. Viewer-facing notes in the form can appear in the confirmation email.
+
+**`confirm-email` — Viewer confirms attendance**  
+Who: Viewer, Agent · Status: Confirmed
+
+1. Viewer receives email with date, time, address, and action buttons.
+2. Viewer taps Confirm attendance.
+3. Viewing status changes from Scheduled to Confirmed.
+4. Agent sees Confirmed on the viewing card and in the detail panel.
+5. One reminder email is sent before the viewing (agency timing, e.g. 24h or 2h).
+
+*Remember:* Confirmed means the viewer will attend — it is not feedback. Feedback is only available after Completed.
+
+**`auto-complete` — Viewing ends — mark complete**  
+Who: Agent, System · Status: Completed
+
+1. System can auto-mark the viewing as Completed when the end time passes.
+2. Agent can also mark Completed manually from the detail panel.
+3. Status changes to Completed.
+4. Applicant assessment and feedback fields unlock in the detail panel.
+
+*Remember:* Do not enter feedback while status is Scheduled or Confirmed. Agent can later correct to No show if needed.
+
+#### Phase 2 — Feedback and vendor update
+
+**`log-feedback` — Log feedback after viewing**  
+Who: Agent · Status: Completed
+
+1. Agent opens a Completed viewing in the detail panel.
+2. Agent enters interest level, suitability (1–5), and a feedback summary.
+3. Agent may record buying situation and proposed price if relevant.
+4. Changes autosave on completed viewings.
+5. Only the feedback summary is eligible for vendor updates — not internal notes.
+
+*Remember:* v1 default: agent-entered feedback only (no automatic form to viewer). Internal agent notes never go to the vendor.
+
+**`no-feedback` — Completed but no feedback yet**  
+Who: Agent · Status: Completed
+
+1. Viewing stays Completed with an empty feedback summary.
+2. List card may show “No feedback recorded”.
+3. Agent adds feedback when ready.
+4. Vendor update should only include viewings the agent selects and curates.
+
+*Remember:* Do not share raw or internal notes with the vendor.
+
+**`vendor-update` — Send vendor update**  
+Who: Agent, Client · Status: Email sent
+
+1. Agent clicks Update vendor on the viewings page.
+2. Agent selects which viewings to include (today and past).
+3. Agent edits the shared feedback summary per viewing.
+4. Optional personal message can be added to the email.
+5. Email sends with agency branding. Last-sent date is tracked.
+6. Vendor sees read-only summaries in the client portal (first name only for buyers).
+
+*Remember:* Internal notes are never included. No-shows can be included even without feedback.
+
+**`client-reads` — Vendor reads updates**  
+Who: Client · Status: Read-only
+
+1. Vendor opens Viewing and feedback in the client workflow.
+2. Upcoming tab shows Scheduled and Confirmed viewings.
+3. History shows Completed, Cancelled, and No show with plain language labels.
+4. Vendor sees first name only — no phone, email, or full name for buyers.
+5. Feedback summary appears when the agent has shared it.
+
+*Remember:* Use “Did not attend” not “No show”. Use “Viewing took place” / “Feedback received” for vendor-facing copy.
+
+**`client-offers` — Vendor expresses offer preference**  
+Who: Client, Agent · Status: Advisory
+
+1. Vendor opens the Offers tab in the client portal.
+2. Vendor compares offer amounts and any shared feedback.
+3. Vendor taps Express preference on one offer.
+4. Preference is advisory — agent confirms the final selection.
+5. Agent sees the preference in the agent view.
+
+*Remember:* Agent generates memorandum of sale after final agreement — not the vendor alone.
+
+#### Phase 3 — Cancel, no show, and recovery
+
+**`viewer-cancel` — Viewer cancels from email**  
+Who: Viewer, Agent · Status: Cancelled
+
+1. Viewer opens the confirmation email and chooses Cancel viewing.
+2. Viewer must add a short note (becomes the cancellation reason).
+3. Viewing status changes to Cancelled.
+4. Agent is notified and sees the reason in the detail panel.
+
+*Remember:* Cancellation reason is always required when agent cancels manually too.
+
+**`viewer-reschedule` — Viewer requests reschedule**  
+Who: Viewer, Agent · Status: Reschedule requested
+
+1. Viewer taps Request reschedule in the email.
+2. Agent is notified.
+3. Agent sees reschedule as the primary action on the viewing.
+4. Agent opens reschedule or create viewing to propose a new slot.
+
+*Remember:* If agent cancels with reason “Viewer wants to reschedule”, prompt to open schedule form.
+
+**`agent-cancel` — Agent cancels viewing**  
+Who: Agent · Status: Cancelled
+
+1. Agent changes status to Cancelled.
+2. Agent must select a cancellation reason (or enter Other).
+3. Viewing stays on the list with Cancelled status.
+4. Footer offers: schedule new viewing, send rebook email, or mark as lost.
+
+*Remember:* All three recovery actions stay available for any cancel reason until lead is marked lost.
+
+**`no-show` — No show and rebook**  
+Who: Agent, Viewer · Status: No show
+
+1. Agent marks the viewing as No show after the slot.
+2. Rebook counter shows on the card (e.g. Rebook 1/3).
+3. Agent can send one rebook email per attempt (max 3).
+4. After 3 attempts with no response, agent should mark the lead as lost or schedule again.
+
+*Remember:* Rebook emails are separate from the original confirmation email.
+
+**`mark-lost` — Mark lead as lost**  
+Who: Agent · Status: Lead lost
+
+1. Agent clicks Mark as lost from a no-show or cancelled viewing.
+2. Agent selects a required reason in the modal.
+3. Lead status becomes lost; viewing record remains for audit.
+4. Recovery buttons hide when lead is lost.
+
+*Remember:* Marking lost does not delete the viewing history.
 
 ---
 
 ## 13. End-to-end test scenarios
+
+These walkthroughs align with the scenario guide (§12.5). Use **View scenarios** → **Try in prototype** to jump to the matching demo where available.
 
 ### Happy path
 1. **Agent** → Lisa → Send Confirmation Email (or enable auto confirmation in prototype controls)
@@ -779,6 +968,8 @@ Debounced 500ms on: agent notes, feedback, interest, buying situation, proposed 
 | Client offer preference | — | Express preference in dock; `localStorage`; case progress → Offer selected |
 | Client responsive | — | Drawer @ ≤1100px; full-screen dock @ ≤640px; vertical filter stack |
 | Client vendor email | — | Not shown on dashboard (agent sends via Update Vendor modal only) |
+| Scenario / user-flow guide | Three-column flow navigator | Integrated **View scenarios** modal — tab or dropdown picker, 13 scenarios, What happens + Remember |
+| Standalone flow HTML | — | Removed (`viewings-flow-simple.html` merged into v5) |
 
 ---
 
@@ -793,4 +984,4 @@ Debounced 500ms on: agent notes, feedback, interest, buying situation, proposed 
 
 ---
 
-*Last updated to reflect `agent-view-v5.html` — agent viewings CRM, client Viewing and Feedback workflow, interactive user flow guide + Figma link, viewer inbox, vendor update modal, and prototype settings gear icon.*
+*Last updated to reflect `agent-view-v5.html` — agent viewings CRM, client Viewing and Feedback workflow, integrated scenario guide (3 phases, 13 scenarios, tab/dropdown picker, Try in prototype), Figma link, viewer inbox, vendor update modal, and prototype settings gear icon.*

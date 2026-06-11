@@ -542,130 +542,63 @@
     }
     .btn-user-flow-figma:hover { background: var(--bg-subtle); color: var(--fg-strong); }
 
-    /* User flow guide modal */
-    .modal-user-flow {
-      max-width: min(960px, 96vw) !important;
+    /* Scenario guide modal (simplified user flows) */
+    .modal-scenario-guide {
+      max-width: min(880px, 96vw) !important;
       width: 100%;
-      max-height: min(720px, calc(100vh - 48px));
+      max-height: min(88vh, 720px);
       display: flex; flex-direction: column; overflow: hidden;
     }
-    .modal-user-flow .modal-header {
+    .modal-scenario-guide .modal-header {
       flex-shrink: 0; flex-direction: column; align-items: flex-start; gap: 4px;
       padding-right: 52px; position: relative;
     }
-    .modal-user-flow .modal-header .btn-icon {
+    .modal-scenario-guide .modal-header .btn-icon {
       position: absolute; top: var(--space-4); right: var(--space-4);
     }
-    .uf-header-sub {
+    .sg-header-sub {
       font-size: 13px; font-weight: 400; color: var(--fg-muted); margin: 0; line-height: 1.45;
     }
-    .modal-user-flow .modal-body { padding: 0; flex: 1; min-height: 0; overflow: hidden; }
-    .modal-user-flow .modal-footer {
+    .modal-scenario-guide .modal-body {
+      padding: var(--space-4); flex: 1; min-height: 0; overflow-y: auto;
+    }
+    .modal-scenario-guide .modal-footer {
       flex-shrink: 0; justify-content: space-between; align-items: center;
       flex-wrap: wrap; gap: 10px;
     }
-    .uf-footer-right { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
-    .uf-split {
-      display: grid;
-      grid-template-columns: 196px minmax(0, 272px) minmax(0, 1fr);
-      height: 100%; min-height: 0;
+    .sg-footer-right { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+    .sg-picker-toggle { margin-bottom: var(--space-3); }
+    .sg-picker-tabs { display: grid; gap: var(--space-3); }
+    .sg-picker-tabs[hidden], .sg-picker-dropdown[hidden] { display: none; }
+    .sg-phase-tabs { overflow-x: auto; padding-bottom: 4px; }
+    .sg-scenario-list { display: grid; gap: 6px; max-height: 160px; overflow-y: auto; }
+    .sg-scenario-btn {
+      text-align: left; padding: 10px 12px; border: 1px solid var(--border);
+      border-radius: var(--radius-md); background: var(--bg); cursor: pointer; font-family: inherit;
     }
-    .uf-phases {
-      border-right: 1px solid var(--border); padding: 12px 10px;
-      display: flex; flex-direction: column; gap: 6px;
-      overflow-y: auto; background: #f8fafc;
+    .sg-scenario-btn:hover { background: var(--slate-50); }
+    .sg-scenario-btn.is-active { border-color: var(--purple-400); background: var(--purple-50); }
+    .sg-scenario-btn strong { display: block; font-size: var(--text-body-size); color: var(--fg-strong); }
+    .sg-scenario-btn span { font-size: var(--text-info-label-size); color: var(--fg-muted); }
+    .sg-detail {
+      margin-top: var(--space-4); padding: var(--space-4);
+      background: var(--bg-subtle); border: 1px solid var(--border); border-radius: var(--radius-lg);
     }
-    .uf-phase-btn {
-      text-align: left; padding: 10px 10px; border-radius: 8px;
-      border: 1px solid transparent; background: transparent;
-      cursor: pointer; transition: background var(--dur-fast), border-color var(--dur-fast);
-      font-family: inherit;
-    }
-    .uf-phase-btn:hover { background: #fff; border-color: var(--border); }
-    .uf-phase-btn.is-active {
-      background: #fff; border-color: #c4b5fd;
-      box-shadow: 0 1px 3px rgba(91, 33, 182, 0.08);
-    }
-    .uf-phase-num {
-      font-size: 10px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.4px; color: #7c3aed; margin-bottom: 2px;
-    }
-    .uf-phase-title { font-size: 12px; font-weight: 600; color: var(--fg-strong); line-height: 1.35; }
-    .uf-flows-col {
-      border-right: 1px solid var(--border); display: flex; flex-direction: column;
-      min-height: 0; background: #fff;
-    }
-    .uf-flows-col-head {
-      padding: 12px 12px 8px; border-bottom: 1px solid var(--border);
-      flex-shrink: 0;
-    }
-    .uf-flows-col-label {
-      font-size: 10px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.35px; color: var(--fg-muted);
-    }
-    .uf-flows-col-summary {
-      font-size: 12px; color: var(--fg-muted); margin-top: 4px; line-height: 1.4;
-    }
-    .uf-flow-list {
-      flex: 1; min-height: 0; overflow-y: auto;
-      padding: 8px; display: flex; flex-direction: column; gap: 4px;
-    }
-    .uf-flow-item {
-      display: block; padding: 9px 10px;
-      border: 1px solid transparent; border-radius: 8px; background: transparent;
-      cursor: pointer; text-align: left; width: 100%;
-      transition: background var(--dur-fast), border-color var(--dur-fast);
-      font-family: inherit;
-    }
-    .uf-flow-item:hover { background: #f8fafc; border-color: var(--border); }
-    .uf-flow-item.is-active {
-      background: #f5f3ff; border-color: #c4b5fd;
-    }
-    .uf-flow-item-top {
-      display: flex; align-items: center; justify-content: space-between; gap: 6px;
-    }
-    .uf-flow-status {
-      flex-shrink: 0; font-size: 9px; font-weight: 700; padding: 2px 5px;
-      border-radius: 4px; background: var(--slate-100); color: var(--fg-muted);
+    .sg-detail h3 { margin: 0 0 8px; font-size: var(--text-h3-size); color: var(--fg-strong); }
+    .sg-detail-intro { margin: 0 0 var(--space-3); color: var(--fg-muted); font-size: var(--text-body-size); }
+    .sg-detail-meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: var(--space-3); }
+    .sg-what-label {
+      margin: 0 0 8px; font-size: var(--text-body-label-size); color: var(--fg-muted);
       text-transform: uppercase; letter-spacing: 0.04em;
     }
-    .uf-flow-name { font-size: 13px; font-weight: 600; color: var(--fg-strong); line-height: 1.3; margin-top: 4px; }
-    .uf-flow-desc { font-size: 11px; color: var(--fg-muted); margin-top: 2px; line-height: 1.35; }
-    .uf-detail {
-      padding: 16px 18px; overflow-y: auto;
-      display: flex; flex-direction: column; gap: 14px; min-height: 0;
+    .sg-what-list { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+    .sg-what-list li { font-size: var(--text-body-size); line-height: var(--lh-body); }
+    .sg-rules {
+      margin-top: var(--space-3); padding: var(--space-3);
+      background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-md);
     }
-    .uf-detail-title { font-size: 17px; font-weight: 600; color: var(--fg-strong); margin: 0; line-height: 1.3; }
-    .uf-detail-desc { font-size: 13px; color: var(--fg-muted); margin: 0; line-height: 1.45; }
-    .uf-steps-label {
-      font-size: 11px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.35px; color: var(--fg-muted); margin: 0 0 6px;
-    }
-    .uf-steps {
-      margin: 0; padding-left: 18px; font-size: 13px; color: var(--fg);
-      line-height: 1.55;
-    }
-    .uf-steps li + li { margin-top: 8px; }
-    .uf-detail-try {
-      margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border);
-    }
-    .uf-figma-note {
-      font-size: 12px; color: var(--fg-muted); padding: 10px 12px;
-      background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; line-height: 1.45;
-    }
-    .uf-figma-note a { color: #7c3aed; font-weight: 500; }
+    .sg-rules ul { margin: 8px 0 0; padding-left: 18px; font-size: var(--text-body-size); color: var(--fg-muted); }
     @media (max-width: 800px) {
-      .uf-split {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto auto 1fr;
-      }
-      .uf-phases {
-        flex-direction: row; overflow-x: auto; border-right: none;
-        border-bottom: 1px solid var(--border);
-      }
-      .uf-phase-btn { min-width: 148px; flex-shrink: 0; }
-      .uf-flows-col { border-right: none; border-bottom: 1px solid var(--border); max-height: 200px; }
-      .uf-detail { min-height: 220px; }
       .proto-flow-banner { flex-direction: column; align-items: stretch; }
     }
     .btn-page-action {
@@ -2107,12 +2040,12 @@
 
         <div class="proto-flow-banner" id="proto-flow-banner-agent">
           <p class="proto-flow-banner-text">
-            <strong>Viewings &amp; Feedback prototype</strong> — Multiple user flows apply depending on each viewing&apos;s state: setup &amp; confirmation, applicant assessment, or viewing recovery.
+            <strong>Viewings &amp; Feedback prototype</strong> — Pick a scenario to see what should happen at each step.
           </p>
           <div class="proto-flow-banner-actions">
             <button type="button" class="btn btn-secondary btn-user-flow" id="btn-user-flow-guide">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 3.5h12M2 8h8M2 12.5h10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="13" cy="12.5" r="1.5" fill="currentColor"/></svg>
-              Explore user flows
+              View scenarios
             </button>
             <a class="btn-user-flow-figma" id="btn-user-flow-figma-agent" href="https://www.figma.com/board/qf2usEVnmWE00ZC9GkDze3/User-Flows?node-id=366-2738" target="_blank" rel="noopener noreferrer">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5.5 2.5h7a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 4 11V4a1.5 1.5 0 0 1 1.5-1.5Z" stroke="currentColor" stroke-width="1.2"/><path d="M2.5 5.5h7a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 2.5 13V7a1.5 1.5 0 0 1 1.5-1.5Z" stroke="currentColor" stroke-width="1.2"/></svg>
@@ -2835,12 +2768,12 @@
   </div>
 </div>
 
-<!-- User flow guide modal -->
+<!-- Scenario guide modal -->
 <div class="modal-scrim" id="modal-user-flow" aria-hidden="true">
-  <div class="modal modal-user-flow" role="dialog" aria-modal="true" aria-labelledby="uf-title">
+  <div class="modal modal-scenario-guide" role="dialog" aria-modal="true" aria-labelledby="sg-title">
     <header class="modal-header">
-      <h2 class="modal-title" id="uf-title">Viewings &amp; Feedback — User flows</h2>
-      <p class="uf-header-sub">Three phases, multiple flows per viewing state. Pick a phase and flow, then try it in the prototype or open the full diagram in Figma.</p>
+      <h2 class="modal-title" id="sg-title">Viewings and feedback — scenarios</h2>
+      <p class="sg-header-sub">Choose a scenario. The panel explains what should happen. You can try it in the prototype when available.</p>
       <button type="button" class="btn btn-icon btn-ghost" data-close-modal="modal-user-flow" aria-label="Close">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -2851,7 +2784,7 @@
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5.5 2.5h7a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 4 11V4a1.5 1.5 0 0 1 1.5-1.5Z" stroke="currentColor" stroke-width="1.2"/><path d="M2.5 5.5h7a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 2.5 13V7a1.5 1.5 0 0 1 1.5-1.5Z" stroke="currentColor" stroke-width="1.2"/></svg>
         Open in Figma
       </a>
-      <div class="uf-footer-right">
+      <div class="sg-footer-right">
         <button type="button" class="btn btn-primary" id="btn-user-flow-try" hidden>Try in prototype</button>
         <button type="button" class="btn btn-secondary" data-close-modal="modal-user-flow">Close</button>
       </div>
@@ -4391,225 +4324,267 @@
     btn.title = `Send Vendor Update — ${label}`;
   }
 
-  // ── User flow guide (Figma + interactive navigator) ───────────────────
+  // ── Scenario guide (simplified user flows) ───────────────────────────
   const USER_FLOW_FIGMA_URL = 'https://www.figma.com/board/qf2usEVnmWE00ZC9GkDze3/User-Flows?node-id=366-2738';
-  let userFlowPhaseId = 'setup';
-  let userFlowId = 'scheduled-confirmation';
+  let scenarioGuidePhaseId = 'setup';
+  let scenarioGuideId = 'schedule';
+  let scenarioGuidePicker = 'tabs';
 
-  const USER_FLOW_PHASES = [
+  const SCENARIO_PHASES = [
     {
       id: 'setup',
-      num: 'Phase 1',
-      title: 'Viewing setup & confirmation',
-      summary: 'Booking a viewing, sending confirmation, and applicant responses before the appointment.',
-      flows: [
+      title: 'Setup and confirmation',
+      scenarios: [
         {
-          id: 'create-viewing',
-          title: 'Book a new viewing',
-          status: 'New',
-          desc: 'Agent creates a viewing from scratch.',
-          steps: [
-            'Click Create Viewing and pick an applicant (or add a new lead).',
-            'Set date, time, accompanied by, and agent notes.',
-            'Book — status becomes Scheduled; confirmation may auto-send if enabled in prototype settings.',
+          id: 'schedule',
+          title: 'Schedule a new viewing',
+          who: ['Agent'],
+          status: 'Scheduled',
+          intro: 'Agent books a viewing for an applicant on this property.',
+          happens: [
+            'Agent opens Create viewing and enters date and time (required).',
+            'Agent selects an existing viewer or creates a new lead (name, email, phone).',
+            'Property address is prefilled from the case and cannot be edited.',
+            'Agent chooses viewing type (agent accompanied by default) and assigns who will conduct it.',
+            'On save, the viewing appears in the list with status Scheduled.',
+            'A confirmation email is sent to the viewer (manual or automatic, depending on agency settings).',
           ],
+          rules: ['Warn the agent if another non-cancelled viewing is within 30 minutes.', 'Viewer-facing notes in the form can appear in the confirmation email.'],
           try: { type: 'create-viewing' },
         },
         {
-          id: 'scheduled-confirmation',
-          title: 'Scheduled — send confirmation',
-          status: 'Scheduled',
-          desc: 'Lisa Okinovo — confirmation not yet sent.',
-          steps: [
-            'Select Lisa Okinovo in the list.',
-            'Click Send Confirmation Email in the dock footer.',
-            'Switch to Viewer perspective to confirm, reschedule, or cancel.',
-          ],
-          try: { type: 'agent-viewing', viewingId: 'v-lisa' },
-        },
-        {
-          id: 'viewer-confirm',
+          id: 'confirm-email',
           title: 'Viewer confirms attendance',
-          status: 'Viewer',
-          desc: 'Applicant responds from the confirmation email inbox.',
-          steps: [
-            'Switch to Viewer and select Lisa Okinovo.',
-            'Click Confirm attendance — viewing becomes Confirmed.',
-            'Return to Agent to see updated status and activity log.',
+          who: ['Viewer', 'Agent'],
+          status: 'Confirmed',
+          intro: 'Viewer responds to the confirmation email before the viewing.',
+          happens: [
+            'Viewer receives email with date, time, address, and action buttons.',
+            'Viewer taps Confirm attendance.',
+            'Viewing status changes from Scheduled to Confirmed.',
+            'Agent sees Confirmed on the viewing card and in the detail panel.',
+            'One reminder email is sent before the viewing (agency timing, e.g. 24h or 2h).',
           ],
+          rules: ['Confirmed means the viewer will attend — it is not feedback.', 'Feedback is only available after Completed.'],
           try: { type: 'viewer', leadId: 'lead-lisa' },
         },
         {
-          id: 'confirmed-await',
-          title: 'Confirmed — before viewing',
-          status: 'Confirmed',
-          desc: 'Mark Jensen — confirmed for today; auto-completes after end time.',
-          steps: [
-            'Select Mark Jensen — dock shows confirmed logistics.',
-            'Advance simulated time past the viewing end (prototype settings) to auto-complete.',
-            'Or use the menu to mark completed early.',
+          id: 'auto-complete',
+          title: 'Viewing ends — mark complete',
+          who: ['Agent', 'System'],
+          status: 'Completed',
+          intro: 'After the viewing time slot passes.',
+          happens: [
+            'System can auto-mark the viewing as Completed when the end time passes.',
+            'Agent can also mark Completed manually from the detail panel.',
+            'Status changes to Completed.',
+            'Applicant assessment and feedback fields unlock in the detail panel.',
           ],
+          rules: ['Do not enter feedback while status is Scheduled or Confirmed.', 'Agent can later correct to No show if needed.'],
           try: { type: 'agent-viewing', viewingId: 'v-mark' },
-        },
-        {
-          id: 'reschedule-request',
-          title: 'Viewer requests reschedule',
-          status: 'Scheduled',
-          desc: 'Applicant asks to move the appointment — agent reschedules.',
-          steps: [
-            'In Viewer, click Request reschedule on an active invitation.',
-            'Agent sees Reschedule as the primary dock CTA.',
-            'Open Reschedule modal to set a new date and time.',
-          ],
-          try: { type: 'viewer', leadId: 'lead-emma' },
         },
       ],
     },
     {
       id: 'assessment',
-      num: 'Phase 2',
-      title: 'Applicant assessment',
-      summary: 'After the viewing takes place — feedback, offers, vendor updates, and seller visibility.',
-      flows: [
+      title: 'Feedback and vendor update',
+      scenarios: [
         {
-          id: 'completed-assessment',
-          title: 'Record applicant assessment',
+          id: 'log-feedback',
+          title: 'Log feedback after viewing',
+          who: ['Agent'],
           status: 'Completed',
-          desc: 'Sofia Romano — feedback, interest, buying situation, and offer recorded.',
-          steps: [
-            'Select Sofia Romano (completed today).',
-            'Fill Feedback & Notes, Interest, Buying Situation, and Proposed Price — autosaves.',
-            'Offer badge turns green when this is the highest offer with feedback.',
+          intro: 'Agent speaks with the viewer (phone or WhatsApp) and records assessment.',
+          happens: [
+            'Agent opens a Completed viewing in the detail panel.',
+            'Agent enters interest level, suitability (1–5), and a feedback summary.',
+            'Agent may record buying situation and proposed price if relevant.',
+            'Changes autosave on completed viewings.',
+            'Only the feedback summary is eligible for vendor updates — not internal notes.',
           ],
+          rules: ['v1 default: agent-entered feedback only (no automatic form to viewer).', 'Internal agent notes never go to the vendor.'],
           try: { type: 'agent-viewing', viewingId: 'v-sofia' },
         },
         {
-          id: 'completed-no-feedback',
-          title: 'Completed — no feedback yet',
+          id: 'no-feedback',
+          title: 'Completed but no feedback yet',
+          who: ['Agent'],
           status: 'Completed',
-          desc: 'Tom Bradley — offer recorded but no feedback summary.',
-          steps: [
-            'Select Tom Bradley in Past filter.',
-            'Card footer shows No Feedback Recorded; offer badge is grey.',
-            'Add feedback in the dock to share with the vendor.',
+          intro: 'Viewing took place but no summary has been written.',
+          happens: [
+            'Viewing stays Completed with an empty feedback summary.',
+            'List card may show “No feedback recorded”.',
+            'Agent adds feedback when ready.',
+            'Vendor update should only include viewings the agent selects and curates.',
           ],
+          rules: ['Do not share raw or internal notes with the vendor.'],
           try: { type: 'agent-viewing', viewingId: 'v-tom', timeFilter: 'past' },
         },
         {
           id: 'vendor-update',
-          title: 'Send vendor update email',
-          status: 'Agent',
-          desc: 'Share feedback summaries with the seller (Mr Hussain Somani).',
-          steps: [
-            'Click Update Vendor on the viewings page.',
-            'Select today/past viewings — only feedback summaries are shared.',
-            'Personalise message optional; preview then Send update.',
+          title: 'Send vendor update',
+          who: ['Agent', 'Client'],
+          status: 'Email sent',
+          intro: 'Agent manually sends the seller a curated update.',
+          happens: [
+            'Agent clicks Update vendor on the viewings page.',
+            'Agent selects which viewings to include (today and past).',
+            'Agent edits the shared feedback summary per viewing.',
+            'Optional personal message can be added to the email.',
+            'Email sends with agency branding. Last-sent date is tracked.',
+            'Vendor sees read-only summaries in the client portal (first name only for buyers).',
           ],
+          rules: ['Internal notes are never included.', 'No-shows can be included even without feedback.'],
           try: { type: 'vendor-update' },
         },
         {
-          id: 'client-feedback',
-          title: 'Vendor reads feedback',
-          status: 'Client',
-          desc: 'Seller opens Viewing and Feedback to review assessments.',
-          steps: [
-            'Switch to Client → open Viewing and Feedback task.',
-            'Filter Past → Viewings held → select Sofia.',
-            'Read-only dock shows assessment fields and activity (first name only).',
+          id: 'client-reads',
+          title: 'Vendor reads updates',
+          who: ['Client'],
+          status: 'Read-only',
+          intro: 'Seller checks viewings in the client portal.',
+          happens: [
+            'Vendor opens Viewing and feedback in the client workflow.',
+            'Upcoming tab shows Scheduled and Confirmed viewings.',
+            'History shows Completed, Cancelled, and No show with plain language labels.',
+            'Vendor sees first name only — no phone, email, or full name for buyers.',
+            'Feedback summary appears when the agent has shared it.',
           ],
+          rules: ['Use “Did not attend” not “No show”.', 'Use “Viewing took place” / “Feedback received” for vendor-facing copy.'],
           try: { type: 'client-viewing', viewingId: 'v-sofia', clientFilter: 'past' },
         },
         {
           id: 'client-offers',
-          title: 'Vendor compares offers',
-          status: 'Client',
-          desc: 'Seller filters offers and expresses a preference.',
-          steps: [
-            'In Client Viewing and Feedback, filter Offers.',
-            'Compare Sofia, Amy, and Tom — sorted by price.',
-            'Express preference on Sofia — case progress advances to Offer selected.',
+          title: 'Vendor expresses offer preference',
+          who: ['Client', 'Agent'],
+          status: 'Advisory',
+          intro: 'Seller compares offers and tells the agent their preference.',
+          happens: [
+            'Vendor opens the Offers tab in the client portal.',
+            'Vendor compares offer amounts and any shared feedback.',
+            'Vendor taps Express preference on one offer.',
+            'Preference is advisory — agent confirms the final selection.',
+            'Agent sees the preference in the agent view.',
           ],
+          rules: ['Agent generates memorandum of sale after final agreement — not the vendor alone.'],
           try: { type: 'client-viewing', viewingId: 'v-sofia', clientFilter: 'offers' },
         },
       ],
     },
     {
-      id: 'recover',
-      num: 'Phase 3',
-      title: 'Viewing recovery',
-      summary: 'When a viewing is lost, cancelled, or a no-show — rebook, reschedule, or mark the lead as lost.',
-      flows: [
+      id: 'recovery',
+      title: 'Cancel, no show, and recovery',
+      scenarios: [
         {
-          id: 'no-show-rebook',
-          title: 'No show — rebook email',
-          status: 'No Show',
-          desc: 'Derik Alrhtia — rebook attempt 1 of 3 already sent.',
-          steps: [
-            'Select Derik in the list.',
-            'Send Rebook Email (up to 3 attempts) or Schedule New Viewing.',
-            'After 3 attempts, Mark as Lost becomes the primary action.',
+          id: 'viewer-cancel',
+          title: 'Viewer cancels from email',
+          who: ['Viewer', 'Agent'],
+          status: 'Cancelled',
+          intro: 'Applicant cancels using the link in the confirmation email.',
+          happens: [
+            'Viewer opens the confirmation email and chooses Cancel viewing.',
+            'Viewer must add a short note (becomes the cancellation reason).',
+            'Viewing status changes to Cancelled.',
+            'Agent is notified and sees the reason in the detail panel.',
           ],
-          try: { type: 'agent-viewing', viewingId: 'v-derik' },
+          rules: ['Cancellation reason is always required when agent cancels manually too.'],
+          try: { type: 'viewer', leadId: 'lead-nina' },
         },
         {
-          id: 'cancelled-recover',
-          title: 'Cancelled — recovery options',
-          status: 'Cancelled',
-          desc: 'James Parker — viewer no longer interested.',
-          steps: [
-            'Select James Parker — dock shows cancellation reason.',
-            'Footer: Schedule a New Viewing (primary), Send Rebook Email, Mark as Lost.',
-            'All three actions available regardless of cancel reason.',
+          id: 'viewer-reschedule',
+          title: 'Viewer requests reschedule',
+          who: ['Viewer', 'Agent'],
+          status: 'Reschedule requested',
+          intro: 'Applicant cannot make the current slot and asks for a new time.',
+          happens: [
+            'Viewer taps Request reschedule in the email.',
+            'Agent is notified.',
+            'Agent sees reschedule as the primary action on the viewing.',
+            'Agent opens reschedule or create viewing to propose a new slot.',
           ],
+          rules: ['If agent cancels with reason “Viewer wants to reschedule”, prompt to open schedule form.'],
+          try: { type: 'viewer', leadId: 'lead-emma' },
+        },
+        {
+          id: 'agent-cancel',
+          title: 'Agent cancels viewing',
+          who: ['Agent'],
+          status: 'Cancelled',
+          intro: 'Agent cancels from the detail panel before or after confirmation.',
+          happens: [
+            'Agent changes status to Cancelled.',
+            'Agent must select a cancellation reason (or enter Other).',
+            'Viewing stays on the list with Cancelled status.',
+            'Footer offers: schedule new viewing, send rebook email, or mark as lost.',
+          ],
+          rules: ['All three recovery actions stay available for any cancel reason until lead is marked lost.'],
           try: { type: 'agent-viewing', viewingId: 'v-james' },
+        },
+        {
+          id: 'no-show',
+          title: 'No show and rebook',
+          who: ['Agent', 'Viewer'],
+          status: 'No show',
+          intro: 'Viewer did not attend the viewing.',
+          happens: [
+            'Agent marks the viewing as No show after the slot.',
+            'Rebook counter shows on the card (e.g. Rebook 1/3).',
+            'Agent can send one rebook email per attempt (max 3).',
+            'After 3 attempts with no response, agent should mark the lead as lost or schedule again.',
+          ],
+          rules: ['Rebook emails are separate from the original confirmation email.'],
+          try: { type: 'agent-viewing', viewingId: 'v-derik' },
         },
         {
           id: 'mark-lost',
           title: 'Mark lead as lost',
-          status: 'Recovery',
-          desc: 'Close out a lead after no-show or cancellation.',
-          steps: [
-            'From a no-show (rebook ≥ 3) or cancelled viewing, click Mark as Lost.',
-            'Required reason in modal — lead status becomes lost.',
-            'Viewing record remains; footer CTAs hide when leadLost is set.',
+          who: ['Agent'],
+          status: 'Lead lost',
+          intro: 'Agent closes the applicant after failed rebook or cancellation.',
+          happens: [
+            'Agent clicks Mark as lost from a no-show or cancelled viewing.',
+            'Agent selects a required reason in the modal.',
+            'Lead status becomes lost; viewing record remains for audit.',
+            'Recovery buttons hide when lead is lost.',
           ],
+          rules: ['Marking lost does not delete the viewing history.'],
           try: { type: 'agent-viewing', viewingId: 'v-james' },
-        },
-        {
-          id: 'viewer-cancel',
-          title: 'Viewer cancels viewing',
-          status: 'Viewer',
-          desc: 'Applicant cancels from the confirmation email.',
-          steps: [
-            'Viewer → active invitation → Cancel viewing.',
-            'Required note becomes the cancellation reason.',
-            'Agent sees Cancelled status with reason in dock.',
-          ],
-          try: { type: 'viewer', leadId: 'lead-nina' },
         },
       ],
     },
   ];
 
-  function getUserFlowPhase(id) {
-    return USER_FLOW_PHASES.find(p => p.id === id);
+  function getScenarioPhase(id) {
+    return SCENARIO_PHASES.find(p => p.id === id);
   }
 
-  function getUserFlow(phaseId, flowId) {
-    const phase = getUserFlowPhase(phaseId);
-    return phase?.flows.find(f => f.id === flowId);
+  function getScenario(id) {
+    for (const p of SCENARIO_PHASES) {
+      const s = p.scenarios.find(x => x.id === id);
+      if (s) return { phase: p, scenario: s };
+    }
+    return null;
+  }
+
+  function scenarioTryLabel(tryAction) {
+    if (!tryAction) return 'Try in prototype';
+    if (tryAction.type === 'viewer') return 'Switch to Viewer';
+    if (tryAction.type === 'client-viewing') return 'Switch to Client';
+    if (tryAction.type === 'vendor-update') return 'Open Update Vendor';
+    if (tryAction.type === 'create-viewing') return 'Open Create Viewing';
+    return 'Try in prototype';
   }
 
   function protoFlowBannerHtml(compact) {
     return `
       <div class="proto-flow-banner${compact ? ' is-compact' : ''}">
         <p class="proto-flow-banner-text">
-          <strong>Viewings &amp; Feedback prototype</strong> — Multiple user flows apply depending on each viewing&apos;s state: setup &amp; confirmation, applicant assessment, or viewing recovery.
+          <strong>Viewings &amp; Feedback prototype</strong> — Pick a scenario to see what should happen at each step.
         </p>
         <div class="proto-flow-banner-actions">
           <button type="button" class="btn btn-secondary btn-user-flow btn-user-flow-guide">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 3.5h12M2 8h8M2 12.5h10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="13" cy="12.5" r="1.5" fill="currentColor"/></svg>
-            Explore user flows
+            View scenarios
           </button>
           <a class="btn-user-flow-figma" href="${USER_FLOW_FIGMA_URL}" target="_blank" rel="noopener noreferrer">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5.5 2.5h7a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 4 11V4a1.5 1.5 0 0 1 1.5-1.5Z" stroke="currentColor" stroke-width="1.2"/><path d="M2.5 5.5h7a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 2.5 13V7a1.5 1.5 0 0 1 1.5-1.5Z" stroke="currentColor" stroke-width="1.2"/></svg>
@@ -4619,92 +4594,90 @@
       </div>`;
   }
 
-  function renderUserFlowModal() {
+  function renderScenarioGuideModal() {
     const mount = $('#user-flow-modal-body');
     if (!mount) return;
-    const phase = getUserFlowPhase(userFlowPhaseId) || USER_FLOW_PHASES[0];
-    const flow = getUserFlow(phase.id, userFlowId) || phase.flows[0];
-    if (!flow) return;
-    userFlowId = flow.id;
+    const phase = getScenarioPhase(scenarioGuidePhaseId) || SCENARIO_PHASES[0];
+    const found = getScenario(scenarioGuideId);
+    const scenario = found?.scenario || phase.scenarios[0];
+    if (!scenario) return;
+    scenarioGuideId = scenario.id;
+    scenarioGuidePhaseId = phase.id;
 
     const tryBtn = $('#btn-user-flow-try');
     if (tryBtn) {
-      tryBtn.hidden = !flow.try;
-      tryBtn.textContent = flow.try?.type === 'viewer' ? 'Switch to Viewer'
-        : flow.try?.type === 'client-viewing' ? 'Switch to Client'
-        : flow.try?.type === 'vendor-update' ? 'Open Update Vendor'
-        : flow.try?.type === 'create-viewing' ? 'Open Create Viewing'
-        : 'Try in prototype';
+      tryBtn.hidden = !scenario.try;
+      tryBtn.textContent = scenarioTryLabel(scenario.try);
     }
 
-    const tryLabel = flow.try?.type === 'viewer' ? 'Switch to Viewer'
-      : flow.try?.type === 'client-viewing' ? 'Switch to Client'
-      : flow.try?.type === 'vendor-update' ? 'Open Update Vendor'
-      : flow.try?.type === 'create-viewing' ? 'Open Create Viewing'
-      : 'Try in prototype';
+    const rulesHtml = scenario.rules?.length
+      ? `<div class="sg-rules"><strong class="text-body-semibold">Remember</strong><ul>${scenario.rules.map(r => `<li>${esc(r)}</li>`).join('')}</ul></div>`
+      : '';
 
     mount.innerHTML = `
-      <div class="uf-split">
-        <nav class="uf-phases" aria-label="Flow phases">
-          ${USER_FLOW_PHASES.map(p => `
-            <button type="button" class="uf-phase-btn${p.id === phase.id ? ' is-active' : ''}" data-uf-phase="${p.id}">
-              <div class="uf-phase-num">${esc(p.num)}</div>
-              <div class="uf-phase-title">${esc(p.title)}</div>
+      <div class="sg-picker-toggle">
+        <div class="tabs-segmented" role="tablist" aria-label="Picker style">
+          <button type="button" class="tab-segmented${scenarioGuidePicker === 'tabs' ? ' is-active' : ''}" data-sg-picker="tabs" role="tab" aria-selected="${scenarioGuidePicker === 'tabs'}">Tab view</button>
+          <button type="button" class="tab-segmented${scenarioGuidePicker === 'dropdown' ? ' is-active' : ''}" data-sg-picker="dropdown" role="tab" aria-selected="${scenarioGuidePicker === 'dropdown'}">Dropdown view</button>
+        </div>
+      </div>
+      <div class="sg-picker-tabs" id="sg-picker-tabs"${scenarioGuidePicker !== 'tabs' ? ' hidden' : ''}>
+        <nav class="sg-phase-tabs tabs-underline" id="sg-phase-tabs" role="tablist" aria-label="Phase">
+          ${SCENARIO_PHASES.map(p => `
+            <button type="button" class="tab-underline${p.id === phase.id ? ' is-active' : ''}" data-sg-phase="${p.id}" role="tab" aria-selected="${p.id === phase.id}">
+              ${esc(p.title)}
             </button>`).join('')}
         </nav>
-        <div class="uf-flows-col">
-          <div class="uf-flows-col-head">
-            <div class="uf-flows-col-label">Flows in this phase</div>
-            <p class="uf-flows-col-summary">${esc(phase.summary)}</p>
-          </div>
-          <div class="uf-flow-list" role="listbox" aria-label="Flows in this phase">
-            ${phase.flows.map(f => `
-              <button type="button" class="uf-flow-item${f.id === flow.id ? ' is-active' : ''}" data-uf-flow="${f.id}" role="option" aria-selected="${f.id === flow.id}">
-                <div class="uf-flow-item-top">
-                  <span class="uf-flow-status">${esc(f.status)}</span>
-                </div>
-                <div class="uf-flow-name">${esc(f.title)}</div>
-                <div class="uf-flow-desc">${esc(f.desc)}</div>
-              </button>`).join('')}
-          </div>
+        <div class="sg-scenario-list" id="sg-scenario-list" role="listbox" aria-label="Scenarios">
+          ${phase.scenarios.map(s => `
+            <button type="button" class="sg-scenario-btn${s.id === scenario.id ? ' is-active' : ''}" data-sg-scenario="${s.id}" role="option" aria-selected="${s.id === scenario.id}">
+              <strong>${esc(s.title)}</strong>
+              <span>${esc(s.intro)}</span>
+            </button>`).join('')}
         </div>
-        <div class="uf-detail">
-          <div>
-            <h3 class="uf-detail-title">${esc(flow.title)}</h3>
-            <p class="uf-detail-desc">${esc(flow.desc)}</p>
-          </div>
-          <div>
-            <p class="uf-steps-label">Steps in this flow</p>
-            <ol class="uf-steps">
-              ${flow.steps.map(s => `<li>${esc(s)}</li>`).join('')}
-            </ol>
-          </div>
-          ${flow.try ? `
-            <div class="uf-detail-try">
-              <button type="button" class="btn btn-primary" id="btn-user-flow-try-inline" style="width:100%;">${esc(tryLabel)}</button>
-            </div>` : ''}
-          <p class="uf-figma-note">Full diagram with all branches: <a href="${USER_FLOW_FIGMA_URL}" target="_blank" rel="noopener noreferrer">Figma User Flows board</a></p>
+      </div>
+      <div class="sg-picker-dropdown" id="sg-picker-dropdown"${scenarioGuidePicker !== 'dropdown' ? ' hidden' : ''}>
+        <label class="field">
+          <span class="field-label">Choose scenario</span>
+          <select class="input" id="sg-scenario-select">
+            ${SCENARIO_PHASES.map(p => `
+              <optgroup label="${esc(p.title)}">
+                ${p.scenarios.map(s => `<option value="${s.id}"${s.id === scenario.id ? ' selected' : ''}>${esc(s.title)}</option>`).join('')}
+              </optgroup>`).join('')}
+          </select>
+        </label>
+      </div>
+      <section class="sg-detail" aria-live="polite">
+        <h3>${esc(scenario.title)}</h3>
+        <p class="sg-detail-intro">${esc(scenario.intro)}</p>
+        <div class="sg-detail-meta">
+          <span class="badge badge-slate">${esc(phase.title)}</span>
+          ${scenario.who.map(w => `<span class="badge badge-purple">${esc(w)}</span>`).join('')}
+          <span class="badge badge-success">${esc(scenario.status)}</span>
         </div>
-      </div>`;
-
-    $('#btn-user-flow-try-inline')?.addEventListener('click', launchUserFlowTry);
+        <p class="sg-what-label">What happens</p>
+        <ol class="sg-what-list">
+          ${scenario.happens.map(line => `<li>${esc(line)}</li>`).join('')}
+        </ol>
+        ${rulesHtml}
+      </section>`;
   }
 
-  function openUserFlowGuide(phaseId, flowId) {
-    if (phaseId) userFlowPhaseId = phaseId;
-    if (flowId) userFlowId = flowId;
+  function openUserFlowGuide(phaseId, scenarioId) {
+    if (phaseId) scenarioGuidePhaseId = phaseId;
+    if (scenarioId) scenarioGuideId = scenarioId;
     else {
-      const phase = getUserFlowPhase(userFlowPhaseId);
-      userFlowId = phase?.flows[0]?.id || 'scheduled-confirmation';
+      const phase = getScenarioPhase(scenarioGuidePhaseId);
+      scenarioGuideId = phase?.scenarios[0]?.id || 'schedule';
     }
-    renderUserFlowModal();
+    renderScenarioGuideModal();
     openModal('modal-user-flow');
   }
 
   function launchUserFlowTry() {
-    const flow = getUserFlow(userFlowPhaseId, userFlowId);
-    if (!flow?.try) return;
-    const t = flow.try;
+    const found = getScenario(scenarioGuideId);
+    if (!found?.scenario.try) return;
+    const t = found.scenario.try;
     closeModal('modal-user-flow');
 
     if (t.type === 'agent-viewing') {
@@ -4717,7 +4690,7 @@
       renderFilterRow();
       renderList();
       renderDock();
-      showToast('User flow', `Showing ${viewings.find(v => v.id === t.viewingId)?.viewer || 'viewing'} — follow the steps in the dock.`, 'neutral');
+      showToast('Scenario', `Showing ${viewings.find(v => v.id === t.viewingId)?.viewer || 'viewing'} — follow the steps in the dock.`, 'neutral');
       return;
     }
 
@@ -4742,7 +4715,7 @@
       updateClientTimeFilterUI();
       syncClientSearchInput();
       renderClientList();
-      showToast('User flow', 'Client Viewing and Feedback — follow the steps in the dock.', 'neutral');
+      showToast('Scenario', 'Client Viewing and Feedback — follow the steps in the dock.', 'neutral');
       return;
     }
 
@@ -4752,7 +4725,7 @@
       const sel = $('#viewer-persona');
       if (sel) sel.value = t.leadId;
       renderViewerDashboard();
-      showToast('User flow', 'Viewer inbox — use the email actions below.', 'neutral');
+      showToast('Scenario', 'Viewer inbox — use the email actions below.', 'neutral');
       return;
     }
 
@@ -4784,19 +4757,35 @@
     $('#btn-user-flow-try')?.addEventListener('click', launchUserFlowTry);
 
     $('#user-flow-modal-body')?.addEventListener('click', (e) => {
-      const phaseBtn = e.target.closest('[data-uf-phase]');
-      if (phaseBtn) {
-        userFlowPhaseId = phaseBtn.dataset.ufPhase;
-        const phase = getUserFlowPhase(userFlowPhaseId);
-        userFlowId = phase?.flows[0]?.id || userFlowId;
-        renderUserFlowModal();
+      const pickerBtn = e.target.closest('[data-sg-picker]');
+      if (pickerBtn) {
+        scenarioGuidePicker = pickerBtn.dataset.sgPicker;
+        renderScenarioGuideModal();
         return;
       }
-      const flowBtn = e.target.closest('[data-uf-flow]');
-      if (flowBtn) {
-        userFlowId = flowBtn.dataset.ufFlow;
-        renderUserFlowModal();
+      const phaseBtn = e.target.closest('[data-sg-phase]');
+      if (phaseBtn) {
+        scenarioGuidePhaseId = phaseBtn.dataset.sgPhase;
+        const phase = getScenarioPhase(scenarioGuidePhaseId);
+        scenarioGuideId = phase?.scenarios[0]?.id || scenarioGuideId;
+        renderScenarioGuideModal();
+        return;
       }
+      const scenarioBtn = e.target.closest('[data-sg-scenario]');
+      if (scenarioBtn) {
+        scenarioGuideId = scenarioBtn.dataset.sgScenario;
+        const found = getScenario(scenarioGuideId);
+        if (found) scenarioGuidePhaseId = found.phase.id;
+        renderScenarioGuideModal();
+      }
+    });
+
+    $('#user-flow-modal-body')?.addEventListener('change', (e) => {
+      if (e.target.id !== 'sg-scenario-select') return;
+      scenarioGuideId = e.target.value;
+      const found = getScenario(scenarioGuideId);
+      if (found) scenarioGuidePhaseId = found.phase.id;
+      renderScenarioGuideModal();
     });
   }
 
