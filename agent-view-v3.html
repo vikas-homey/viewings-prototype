@@ -1,0 +1,1736 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Viewings and feedback v3 — Homey</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="design-system/homeywebfoundation.css">
+<style>
+/* Prototype-specific layout & overrides — tokens & UI components: design-system/homeywebfoundation.css */
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans);
+      font-size: var(--fs-base);
+      line-height: 1.5;
+      color: var(--fg);
+      background: var(--bg-subtle);
+      min-height: 100vh;
+    }
+    .icon { width: 16px; height: 16px; flex-shrink: 0; }
+
+    /* Modals hidden until .is-open (JS) */
+    .modal-scrim { display: none; }
+    .modal-scrim.is-open { display: flex; }
+
+    /* —— Page layout: app shell —— */
+    .app {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      grid-template-rows: 48px 1fr;
+      min-height: 100vh;
+    }
+
+    .global-header {
+      grid-column: 2;
+      grid-row: 1;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 var(--space-6);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+    .header-actions-global { display: flex; align-items: center; gap: var(--space-2); }
+
+    .body-row {
+      grid-column: 2;
+      grid-row: 2;
+      display: flex;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .icon-rail {
+      grid-column: 1;
+      grid-row: 1 / -1;
+      width: 56px;
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: var(--space-3) 0;
+      gap: var(--space-2);
+    }
+    .rail-logo {
+      width: 32px; height: 32px;
+      background: var(--purple-600);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-4);
+    }
+    .rail-item {
+      width: 40px; height: 40px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: var(--radius-md);
+      color: var(--fg-muted);
+      cursor: pointer;
+    }
+    .rail-item:hover { background: var(--slate-100); color: var(--fg); }
+    .rail-item.active { background: var(--purple-50); color: var(--purple-700); }
+
+    /* Case panel */
+    .case-panel {
+      width: 380px;
+      flex-shrink: 0;
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .panel-section {
+      padding: var(--space-4);
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-section:last-child { border-bottom: none; flex: 1; }
+
+    .client-header {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      margin-bottom: var(--space-3);
+    }
+    .client-identity { display: flex; align-items: center; gap: var(--space-2); min-width: 0; }
+    .client-name { font-size: var(--fs-md); font-weight: 600; line-height: 1.25; color: var(--fg-strong); }
+    .client-actions { display: flex; gap: var(--space-2); }
+
+    .contact-row {
+      display: flex; align-items: center; gap: var(--space-2);
+      font-size: var(--fs-base); margin-bottom: var(--space-2);
+    }
+    .contact-row a { color: var(--purple-700); text-decoration: none; }
+    .contact-row a:hover { text-decoration: underline; }
+    .contact-row svg { color: var(--fg-muted); flex-shrink: 0; }
+    .contact-row a svg { color: var(--purple-700); }
+
+    .follow-up-row { display: flex; align-items: center; gap: var(--space-2); margin-top: var(--space-1); }
+    .follow-up-btn {
+      font-family: inherit; font-size: var(--fs-base); color: var(--fg);
+      background: none; border: none; cursor: pointer;
+      display: flex; align-items: center; gap: 4px; padding: 4px 0;
+    }
+    .follow-up-btn:hover { color: var(--purple-700); }
+
+    .section-title-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: var(--space-3);
+    }
+    .section-title { font-size: var(--fs-md); font-weight: 600; color: var(--fg-strong); }
+    .property-address {
+      font-size: var(--fs-base); font-weight: 500; line-height: 1.4;
+      display: flex; align-items: flex-start; gap: var(--space-2);
+      margin-bottom: var(--space-3); color: var(--fg-strong);
+    }
+    .property-meta { display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--fs-base); }
+    .property-meta-row { display: flex; gap: var(--space-2); }
+    .property-meta-row .label { width: 56px; color: var(--fg-muted); flex-shrink: 0; }
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      font-size: var(--fs-base); cursor: pointer;
+      background: var(--bg); color: var(--fg-strong);
+      font-family: inherit;
+    }
+    .status-pill:hover { background: var(--slate-50); }
+    .show-more {
+      font-size: var(--fs-base); color: var(--purple-700);
+      background: none; border: none; cursor: pointer;
+      display: flex; align-items: center; gap: 4px;
+      margin-top: var(--space-2); padding: 0;
+      font-family: inherit;
+    }
+    .show-more:hover { color: var(--purple-800); }
+
+    .phase-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      padding: 0 var(--space-4);
+      background: var(--bg);
+    }
+    .phase-tab {
+      padding: var(--space-3) var(--space-4);
+      font-size: var(--fs-base); font-weight: 500;
+      color: var(--fg-muted);
+      background: none; border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .phase-tab:hover { color: var(--fg-strong); }
+    .phase-tab.active {
+      color: var(--purple-700);
+      border-bottom-color: var(--purple-600);
+      font-weight: 600;
+    }
+
+    .workflow-list {
+      padding: var(--space-3) var(--space-4) var(--space-4);
+      display: flex; flex-direction: column; gap: var(--space-2);
+    }
+    .workflow-card {
+      display: flex; align-items: center; gap: var(--space-3);
+      padding: var(--space-3) 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      background: var(--bg);
+      cursor: pointer;
+      text-align: left;
+      font-family: inherit;
+      width: 100%;
+      transition: border-color var(--dur-fast), background var(--dur-fast);
+    }
+    .workflow-card:hover { border-color: var(--border-strong); background: var(--slate-50); }
+    .workflow-card.active {
+      background: var(--purple-50);
+      border-color: var(--purple-200);
+    }
+    .workflow-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .workflow-dot.progress { background: var(--info-600); }
+    .workflow-dot.pending { background: var(--warning-600); }
+    .workflow-card.active .workflow-dot.progress {
+      box-shadow: 0 0 0 3px var(--purple-100);
+    }
+    .workflow-label { flex: 1; font-size: var(--fs-base); font-weight: 500; color: var(--fg-strong); }
+    .workflow-chevron { color: var(--fg-subtle); flex-shrink: 0; }
+
+    /* Workflow main */
+    .workflow-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      background: var(--bg-subtle);
+    }
+    .workflow-page-header {
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: var(--space-5) var(--space-8);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-4);
+      flex-wrap: wrap;
+    }
+    .workflow-page-header-start {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      min-width: 0;
+    }
+    .workflow-page-header h1 {
+      font-size: var(--fs-2xl); font-weight: 600;
+      line-height: 1.2; color: var(--fg-strong);
+    }
+    .workflow-body {
+      flex: 1;
+      overflow: auto;
+      padding: var(--space-6) var(--space-8);
+    }
+
+    /* —— Viewings workspace —— */
+    .vf-workspace {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-5);
+      min-height: 0;
+    }
+    .vf-attention {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+    .vf-attention .message { align-items: center; }
+
+    .vf-work-area {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 380px;
+      gap: var(--space-5);
+      align-items: start;
+    }
+    .vf-grid-panel {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .vf-toolbar {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+    .vf-toolbar .search {
+      flex: 1;
+      min-width: 180px;
+      max-width: none;
+    }
+    .vf-toolbar .tabs-pill { flex-shrink: 0; }
+
+    .vf-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-3);
+    }
+    @media (max-width: 1100px) {
+      .vf-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 900px) {
+      .vf-work-area { grid-template-columns: 1fr; }
+      .vf-detail { position: static; max-height: none; }
+    }
+    @media (max-width: 540px) {
+      .vf-grid { grid-template-columns: 1fr; }
+    }
+
+    .vf-card {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      padding: var(--space-4);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      border-left-width: 3px;
+      cursor: pointer;
+      text-align: left;
+      font-family: inherit;
+      width: 100%;
+      transition: background var(--dur-fast), border-color var(--dur-fast);
+    }
+    .vf-card:hover { background: var(--slate-50); }
+    .vf-card.is-selected {
+      background: var(--purple-50);
+      border-color: var(--purple-200);
+    }
+    .vf-card.is-selected.is-accent-scheduled,
+    .vf-card.is-selected.is-accent-confirmed,
+    .vf-card.is-selected.is-accent-completed,
+    .vf-card.is-selected.is-accent-no_show,
+    .vf-card.is-selected.is-accent-cancelled { border-left-color: var(--purple-600); }
+    .vf-card.is-accent-scheduled { border-left-color: var(--purple-400); }
+    .vf-card.is-accent-confirmed { border-left-color: var(--success-600); }
+    .vf-card.is-accent-completed { border-left-color: var(--info-600); }
+    .vf-card.is-accent-no_show { border-left-color: var(--warning-600); }
+    .vf-card.is-accent-cancelled { border-left-color: var(--slate-300); }
+    .vf-card.is-needs-action { box-shadow: inset 0 0 0 1px var(--orange-200); }
+
+    .vf-card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-2);
+    }
+    .vf-card-time {
+      font-size: var(--fs-lg);
+      font-weight: 700;
+      color: var(--fg-strong);
+      line-height: 1.2;
+      font-variant-numeric: tabular-nums;
+    }
+    .vf-card-date {
+      font-size: var(--fs-xs);
+      color: var(--fg-muted);
+      margin-top: 2px;
+    }
+    .vf-card-viewer {
+      font-size: var(--fs-md);
+      font-weight: 600;
+      color: var(--fg-strong);
+    }
+    .vf-card-sub {
+      font-size: var(--fs-xs);
+      color: var(--fg-muted);
+    }
+    .vf-card-action {
+      font-size: var(--fs-xs);
+      font-weight: 600;
+      color: var(--warning-600);
+      margin-top: var(--space-1);
+    }
+    .vf-card-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--space-2);
+      margin-top: auto;
+      padding-top: var(--space-2);
+      border-top: 1px solid var(--slate-100);
+      font-size: var(--fs-xs);
+      color: var(--fg-muted);
+    }
+
+    .vf-detail.detail-panel {
+      position: sticky;
+      top: 0;
+      box-shadow: var(--shadow-sm);
+    }
+    @media (max-width: 1200px) {
+      .vf-detail.detail-panel {
+        position: static;
+        inset: auto;
+        display: block !important;
+        max-height: none;
+        border-radius: var(--radius-lg);
+      }
+      .vf-detail .detail-panel-inner {
+        width: 100%;
+        max-width: none;
+        height: auto;
+        overflow: visible;
+        border-radius: var(--radius-lg);
+        box-shadow: none;
+      }
+    }
+    .vf-detail-empty {
+      padding: var(--space-8) var(--space-4);
+      text-align: center;
+      color: var(--fg-muted);
+      font-size: var(--fs-sm);
+    }
+    .vf-detail-empty strong {
+      display: block;
+      color: var(--fg-strong);
+      font-size: var(--fs-md);
+      margin-bottom: var(--space-2);
+    }
+    .vf-next-card {
+      margin-top: var(--space-4);
+      padding: var(--space-3);
+      background: var(--slate-50);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      text-align: left;
+      cursor: pointer;
+      font-family: inherit;
+      width: 100%;
+      transition: background var(--dur-fast);
+    }
+    .vf-next-card:hover { background: var(--slate-100); }
+    .vf-next-label {
+      font-size: var(--fs-xs);
+      font-weight: 600;
+      color: var(--fg-muted);
+      margin-bottom: 4px;
+    }
+    .vf-next-viewer {
+      font-size: var(--fs-sm);
+      font-weight: 600;
+      color: var(--fg-strong);
+    }
+    .vf-next-time {
+      font-size: var(--fs-xs);
+      color: var(--fg-muted);
+      margin-top: 2px;
+    }
+
+    .vf-detail-action {
+      padding: var(--space-3) var(--space-4);
+      border-bottom: 1px solid var(--border);
+      background: var(--slate-50);
+    }
+    .vf-detail-action p {
+      font-size: var(--fs-sm);
+      color: var(--fg);
+      margin: 0 0 var(--space-2);
+    }
+    .vf-detail-action.is-warning { background: var(--warning-50); border-bottom-color: #FDE68A; }
+    .vf-detail-action.is-warning p { color: var(--warning-600); font-weight: 600; }
+
+    /* Minimal floating layout switcher */
+    .layout-float {
+      position: fixed;
+      top: 92px;
+      right: 24px;
+      z-index: 40;
+      pointer-events: none;
+    }
+    .layout-float-chip {
+      pointer-events: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px 6px 8px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--bg) 88%, transparent);
+      backdrop-filter: blur(6px);
+      box-shadow: var(--shadow-sm);
+      cursor: grab;
+      user-select: none;
+    }
+    .layout-float.is-dragging .layout-float-chip {
+      cursor: grabbing;
+      box-shadow: var(--shadow-md);
+    }
+    .layout-float-handle {
+      width: 24px;
+      height: 24px;
+      border: none;
+      border-radius: 999px;
+      background: var(--slate-100);
+      color: var(--fg-muted);
+      font-size: 12px;
+      line-height: 1;
+      cursor: grab;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+    }
+    .layout-float.is-dragging .layout-float-handle { cursor: grabbing; }
+    .layout-float-handle:focus-visible {
+      outline: 2px solid var(--purple-400);
+      outline-offset: 2px;
+    }
+    .layout-float-chip .field { margin: 0; }
+    .layout-float-chip .field-label {
+      margin: 0;
+      font-size: 11px;
+      color: var(--fg-subtle);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+    .layout-float-select {
+      min-width: 180px;
+      height: 30px;
+      padding: 4px 28px 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      background-color: var(--bg);
+    }
+    .property-scope { font-size: var(--fs-sm); color: var(--fg-muted); margin: 2px 0 0; font-weight: 400; }
+    .suitability-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .suitability-chip {
+      padding: 6px 12px; border: 1px solid var(--border); border-radius: var(--radius-full);
+      font-size: var(--fs-xs); font-weight: 600; background: var(--bg); cursor: pointer; font-family: inherit;
+    }
+    .suitability-chip.is-selected { background: var(--purple-100); border-color: var(--purple-200); color: var(--purple-800); }
+    .notify-vendor-row {
+      display: flex; align-items: flex-start; gap: 8px; margin-top: var(--space-3);
+      padding: var(--space-3); background: var(--purple-50); border: 1px solid var(--purple-200);
+      border-radius: var(--radius-md); font-size: var(--fs-sm);
+    }
+
+
+    .tag {
+      display: inline-block;
+      font-size: 8px; font-weight: 700;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      padding: 4px 8px; border-radius: var(--radius-xs);
+    }
+    .tag-purple { background: var(--purple-50); color: var(--purple-700); }
+
+    .layout-views { min-width: 0; }
+    .layout-view { display: none; }
+    .layout-view.is-active { display: block; }
+
+    /* Grouped by day */
+    .day-group { margin-bottom: var(--space-5); }
+    .day-group-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: var(--space-2) var(--space-3);
+      background: var(--slate-100);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-2);
+    }
+    .day-group-header h3 { font-size: var(--fs-sm); font-weight: 600; color: var(--fg-strong); margin: 0; }
+    .day-group-header .count { font-size: var(--fs-xs); color: var(--fg-muted); font-weight: 500; }
+    .day-group-header.is-today { background: var(--purple-50); border: 1px solid var(--purple-200); }
+    .day-group-header.is-today h3 { color: var(--purple-700); }
+    .day-group-cards { display: flex; flex-direction: column; gap: var(--space-2); padding-left: var(--space-1); }
+
+    /* Status board */
+    .status-board {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(160px, 1fr));
+      gap: var(--space-3);
+      overflow-x: auto;
+      padding-bottom: var(--space-2);
+    }
+    @media (max-width: 1100px) {
+      .status-board { grid-template-columns: repeat(2, 1fr); }
+    }
+    .board-column {
+      background: var(--slate-50);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      min-height: 200px;
+      display: flex; flex-direction: column;
+    }
+    .board-column-head {
+      padding: var(--space-3);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--space-2);
+    }
+    .board-column-head h3 { font-size: var(--fs-xs); font-weight: 600; color: var(--fg-strong); margin: 0; }
+    .board-column-body {
+      padding: var(--space-2);
+      display: flex; flex-direction: column; gap: var(--space-2);
+      flex: 1;
+    }
+    .board-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+      cursor: pointer;
+      transition: background var(--dur-fast), border-color var(--dur-fast);
+    }
+    .board-card:hover { background: var(--slate-50); border-color: var(--purple-200); }
+    .board-card.selected { border-color: var(--purple-600); box-shadow: var(--shadow-focus); }
+    .board-card-time { font-size: var(--fs-xs); font-weight: 600; color: var(--fg-strong); margin-bottom: 4px; }
+    .board-card-buyer { font-size: var(--fs-sm); color: var(--fg); margin-bottom: var(--space-2); }
+    .board-card-meta { display: flex; flex-wrap: wrap; gap: 4px; }
+
+    /* Upcoming / past split */
+    .split-section { margin-bottom: var(--space-6); }
+    .split-section-head {
+      font-size: var(--fs-sm); font-weight: 600; color: var(--fg-strong);
+      margin-bottom: var(--space-3);
+      display: flex; align-items: center; gap: var(--space-2);
+    }
+    .split-section-head .badge { font-weight: 700; }
+
+    /* Table layout */
+    .viewings-table-wrap {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .viewings-table {
+      width: 100%; border-collapse: collapse; font-size: var(--fs-sm);
+    }
+    .viewings-table th {
+      text-align: left; font-weight: 600; font-size: var(--fs-xs);
+      padding: 10px 14px; background: var(--bg-subtle);
+      color: var(--fg-strong); border-bottom: 1px solid var(--border);
+    }
+    .viewings-table td {
+      padding: 12px 14px; border-bottom: 1px solid var(--slate-100);
+      color: var(--fg); vertical-align: middle;
+    }
+    .viewings-table tbody tr { cursor: pointer; transition: background var(--dur-fast); }
+    .viewings-table tbody tr:hover td { background: var(--slate-50); }
+    .viewings-table tbody tr.selected td { background: var(--purple-50); }
+    .viewings-table tbody tr:last-child td { border-bottom: 0; }
+    .viewings-table .td-buyer { font-weight: 600; color: var(--fg-strong); }
+    .viewings-table .td-muted { color: var(--fg-muted); font-size: var(--fs-xs); }
+
+    /* Diary (legacy exploration) */
+    .layout-view[data-layout="diary"] .diary-legacy-note {
+      font-size: var(--fs-xs); color: var(--warning-600);
+      background: var(--warning-50);
+      border: 1px solid #FDE68A;
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+      margin-bottom: var(--space-3);
+    }
+
+    /* Diary */
+    .diary-week {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .diary-week-header {
+      padding: var(--space-3) var(--space-4);
+      font-weight: 600;
+      color: var(--fg-strong);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .diary-days { display: grid; grid-template-columns: repeat(5, 1fr); min-height: 320px; }
+    .diary-day {
+      border-right: 1px solid var(--border);
+      padding: var(--space-2);
+      min-height: 280px;
+    }
+    .diary-day:last-child { border-right: none; }
+    .diary-day-label {
+      font-size: var(--fs-xs);
+      font-weight: 600;
+      color: var(--fg-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: var(--space-2);
+      text-align: center;
+    }
+    .diary-day-label.today { color: var(--purple-700); }
+    .diary-event {
+      background: var(--purple-50);
+      border-left: 3px solid var(--purple-600);
+      border-radius: var(--radius-xs);
+      padding: var(--space-2);
+      margin-bottom: 6px;
+      font-size: var(--fs-xs);
+      cursor: pointer;
+    }
+    .diary-event:hover { background: var(--purple-100); }
+    .diary-event.cancelled {
+      opacity: 0.55;
+      border-left-color: var(--fg-subtle);
+      background: var(--slate-100);
+    }
+    .diary-event-time { font-weight: 600; margin-bottom: 2px; color: var(--fg-strong); }
+    .diary-event-buyer { color: var(--fg); margin-bottom: 4px; }
+
+    /* Detail panel */
+    .layout-with-panel {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: var(--space-6);
+      align-items: start;
+    }
+    @media (max-width: 1200px) {
+      .layout-with-panel { grid-template-columns: 1fr; }
+    }
+
+    .detail-panel {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      position: sticky;
+      top: 0;
+    }
+    .detail-panel.hidden { display: none; }
+    @media (max-width: 1200px) {
+      .detail-panel:not(.hidden) {
+        position: fixed; inset: 0; z-index: 100;
+        background: color-mix(in srgb, var(--slate-900) 40%, transparent);
+        display: flex !important; justify-content: flex-end;
+        border-radius: 0; border: none; box-shadow: none;
+      }
+      .detail-panel:not(.hidden) .detail-panel-inner {
+        width: 100%; max-width: 400px; height: 100%; overflow: auto;
+        background: var(--bg);
+        border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+        box-shadow: var(--shadow-xl);
+      }
+    }
+    .detail-header {
+      padding: var(--space-4);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: var(--space-3);
+    }
+    .detail-header h2 { font-size: var(--fs-lg); font-weight: 600; color: var(--fg-strong); }
+    .detail-meta { font-size: var(--fs-sm); color: var(--fg-muted); margin-top: 4px; }
+    .detail-body { padding: var(--space-4); }
+    .detail-section { margin-bottom: var(--space-6); }
+    .detail-section:last-child { margin-bottom: 0; }
+    .detail-section-title {
+      font-size: var(--fs-xs);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--fg-muted);
+      margin-bottom: var(--space-3);
+    }
+    .status-buttons { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+    .status-btn {
+      font-family: inherit;
+      font-size: var(--fs-sm);
+      padding: 6px 12px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: var(--bg);
+      cursor: pointer;
+      color: var(--fg);
+      font-weight: 500;
+    }
+    .status-btn:hover { background: var(--slate-50); }
+    .status-btn.active {
+      border-color: var(--purple-600);
+      background: var(--purple-50);
+      color: var(--purple-700);
+      font-weight: 600;
+    }
+    .feedback-locked {
+      background: var(--bg-subtle);
+      border: 1px dashed var(--border-strong);
+      border-radius: var(--radius-md);
+      padding: var(--space-4);
+      font-size: var(--fs-sm);
+      color: var(--fg-muted);
+      text-align: center;
+    }
+    .feedback-actions { display: flex; flex-direction: column; gap: var(--space-2); margin-bottom: var(--space-4); }
+
+    .rating-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--space-3); flex-wrap: wrap;
+    }
+    .rating-value {
+      font-size: var(--fs-sm); font-weight: 600; color: var(--fg-strong);
+      font-variant-numeric: tabular-nums;
+    }
+    .rating-picker { display: flex; gap: 4px; }
+    .rating-btn {
+      min-width: 32px; height: 32px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xs);
+      background: var(--bg);
+      cursor: pointer;
+      font-family: inherit;
+      font-size: var(--fs-sm);
+      font-weight: 600;
+      color: var(--fg-muted);
+    }
+    .rating-btn:hover { background: var(--slate-50); border-color: var(--border-strong); }
+    .rating-btn.is-selected {
+      background: var(--purple-50);
+      border-color: var(--purple-400);
+      color: var(--purple-700);
+    }
+
+    .internal-note {
+      background: var(--bg-subtle);
+      border-radius: var(--radius-md);
+      padding: var(--space-3);
+    }
+    .internal-note .detail-section-title { color: var(--warning-600); }
+    .internal-note .field-help { margin-bottom: var(--space-2); }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-3);
+    }
+    .form-row .field { margin-bottom: 0; }
+
+    .modal-note { font-size: var(--fs-xs); color: var(--fg-muted); margin-top: var(--space-2); }
+
+    /* Responsive shell (Tailwind complements) */
+    @media (max-width: 1023px) {
+      .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+      .icon-rail {
+        grid-row: 2; grid-column: 1;
+        width: 100%; height: 56px; flex-direction: row;
+        border-right: none; border-top: 1px solid var(--border);
+        padding: 0 var(--space-4); justify-content: center;
+        position: fixed; bottom: 0; left: 0; right: 0; z-index: 50;
+        background: var(--bg);
+      }
+      .rail-logo { margin-bottom: 0; margin-right: var(--space-4); }
+      .global-header { grid-column: 1; padding: 0 var(--space-4); }
+      .body-row {
+        grid-column: 1; flex-direction: column;
+        padding-bottom: 56px;
+      }
+      .case-panel {
+        width: 100%; max-height: none;
+        border-right: none; border-bottom: 1px solid var(--border);
+      }
+      .case-panel.is-collapsed .panel-section,
+      .case-panel.is-collapsed .phase-tabs,
+      .case-panel.is-collapsed .workflow-list { display: none; }
+      .case-panel-toggle { display: flex; }
+      .workflow-page-header { padding: var(--space-4); }
+      .workflow-body { padding: var(--space-4); }
+      .vf-grid { grid-template-columns: 1fr; }
+      .status-board { grid-template-columns: 1fr 1fr; }
+      .diary-days { grid-template-columns: repeat(2, 1fr); overflow-x: auto; }
+      .form-row { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 639px) {
+      .stats-row { grid-template-columns: 1fr; }
+      .status-board { grid-template-columns: 1fr; }
+      .header-actions { width: 100%; }
+      .header-actions .btn { flex: 1; }
+      .layout-float { position: static; margin-bottom: var(--space-3); pointer-events: auto; }
+      .layout-float-chip { width: 100%; border-radius: var(--radius-md); }
+      .layout-float-select { width: 100%; min-width: 0; border-radius: var(--radius-md); }
+      .viewings-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .viewings-table { min-width: 640px; }
+    }
+    .case-panel-toggle {
+      display: none; width: 100%; padding: var(--space-3) var(--space-4);
+      font-family: inherit; font-size: var(--fs-sm); font-weight: 600;
+      color: var(--fg-strong); background: var(--slate-50); border: none;
+      border-bottom: 1px solid var(--border); cursor: pointer;
+      align-items: center; justify-content: space-between; gap: var(--space-2);
+    }
+    .stats-row {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-3); margin-bottom: var(--space-5);
+    }
+    .stat-card {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: var(--space-3) var(--space-4);
+      box-shadow: var(--shadow-xs);
+    }
+    .stat-card .stat-value { font-size: var(--fs-xl); font-weight: 700; color: var(--fg-strong); }
+    .stat-card .stat-label { font-size: var(--fs-xs); color: var(--fg-muted); margin-top: 2px; }
+    .stat-card.is-warning { border-color: #FDE68A; background: var(--warning-50); }
+    .filters-bar {
+      display: flex; flex-wrap: wrap; gap: var(--space-3);
+      align-items: flex-end; margin-bottom: var(--space-4);
+    }
+    .filters-bar .field { margin-bottom: 0; flex: 1; min-width: 180px; }
+    .filter-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .filter-chip {
+      font-family: inherit; font-size: var(--fs-xs); font-weight: 600;
+      padding: 6px 12px; border-radius: var(--radius-full);
+      border: 1px solid var(--border); background: var(--bg);
+      color: var(--fg-muted); cursor: pointer;
+    }
+    .filter-chip.is-active {
+      background: var(--purple-50); border-color: var(--purple-200); color: var(--purple-700);
+    }
+    .empty-state {
+      text-align: center; padding: var(--space-10) var(--space-6);
+      color: var(--fg-muted); font-size: var(--fs-sm);
+    }
+    .empty-state strong { display: block; color: var(--fg-strong); margin-bottom: var(--space-2); }
+    .detail-backdrop {
+      display: none; position: fixed; inset: 0;
+      background: color-mix(in srgb, var(--slate-900) 45%, transparent);
+      z-index: 99;
+    }
+    .detail-backdrop.is-visible { display: block; }
+    @media (min-width: 1201px) {
+      .detail-backdrop { display: none !important; }
+    }
+
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+    /* .btn-icon-sm / .btn-icon-bordered — design-system/homeywebfoundation.css */
+    .detail-section .field-help { margin-top: var(--space-2); }
+
+    /* —— v2 Command centre —— */
+    .v2-cmd {
+      display: grid;
+      grid-template-columns: 260px 1fr 300px;
+      gap: 16px;
+      align-items: start;
+    }
+    .v2-col {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 200px);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .v2-col-head {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 600;
+      font-size: var(--fs-sm);
+      color: var(--fg-strong);
+      flex-shrink: 0;
+    }
+    .v2-col-body {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
+    }
+    .v2-col-body-pad {
+      padding: 16px;
+    }
+    .v2-item {
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--slate-100);
+      cursor: pointer;
+      transition: background var(--dur-fast);
+    }
+    .v2-item:hover { background: var(--slate-50); }
+    .v2-item.is-active { background: var(--purple-50); }
+    .v2-item-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px;
+    }
+    .v2-item-dot--scheduled { background: var(--purple-500); }
+    .v2-item-dot--confirmed { background: var(--success-500); }
+    .v2-item-dot--completed { background: var(--info-600); }
+    .v2-item-dot--cancelled, .v2-item-dot--no_show { background: var(--slate-300); }
+    .v2-item-buyer { font-weight: 600; font-size: 13px; color: var(--fg-strong); }
+    .v2-item-meta { font-size: 12px; color: var(--fg-muted); }
+    .v2-item-signals { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+    .v2-signal {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 2px 6px; border-radius: var(--radius-xs); border: 1px solid transparent;
+    }
+    .v2-signal--reminder { background: var(--purple-50); color: var(--purple-700); border-color: var(--purple-200); }
+    .v2-signal--feedback { background: var(--warning-50); color: var(--warning-600); border-color: #FDE68A; }
+    .v2-signal--rebook { background: var(--info-50); color: var(--info-600); border-color: #BFDBFE; }
+
+    .v2-detail-head {
+      padding: 16px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .v2-detail-name {
+      font-size: 18px; font-weight: 700; color: var(--fg-strong);
+      display: flex; flex-direction: row; gap: 8px; flex-wrap: wrap; align-items: center;
+    }
+    .v2-lead-chip {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 2px 8px; border-radius: var(--radius-full);
+      background: var(--info-50); color: var(--info-600); border: 1px solid #BFDBFE;
+    }
+    .v2-detail-meta { font-size: 13px; color: var(--fg-muted); margin-top: 2px; }
+
+    .v2-section { margin-bottom: 20px; }
+    .v2-section-title {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+      color: var(--fg-muted); margin-bottom: 12px;
+    }
+    .v2-section-title-warn { color: var(--warning-600); }
+    .v2-section-title-info { color: var(--info-600); }
+
+    .v2-action-card {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--slate-100);
+    }
+    .v2-action-type {
+      display: flex; flex-direction: row; gap: 8px; align-items: center;
+      font-size: 11px; text-transform: uppercase; font-weight: 700;
+      color: var(--fg-muted); margin-bottom: 8px;
+    }
+    .v2-action-icon {
+      width: 20px; height: 20px; border-radius: var(--radius-xs);
+      display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .v2-action-icon--reminder { background: var(--purple-100); color: var(--purple-700); }
+    .v2-action-icon--feedback { background: var(--warning-50); color: var(--warning-600); }
+    .v2-action-icon--rebook { background: var(--info-50); color: var(--info-600); }
+    .v2-action-buyer { font-size: 13px; font-weight: 600; color: var(--fg-strong); }
+    .v2-action-sub { font-size: 12px; color: var(--fg-muted); margin-bottom: 8px; }
+    .v2-action-sent {
+      font-size: 12px; color: var(--success-700); font-weight: 600;
+      display: flex; flex-direction: row; gap: 4px; align-items: center;
+    }
+    .v2-section-divider {
+      padding: 8px 16px;
+      font-size: 11px; text-transform: uppercase; font-weight: 700;
+      color: var(--fg-subtle); background: var(--slate-50);
+      border-bottom: 1px solid var(--border);
+    }
+    .v2-vendor-item {
+      display: flex; flex-direction: row; gap: 8px; align-items: center;
+      padding: 5px 0; font-size: 13px;
+    }
+    .v2-vendor-item input[type="checkbox"] { accent-color: var(--purple-600); }
+    .v2-empty-state {
+      text-align: center; padding: 40px 16px;
+      color: var(--fg-muted); font-size: 13px;
+    }
+
+    .v2-status-btn {
+      font-family: inherit; font-size: var(--fs-sm); padding: 6px 12px;
+      border-radius: var(--radius-md); border: 1px solid var(--border);
+      background: var(--bg); cursor: pointer; color: var(--fg); font-weight: 500;
+    }
+    .v2-status-btn:hover { background: var(--slate-50); }
+    .v2-status-btn.active {
+      border-color: var(--purple-600); background: var(--purple-50);
+      color: var(--purple-700); font-weight: 600;
+    }
+    .v2-rating-btn {
+      min-width: 32px; height: 32px; border: 1px solid var(--border);
+      border-radius: var(--radius-xs); background: var(--bg); cursor: pointer;
+      font-family: inherit; font-size: var(--fs-sm); font-weight: 600; color: var(--fg-muted);
+    }
+    .v2-rating-btn:hover { background: var(--slate-50); border-color: var(--border-strong); }
+    .v2-rating-btn.is-selected {
+      background: var(--purple-50); border-color: var(--purple-400); color: var(--purple-700);
+    }
+
+    @media (max-width: 1300px) {
+      .v2-cmd { grid-template-columns: 220px 1fr 260px; }
+    }
+    @media (max-width: 1100px) {
+      .v2-cmd { grid-template-columns: 1fr 1fr; }
+      .v2-auto-col { grid-column: 1 / -1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app min-h-screen">
+    <nav class="icon-rail" aria-label="Main navigation">
+      <div class="rail-logo" aria-hidden="true"></div>
+      <div class="rail-item active" title="Cases">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 7l7-4 7 4v10l-7 4-7-4V7Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="rail-item" title="Calendar">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><rect x="3" y="4" width="14" height="13" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M3 8h14M7 2v3M13 2v3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      </div>
+      <div class="rail-item" title="Contacts">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M4 17c0-3.3 2.7-5 6-5s6 1.7 6 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      </div>
+    </nav>
+
+    <header class="global-header">
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a class="breadcrumb-item" href="#">Dashboard</a>
+        <svg class="breadcrumb-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+        <a class="breadcrumb-item" href="#">PU-0001</a>
+        <svg class="breadcrumb-sep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>
+        <span class="breadcrumb-item is-current" aria-current="page">Agency</span>
+      </nav>
+      <div class="header-actions-global">
+        <button type="button" class="btn-icon" aria-label="Help">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="7.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 13.5V10M10 6.5h.01" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        </button>
+        <button type="button" class="btn-icon" aria-label="Notifications">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M15 6.5a5 5 0 0 0-10 0c0 5.25-1.25 6.75-1.25 6.75h12.5S15 11.75 15 6.5ZM8.75 17a1.25 1.25 0 0 0 2.5 0" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="avatar avatar-md" title="John Doe">JD</div>
+      </div>
+    </header>
+
+    <div class="body-row flex min-h-0 flex-1 overflow-hidden max-lg:flex-col">
+      <button type="button" class="case-panel-toggle" id="case-panel-toggle" aria-expanded="true">
+        <span>Case: Mr Hussain Somani · 12 Duarte Close</span>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+      <aside class="case-panel max-lg:w-full lg:w-[min(380px,100%)] lg:shrink-0" id="case-panel">
+        <section class="panel-section">
+          <div class="client-header">
+            <div class="client-identity">
+              <div class="avatar avatar-sm">HS</div>
+              <span class="client-name">Mr Hussain Somani</span>
+            </div>
+            <div class="client-actions">
+              <button type="button" class="btn-icon btn-icon-bordered" aria-label="Edit client">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 13.33h5.33M2 13.33l2.93-1.27a1.87 1.87 0 0 0 .6-.42l5.8-6.1a1.67 1.67 0 0 0 0-2.3 1.58 1.58 0 0 0-2.26 0l-5.8 6.1c-.12.13-.22.27-.3.43L2 13.33Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+              </button>
+              <button type="button" class="btn-icon btn-icon-bordered" aria-label="More options">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="4" r="1" fill="currentColor"/><circle cx="8" cy="8" r="1" fill="currentColor"/><circle cx="8" cy="12" r="1" fill="currentColor"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="contact-row">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5.66 2.67H3.33C2.6 2.67 2 3.27 2 4c0 5.52 4.48 10 10 10 .73 0 1.33-.6 1.33-1.33v-2.33l-2.83-.94-1.28 1.28a10.42 10.42 0 0 1-4.9-4.9L5.6 4.5 4.66 1.67" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <a href="tel:+447790259198">+44 7790 259198</a>
+            <button type="button" class="btn-icon" aria-label="Copy phone">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5.33 5.33V3.47c0-.56 0-.84.11-.96a.67.67 0 0 1 .29-.18c.16-.06.44-.06 1-.06h4.8c.56 0 .84 0 1.05.1a1 1 0 0 1 .44.45c.1.21.1.49.1 1.05v4.8c0 .56 0 .84-.1 1.05a1 1 0 0 1-.44.44c-.21.11-.49.11-1.05.11H9.87m-5.4 2.93h4.8c.56 0 .84 0 1.05-.1a1 1 0 0 0 .44-.45c.1-.21.1-.49.1-1.05v-4.8c0-.56 0-.84-.1-1.05a1 1 0 0 0-.44-.44c-.21-.11-.49-.11-1.05-.11h-4.8c-.56 0-.84 0-1.05.1a1 1 0 0 0-.44.45c-.1.21-.1.49-.1 1.05v4.8c0 .56 0 .84.1 1.05a1 1 0 0 0 .44.44c.21.11.49.11 1.05.11Z" stroke="currentColor" stroke-width="1.2"/></svg>
+            </button>
+          </div>
+          <div class="contact-row">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M1.33 4.67l5.42 3.61a2 2 0 0 0 2.22 0l5.36-3.61M2.67 12h10.66c.74 0 1.34-.6 1.34-1.33V5.33c0-.73-.6-1.33-1.34-1.33H2.67c-.74 0-1.34.6-1.34 1.33v5.34c0 .73.6 1.33 1.34 1.33Z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <a href="mailto:hussain@example.com">hussain.somani@email.com</a>
+            <button type="button" class="btn-icon" aria-label="Copy email">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5.33 5.33V3.47c0-.56 0-.84.11-.96a.67.67 0 0 1 .29-.18c.16-.06.44-.06 1-.06h4.8c.56 0 .84 0 1.05.1a1 1 0 0 1 .44.45c.1.21.1.49.1 1.05v4.8c0 .56 0 .84-.1 1.05a1 1 0 0 1-.44.44c-.21.11-.49.11-1.05.11H9.87m-5.4 2.93h4.8c.56 0 .84 0 1.05-.1a1 1 0 0 0 .44-.45c.1-.21.1-.49.1-1.05v-4.8c0-.56 0-.84-.1-1.05a1 1 0 0 0-.44-.44c-.21-.11-.49-.11-1.05-.11h-4.8c-.56 0-.84 0-1.05.1a1 1 0 0 0-.44.45c-.1.21-.1.49-.1 1.05v4.8c0 .56 0 .84.1 1.05a1 1 0 0 0 .44.44c.21.11.49.11 1.05.11Z" stroke="currentColor" stroke-width="1.2"/></svg>
+            </button>
+          </div>
+          <div class="follow-up-row">
+            <button type="button" class="follow-up-btn">
+              Add follow-up
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 3.33v9.34M3.33 8h9.34" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+        </section>
+
+        <section class="panel-section">
+          <div class="section-title-row">
+            <span class="section-title">Property</span>
+            <button type="button" class="btn-icon btn-icon-bordered btn-icon-sm" aria-label="Expand property">
+              <svg width="16" height="16" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M4.5 6.75L9 11.25l4.5-4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+          <div class="property-address">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M8 1.33L2.67 6.67v6.66h10.66V6.67L8 1.33Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+            <span>12 Duarte Close Harrow HA1 4GW</span>
+            <button type="button" class="btn-icon" aria-label="Copy address">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5.33 5.33V3.47c0-.56 0-.84.11-.96a.67.67 0 0 1 .29-.18c.16-.06.44-.06 1-.06h4.8c.56 0 .84 0 1.05.1a1 1 0 0 1 .44.45c.1.21.1.49.1 1.05v4.8c0 .56 0 .84-.1 1.05a1 1 0 0 1-.44.44c-.21.11-.49.11-1.05.11H9.87m-5.4 2.93h4.8c.56 0 .84 0 1.05-.1a1 1 0 0 0 .44-.45c.1-.21.1-.49.1-1.05v-4.8c0-.56 0-.84-.1-1.05a1 1 0 0 0-.44-.44c-.21-.11-.49-.11-1.05-.11h-4.8c-.56 0-.84 0-1.05.1a1 1 0 0 0-.44.45c-.1.21-.1.49-.1 1.05v4.8c0 .56 0 .84.1 1.05a1 1 0 0 0 .44.44c.21.11.49.11 1.05.11Z" stroke="currentColor" stroke-width="1.2"/></svg>
+            </button>
+          </div>
+          <div class="property-meta">
+            <div class="property-meta-row"><span class="label">Price</span><span>£400,000</span></div>
+            <div class="property-meta-row"><span class="label">Type</span><span>Sale</span></div>
+            <div class="property-meta-row"><span class="label">Tenure</span><span>Leasehold</span></div>
+            <div class="property-meta-row">
+              <span class="label">Status</span>
+              <button type="button" class="status-pill">
+                Onboarding
+                <svg width="14" height="14" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M4.5 6.75L9 11.25l4.5-4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </button>
+            </div>
+          </div>
+          <button type="button" class="show-more">
+            Show more
+            <svg width="14" height="14" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M4.5 6.75L9 11.25l4.5-4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </button>
+        </section>
+
+        <nav class="phase-tabs" aria-label="Case phase">
+          <button type="button" class="phase-tab active">Agency</button>
+          <button type="button" class="phase-tab">Conveyancing</button>
+          <button type="button" class="phase-tab">Hub</button>
+        </nav>
+
+        <div class="workflow-list" aria-label="Agency workflows">
+          <button type="button" class="workflow-card">
+            <span class="workflow-dot progress" aria-hidden="true"></span>
+            <span class="workflow-label">Instruction</span>
+            <svg class="workflow-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          </button>
+          <button type="button" class="workflow-card">
+            <span class="workflow-dot pending" aria-hidden="true"></span>
+            <span class="workflow-label">Marketing</span>
+            <svg class="workflow-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          </button>
+          <button type="button" class="workflow-card active" aria-current="page">
+            <span class="workflow-dot progress" aria-hidden="true"></span>
+            <span class="workflow-label">Viewings and feedback</span>
+            <svg class="workflow-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          </button>
+          <button type="button" class="workflow-card">
+            <span class="workflow-dot pending" aria-hidden="true"></span>
+            <span class="workflow-label">Offer and MOS</span>
+            <svg class="workflow-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          </button>
+          <button type="button" class="workflow-card">
+            <span class="workflow-dot pending" aria-hidden="true"></span>
+            <span class="workflow-label">Commission invoicing</span>
+            <svg class="workflow-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </aside>
+
+      <main class="workflow-main">
+        <header class="workflow-page-header">
+          <div class="workflow-page-header-start">
+            <button type="button" class="btn-icon btn-icon-bordered" aria-label="Back to workflows">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M11.25 13.5L6.75 9l4.5-4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div>
+              <h1>Viewings</h1>
+              <p class="property-scope">12 Duarte Close · PU-0001</p>
+            </div>
+          </div>
+          <div class="page-actions">
+            <button type="button" class="btn btn-secondary" id="btn-vendor-update">Send vendor update</button>
+            <button type="button" class="btn btn-primary" id="btn-schedule">Schedule viewing</button>
+          </div>
+        </header>
+
+        <div class="workflow-body vf-workspace">
+
+          <div class="vf-attention" id="attention-strip" aria-live="polite"></div>
+
+          <div class="vf-work-area">
+            <section class="vf-grid-panel card card-no-pad" aria-labelledby="viewings-panel-title">
+              <div class="vf-toolbar">
+                <div class="search">
+                  <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                  <input type="search" id="search-input" placeholder="Search viewer or notes" aria-label="Search viewings">
+                </div>
+                <div class="tabs-pill" role="tablist" aria-label="Filter viewings" id="filter-pills">
+                  <button type="button" class="tab-pill is-active" data-filter="all" role="tab" aria-selected="true">All</button>
+                  <button type="button" class="tab-pill" data-filter="upcoming" role="tab" aria-selected="false">Upcoming</button>
+                  <button type="button" class="tab-pill" data-filter="action" role="tab" aria-selected="false">Needs action</button>
+                  <button type="button" class="tab-pill" data-filter="past" role="tab" aria-selected="false">Past</button>
+                </div>
+              </div>
+              <header class="card-header">
+                <h2 class="text-h4" id="viewings-panel-title">All viewings</h2>
+                <span class="text-info-label" id="viewings-count"></span>
+              </header>
+              <div class="card-body">
+                <div id="viewings-list" class="vf-grid" role="list"></div>
+              </div>
+            </section>
+
+            <aside class="vf-detail detail-panel card card-no-pad" id="detail-panel" aria-label="Viewing details">
+              <div class="detail-panel-inner" id="detail-inner"></div>
+            </aside>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div class="modal-scrim" id="modal-schedule" aria-hidden="true">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="sched-title" style="max-width:700px;">
+        <header class="modal-header"><h2 class="modal-title" id="sched-title">Schedule viewing</h2></header>
+        <div class="modal-body">
+          <div class="form-row" style="margin-bottom:12px;">
+            <label class="field"><span class="field-label">Property address</span><input class="input" value="12 Duarte Close, Harrow, HA1 4GW" readonly></label>
+            <label class="field"><span class="field-label">Agent conducting viewing</span><select class="input" id="form-agent"><option>Towers Wills</option><option>Sarah Malik</option></select></label>
+          </div>
+          <div class="form-row" style="margin-bottom:12px;">
+            <label class="field"><span class="field-label">Viewing date *</span><input class="input" type="date" id="form-date"></label>
+            <label class="field"><span class="field-label">Viewing time *</span><input class="input" type="time" id="form-time"></label>
+          </div>
+          <div class="form-row" style="margin-bottom:12px;">
+            <label class="field"><span class="field-label">Viewer (existing)</span><select class="input" id="form-viewer-existing"><option value="">Select existing viewer</option><option>Emma Walker</option><option>David Khan</option></select></label>
+            <div class="field"><span class="field-label">Viewing type</span><div class="btn-group" role="group"><button type="button" class="btn-group-item is-active" data-type="Agent accompanied">Agent accompanied</button><button type="button" class="btn-group-item" data-type="Unaccompanied">Unaccompanied</button></div></div>
+          </div>
+          <details class="collapse" style="margin-bottom:12px;">
+            <summary class="collapse-trigger">Create new viewer (lead) <svg class="collapse-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></summary>
+            <div class="collapse-body">
+              <div class="form-row" style="margin-bottom:10px;"><label class="field"><span class="field-label">First name</span><input class="input" id="lead-first"></label><label class="field"><span class="field-label">Last name</span><input class="input" id="lead-last"></label></div>
+              <div class="form-row"><label class="field"><span class="field-label">Email</span><input class="input" type="email" id="lead-email"></label><label class="field"><span class="field-label">Phone</span><input class="input" id="lead-phone"></label></div>
+            </div>
+          </details>
+          <label class="field"><span class="field-label">Viewer-facing notes (optional)</span><textarea class="input textarea" id="form-notes" placeholder="Access instructions, arrival notes"></textarea></label>
+          <p class="field-help" id="schedule-warning" style="display:none;color:var(--warning-600);"></p>
+        </div>
+        <footer class="modal-footer"><button type="button" class="btn btn-secondary" data-close-modal="modal-schedule">Cancel</button><button type="button" class="btn btn-primary" id="btn-save-schedule">Save viewing</button></footer>
+      </div>
+    </div>
+
+    <div class="modal-scrim" id="modal-vendor" aria-hidden="true">
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="vendor-title" style="max-width:760px;">
+        <header class="modal-header"><h2 class="modal-title" id="vendor-title">Send vendor update</h2></header>
+        <div class="modal-body">
+          <p class="text-body" style="margin-top:0;">Select which viewings to include and edit the curated feedback summary. Internal notes are never shared.</p>
+          <div id="vendor-list" style="display:grid;gap:10px;"></div>
+        </div>
+        <footer class="modal-footer"><button type="button" class="btn btn-secondary" data-close-modal="modal-vendor">Cancel</button><button type="button" class="btn btn-primary" id="btn-send-vendor">Send update</button></footer>
+      </div>
+    </div>
+
+<script>
+(function(){
+  'use strict';
+
+  const viewings = [
+    {id:'v1',viewer:'Emma',date:'2026-05-28',time:'11:30',status:'confirmed',type:'Agent accompanied',agent:'Towers Wills',feedback:null,suitability:null,summary:'',notesShared:'Buyer requested parking details.',notesInternal:'Prefers weekday afternoon slots.',offer:null,rebook:0,lastVendorShared:false},
+    {id:'v2',viewer:'David',date:'2026-05-29',time:'15:00',status:'scheduled',type:'Agent accompanied',agent:'Towers Wills',feedback:null,suitability:null,summary:'',notesShared:'Gate code sent in confirmation.',notesInternal:'Comes with partner.',offer:null,rebook:0,lastVendorShared:false},
+    {id:'v3',viewer:'Lisa',date:'2026-05-26',time:'10:00',status:'completed',type:'Unaccompanied',agent:'Sarah Malik',feedback:'Interested',suitability:4,summary:'Buyer likes kitchen layout and wants a second visit this week.',notesShared:'',notesInternal:'Asked about service charge range.',offer:382500,rebook:0,lastVendorShared:true},
+    {id:'v4',viewer:'Tom',date:'2026-05-25',time:'13:00',status:'no_show',type:'Agent accompanied',agent:'Towers Wills',feedback:null,suitability:null,summary:'',notesShared:'',notesInternal:'No response on phone.',offer:null,rebook:1,lastVendorShared:false},
+    {id:'v5',viewer:'Priya',date:'2026-05-30',time:'09:30',status:'scheduled',type:'Unaccompanied',agent:'Sarah Malik',feedback:null,suitability:null,summary:'',notesShared:'Key safe code shared.',notesInternal:'First-time buyer.',offer:null,rebook:0,lastVendorShared:false},
+    {id:'v6',viewer:'James',date:'2026-05-27',time:'16:00',status:'completed',type:'Agent accompanied',agent:'Towers Wills',feedback:'Very interested',suitability:5,summary:'Loved the garden and en-suite. Wants to proceed quickly.',notesShared:'',notesInternal:'Cash buyer.',offer:395000,rebook:0,lastVendorShared:false},
+    {id:'v7',viewer:'Anna',date:'2026-05-24',time:'14:00',status:'completed',type:'Agent accompanied',agent:'Sarah Malik',feedback:null,suitability:null,summary:'',notesShared:'',notesInternal:'Viewed with partner.',offer:null,rebook:0,lastVendorShared:false}
+  ];
+
+  const STATUS_LABEL = {scheduled:'Scheduled',confirmed:'Confirmed',completed:'Completed',cancelled:'Cancelled',no_show:'No show'};
+  const VENDOR_LABEL = {scheduled:'Scheduled',confirmed:'Confirmed',completed:'Viewing took place',cancelled:'Cancelled',no_show:'Did not attend'};
+  const FEEDBACK_ALLOWED = (v) => v.status === 'completed';
+
+  let selectedId = null;
+  let filterMode = 'all';
+
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+
+  function toDateTime(v){ return new Date(`${v.date}T${v.time || '00:00'}`); }
+  function fmtTime(v){ return toDateTime(v).toLocaleString('en-GB',{hour:'2-digit',minute:'2-digit'}); }
+  function fmtDateShort(v){ return toDateTime(v).toLocaleString('en-GB',{weekday:'short',day:'numeric',month:'short'}); }
+  function fmtDate(v){ return toDateTime(v).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }
+
+  function isUpcoming(v){
+    return ['scheduled','confirmed'].includes(v.status) && toDateTime(v) >= new Date('2026-05-29T00:00');
+  }
+  function isPast(v){
+    if(['completed','cancelled','no_show'].includes(v.status)) return true;
+    return ['scheduled','confirmed'].includes(v.status) && toDateTime(v) < new Date('2026-05-29T00:00');
+  }
+  function needsAction(v){
+    if(v.status === 'completed' && !(v.summary && v.summary.trim())) return true;
+    if(v.status === 'no_show' && v.rebook < 3) return true;
+    return false;
+  }
+  function actionHint(v){
+    if(v.status === 'completed' && !(v.summary && v.summary.trim())) return 'Add feedback';
+    if(v.status === 'no_show') return `Rebook ${v.rebook}/3`;
+    if(v.offer) return `Offer £${Number(v.offer).toLocaleString('en-GB')}`;
+    return null;
+  }
+
+  function calcStats(){
+    const upcoming = viewings.filter(isUpcoming).length;
+    const actionCount = viewings.filter(needsAction).length;
+    const feedbackPending = viewings.filter(v => v.status === 'completed' && !(v.summary && v.summary.trim())).length;
+    const daysSinceVendor = 3;
+    return {upcoming, actionCount, feedbackPending, daysSinceVendor};
+  }
+
+  function statusBadgeClass(status){
+    if(status==='scheduled' || status==='confirmed') return 'badge-purple';
+    if(status==='completed') return 'badge-success';
+    if(status==='no_show') return 'badge-warning';
+    return 'badge-slate';
+  }
+
+  function accentClass(status){ return `is-accent-${status}`; }
+
+  function pickDefaultSelection(){
+    const action = viewings.find(needsAction);
+    if(action) return action.id;
+    const next = viewings.filter(isUpcoming).sort((a,b)=>toDateTime(a)-toDateTime(b))[0];
+    if(next) return next.id;
+    return viewings[0]?.id || null;
+  }
+
+  function matchesFilter(v){
+    if(filterMode === 'upcoming') return isUpcoming(v);
+    if(filterMode === 'action') return needsAction(v);
+    if(filterMode === 'past') return isPast(v);
+    return true;
+  }
+
+  function renderAttention(){
+    const s = calcStats();
+    const parts = [];
+    if(s.daysSinceVendor >= 3){
+      parts.push(`<div class="message message-warning">
+        <svg class="message-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div class="message-body"><div class="message-title">Vendor update overdue</div>Last sent ${s.daysSinceVendor} days ago. ${s.feedbackPending ? `${s.feedbackPending} viewing${s.feedbackPending===1?'':'s'} still need feedback before you share.` : 'Share a curated summary with the vendor.'}</div>
+        <div class="message-actions"><button type="button" class="btn btn-secondary" id="btn-vendor-attention">Send update</button></div>
+      </div>`);
+    }
+    if(s.feedbackPending > 0 && s.daysSinceVendor < 3){
+      parts.push(`<div class="message message-info">
+        <svg class="message-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        <div class="message-body"><div class="message-title">${s.feedbackPending} viewing${s.feedbackPending===1?' needs':'s need'} feedback</div>Complete feedback on completed viewings so it can go in the next vendor update.</div>
+        <div class="message-actions"><button type="button" class="btn btn-secondary" id="btn-filter-action">Show</button></div>
+      </div>`);
+    }
+    $('#attention-strip').innerHTML = parts.join('');
+    $('#btn-vendor-attention')?.addEventListener('click', ()=> $('#btn-vendor-update').click());
+    $('#btn-filter-action')?.addEventListener('click', ()=>{
+      filterMode = 'action';
+      $$('#filter-pills .tab-pill').forEach(p=>{
+        const on = p.dataset.filter === 'action';
+        p.classList.toggle('is-active', on);
+        p.setAttribute('aria-selected', String(on));
+      });
+      renderList();
+    });
+  }
+
+  function renderList(){
+    const q = ($('#search-input')?.value || '').toLowerCase().trim();
+    const list = viewings.filter(v => {
+      if(!matchesFilter(v)) return false;
+      if(!q) return true;
+      return [v.viewer, v.status, v.notesShared, v.notesInternal, v.agent].join(' ').toLowerCase().includes(q);
+    }).sort((a,b)=>toDateTime(b)-toDateTime(a));
+
+    const labels = {all:'All viewings', upcoming:'Upcoming', action:'Needs action', past:'Past viewings'};
+    $('#viewings-panel-title').textContent = labels[filterMode] || 'All viewings';
+    $('#viewings-count').textContent = list.length ? `${list.length} viewing${list.length===1?'':'s'}` : 'None';
+
+    $('#viewings-list').innerHTML = list.length ? list.map(v => {
+      const hint = actionHint(v);
+      return `<button type="button" class="vf-card ${accentClass(v.status)} ${v.id===selectedId?'is-selected':''} ${needsAction(v)?'is-needs-action':''}" data-id="${v.id}" role="listitem">
+        <div class="vf-card-head">
+          <div>
+            <div class="vf-card-time">${fmtTime(v)}</div>
+            <div class="vf-card-date">${fmtDateShort(v)}</div>
+          </div>
+          <span class="badge ${statusBadgeClass(v.status)}">${STATUS_LABEL[v.status]}</span>
+        </div>
+        <div class="vf-card-viewer">${v.viewer}</div>
+        <div class="vf-card-sub">${v.type} · ${v.agent}</div>
+        ${hint ? `<div class="vf-card-action">${hint}</div>` : ''}
+        <div class="vf-card-foot">
+          <span>${v.offer ? `Offer £${Number(v.offer).toLocaleString('en-GB')}` : VENDOR_LABEL[v.status]}</span>
+          ${v.feedback ? '<span class="badge badge-success">Feedback saved</span>' : ''}
+        </div>
+      </button>`;
+    }).join('') : `<div class="empty-state" style="grid-column:1/-1;"><strong>No viewings match</strong>Try a different filter or search term.</div>`;
+
+    $$('#viewings-list .vf-card').forEach(card => card.addEventListener('click',()=>{
+      selectedId = card.dataset.id;
+      renderList();
+      renderDetail();
+    }));
+  }
+
+  function getSelected(){ return viewings.find(v => v.id===selectedId); }
+
+  function renderDetailEmpty(){
+    const next = viewings.filter(isUpcoming).sort((a,b)=>toDateTime(a)-toDateTime(b))[0];
+    $('#detail-inner').innerHTML = `
+      <div class="vf-detail-empty">
+        <strong>Select a viewing</strong>
+        Choose a card from the grid to update status, add feedback, or manage rebooks.
+        ${next ? `<button type="button" class="vf-next-card" data-id="${next.id}">
+          <div class="vf-next-label">Next up</div>
+          <div class="vf-next-viewer">${next.viewer}</div>
+          <div class="vf-next-time">${fmtDate(next)} · ${next.type}</div>
+        </button>` : ''}
+      </div>`;
+    $('.vf-next-card')?.addEventListener('click', (e)=>{
+      selectedId = e.currentTarget.dataset.id;
+      renderList();
+      renderDetail();
+    });
+  }
+
+  function renderDetail(){
+    const v = getSelected();
+    if(!v){ renderDetailEmpty(); return; }
+
+    const hint = actionHint(v);
+    const actionBanner = hint ? `<div class="vf-detail-action ${v.status==='no_show'||!v.summary?'is-warning':''}"><p>${hint === 'Add feedback' ? 'This viewing needs feedback before you can include it in a vendor update.' : hint.startsWith('Rebook') ? 'Send a rebook email or mark the lead as lost after 3 attempts.' : hint}</p></div>` : '';
+
+    $('#detail-inner').innerHTML = `
+      ${actionBanner}
+      <header class="detail-header">
+        <div>
+          <h2 class="text-h3">${v.viewer}</h2>
+          <p class="detail-meta">${fmtDate(v)} · ${v.type}</p>
+          <p class="detail-meta">${v.agent}</p>
+        </div>
+        <span class="badge ${statusBadgeClass(v.status)}">${STATUS_LABEL[v.status]}</span>
+      </header>
+      <div class="detail-body">
+        <section class="detail-section">
+          <h3 class="detail-section-title">Viewing status</h3>
+          <div class="status-buttons" id="status-buttons"></div>
+        </section>
+        <section class="detail-section" id="cancel-reason-wrap" style="display:none;">
+          <h3 class="detail-section-title">Cancellation reason (required)</h3>
+          <label class="field">
+            <select class="input" id="cancel-reason">
+              <option value="">Select reason</option>
+              <option value="Viewer wants to reschedule">Viewer wants to reschedule</option>
+              <option value="Viewer found another property">Viewer found another property</option>
+              <option value="Viewer no longer interested">Viewer no longer interested</option>
+              <option value="Property no longer available">Property no longer available</option>
+              <option value="Scheduling conflict">Scheduling conflict</option>
+              <option value="Other">Other</option>
+            </select>
+          </label>
+          <label class="field" id="cancel-other-wrap" style="display:none;">
+            <span class="field-label">Other reason</span>
+            <textarea class="input textarea" id="cancel-other" placeholder="Add reason"></textarea>
+          </label>
+          <button type="button" class="btn btn-secondary" id="btn-open-reschedule" style="display:none;">Open schedule form</button>
+        </section>
+        <section class="detail-section" id="feedback-section"></section>
+        <section class="detail-section" id="rebook-section" style="display:none;"></section>
+        ${v.notesInternal ? `<section class="detail-section internal-note"><h3 class="detail-section-title">Internal note</h3><p class="text-body">${v.notesInternal}</p></section>` : ''}
+      </div>`;
+
+    renderStatusButtons(v);
+    renderCancel(v);
+    renderFeedback(v);
+    renderRebook(v);
+  }
+
+  function renderStatusButtons(v){
+    const statuses=['scheduled','confirmed','completed','cancelled','no_show'];
+    $('#status-buttons').innerHTML = statuses.map(s => `<button type="button" class="status-btn ${v.status===s?'active':''}" data-status="${s}">${STATUS_LABEL[s]}</button>`).join('');
+    $$('#status-buttons .status-btn').forEach(btn=>btn.addEventListener('click',()=>{
+      const next=btn.dataset.status;
+      v.status=next;
+      if(next!=='cancelled') { v.cancelReason=''; }
+      renderAttention(); renderList(); renderDetail();
+    }));
+  }
+
+  function renderFeedback(v){
+    const container = $('#feedback-section');
+    if(!FEEDBACK_ALLOWED(v)){
+      container.innerHTML = `<h3 class="detail-section-title">Feedback</h3><div class="feedback-locked">Feedback can be entered only when status is <strong>Completed</strong>.</div>`;
+      return;
+    }
+
+    container.innerHTML = `
+      <h3 class="detail-section-title">Feedback (agent entered)</h3>
+      <label class="field"><span class="field-label">Interest level</span>
+        <select class="input" id="fb-interest">
+          <option ${v.feedback==='Very interested'?'selected':''}>Very interested</option>
+          <option ${v.feedback==='Interested'?'selected':''}>Interested</option>
+          <option ${v.feedback==='Neutral'?'selected':''}>Neutral</option>
+          <option ${v.feedback==='Not interested'?'selected':''}>Not interested</option>
+        </select>
+      </label>
+      <div class="field"><span class="field-label">Viewer suitability (1-5)</span><div class="rating-picker" id="fb-rating"></div></div>
+      <label class="field"><span class="field-label">Curated feedback summary</span><textarea class="input textarea" id="fb-summary" placeholder="Summary shared with vendor">${v.summary||''}</textarea></label>
+      <button type="button" class="btn btn-primary" id="btn-save-feedback">Save feedback</button>
+    `;
+    const ratingWrap = $('#fb-rating');
+    ratingWrap.innerHTML = [1,2,3,4,5].map(n=>`<button type="button" class="rating-btn ${v.suitability===n?'is-selected':''}" data-rate="${n}">${n}</button>`).join('');
+    $$('#fb-rating .rating-btn').forEach(b=>b.addEventListener('click',()=>{ v.suitability=Number(b.dataset.rate); renderDetail(); }));
+    $('#btn-save-feedback').addEventListener('click',()=>{
+      v.feedback = $('#fb-interest').value;
+      v.summary = $('#fb-summary').value.trim();
+      renderAttention(); renderList();
+    });
+  }
+
+  function renderRebook(v){
+    const sec = $('#rebook-section');
+    if(v.status!=='no_show'){ sec.style.display='none'; sec.innerHTML=''; return; }
+    sec.style.display='block';
+    sec.innerHTML = `
+      <h3 class="detail-section-title">No-show and rebook</h3>
+      <p class="text-body" style="margin-top:0;">Rebook attempts: <strong>${v.rebook}/3</strong></p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button type="button" class="btn btn-secondary" id="btn-rebook">Send rebook email</button>
+        ${v.rebook>=3?'<span class="badge badge-danger">Mark lead as lost</span>':''}
+      </div>
+    `;
+    $('#btn-rebook')?.addEventListener('click',()=>{
+      if(v.rebook<3) v.rebook +=1;
+      renderAttention(); renderList(); renderDetail();
+    });
+  }
+
+  function renderCancel(v){
+    const wrap = $('#cancel-reason-wrap');
+    const otherWrap = $('#cancel-other-wrap');
+    const btnRes = $('#btn-open-reschedule');
+    wrap.style.display = v.status==='cancelled' ? 'block':'none';
+    if(v.status!=='cancelled') return;
+
+    $('#cancel-reason').onchange = (e)=>{
+      v.cancelReason = e.target.value;
+      otherWrap.style.display = v.cancelReason==='Other' ? 'block':'none';
+      btnRes.style.display = v.cancelReason==='Viewer wants to reschedule' ? 'inline-flex':'none';
+    };
+    $('#cancel-other').oninput = (e)=>{ v.cancelReasonOther = e.target.value; };
+    btnRes.onclick = ()=>openModal('modal-schedule');
+  }
+
+  function openModal(id){ const m=$('#'+id); m.classList.add('is-open'); m.setAttribute('aria-hidden','false'); }
+  function closeModal(id){ const m=$('#'+id); m.classList.remove('is-open'); m.setAttribute('aria-hidden','true'); }
+
+  function setupSchedule(){
+    let viewType='Agent accompanied';
+    $$('#modal-schedule [data-type]').forEach(b=>b.addEventListener('click',()=>{
+      $$('#modal-schedule [data-type]').forEach(x=>x.classList.remove('is-active'));
+      b.classList.add('is-active');
+      viewType = b.dataset.type;
+    }));
+
+    $('#btn-save-schedule').addEventListener('click',()=>{
+      const date = $('#form-date').value;
+      const time = $('#form-time').value;
+      const warning = $('#schedule-warning');
+      warning.style.display='none';
+      if(!date || !time){ warning.textContent='Date and time are mandatory.'; warning.style.display='block'; return; }
+
+      const target = new Date(`${date}T${time}`);
+      const conflict = viewings.find(v=>v.status!=='cancelled' && Math.abs(toDateTime(v)-target)<=30*60*1000);
+      if(conflict){ warning.textContent=`Scheduling conflict: within 30 minutes of ${conflict.viewer} (${fmtDate(conflict)}).`; warning.style.display='block'; return; }
+
+      const existing = $('#form-viewer-existing').value.trim();
+      const first = $('#lead-first').value.trim();
+      const last = $('#lead-last').value.trim();
+      const viewer = existing || `${first} ${last}`.trim();
+      if(!viewer){ warning.textContent='Select an existing viewer or create a new lead.'; warning.style.display='block'; return; }
+
+      viewings.push({
+        id:'v'+(viewings.length+1), viewer: viewer.split(' ')[0], date, time,
+        status:'scheduled', type:viewType, agent:$('#form-agent').value, feedback:null, suitability:null,
+        summary:'', notesShared:$('#form-notes').value.trim(), notesInternal:'', offer:null, rebook:0, lastVendorShared:false
+      });
+      selectedId = viewings[viewings.length-1].id;
+      closeModal('modal-schedule');
+      renderAttention(); renderList(); renderDetail();
+      alert('Viewing scheduled. Confirmation email sent to viewer.');
+    });
+  }
+
+  function setupVendorUpdate(){
+    $('#btn-vendor-update').addEventListener('click',()=>{
+      const items = viewings.filter(v=>['completed','cancelled','no_show','confirmed','scheduled'].includes(v.status));
+      $('#vendor-list').innerHTML = items.map(v=>`
+        <article class="card" style="margin-bottom:8px;">
+          <div class="card-body">
+            <label style="display:flex;gap:8px;align-items:start;">
+              <input type="checkbox" data-vendor-id="${v.id}" ${v.lastVendorShared?'checked':''}>
+              <div>
+                <p class="text-body-bold" style="margin:0;">${v.viewer} · ${fmtDate(v)}</p>
+                <p class="text-info-label" style="margin:4px 0;">Status shown to vendor: ${VENDOR_LABEL[v.status]}</p>
+              </div>
+            </label>
+            <label class="field" style="margin:8px 0 0;"><span class="field-label">Curated summary (shared)</span><textarea class="input textarea" data-summary-id="${v.id}" placeholder="Summary shared with vendor">${v.summary||''}</textarea></label>
+            <p class="field-help">Internal notes are excluded from vendor update.</p>
+          </div>
+        </article>`).join('');
+      openModal('modal-vendor');
+    });
+
+    $('#btn-send-vendor').addEventListener('click',()=>{
+      $$('[data-vendor-id]').forEach(el=>{
+        const v = viewings.find(x=>x.id===el.dataset.vendorId);
+        if(v) v.lastVendorShared = el.checked;
+      });
+      $$('[data-summary-id]').forEach(el=>{
+        const v = viewings.find(x=>x.id===el.dataset.summaryId);
+        if(v) v.summary = el.value.trim();
+      });
+      closeModal('modal-vendor');
+      renderAttention(); renderList(); renderDetail();
+      alert('Vendor update sent with curated summaries.');
+    });
+  }
+
+  function bindShell(){
+    $('#case-panel-toggle')?.addEventListener('click', () => {
+      const panel = $('#case-panel');
+      const open = panel.classList.contains('is-collapsed');
+      panel.classList.toggle('is-collapsed', !open);
+      $('#case-panel-toggle').setAttribute('aria-expanded', String(open));
+    });
+
+    $$('[data-close-modal]').forEach(btn=>btn.addEventListener('click',()=>closeModal(btn.dataset.closeModal)));
+    ['modal-schedule','modal-vendor'].forEach(id=>{
+      $('#'+id).addEventListener('click',(e)=>{ if(e.target.id===id) closeModal(id); });
+    });
+
+    $$('#filter-pills .tab-pill').forEach(pill => pill.addEventListener('click', ()=>{
+      filterMode = pill.dataset.filter;
+      $$('#filter-pills .tab-pill').forEach(p=>{
+        const on = p === pill;
+        p.classList.toggle('is-active', on);
+        p.setAttribute('aria-selected', String(on));
+      });
+      renderList();
+    }));
+
+    $('#search-input').addEventListener('input', renderList);
+    $('#btn-schedule').addEventListener('click',()=>openModal('modal-schedule'));
+  }
+
+  bindShell();
+  setupSchedule();
+  setupVendorUpdate();
+  selectedId = pickDefaultSelection();
+  renderAttention();
+  renderList();
+  renderDetail();
+})();
+</script>
+</body>
+</html>
