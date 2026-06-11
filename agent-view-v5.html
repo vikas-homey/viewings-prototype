@@ -74,11 +74,13 @@
     .perspective-switch { flex-shrink: 0; }
     .proto-settings-wrap { position: relative; flex-shrink: 0; }
     .proto-settings-btn {
+      display: inline-flex; align-items: center; justify-content: center;
       width: 22px; height: 22px; padding: 0; border: none; border-radius: var(--radius-full);
-      background: var(--danger-600); cursor: pointer;
+      background: var(--danger-600); color: #fff; cursor: pointer;
       box-shadow: 0 0 0 2px #fff, 0 0 0 3px var(--danger-200);
       transition: background var(--dur-fast), transform var(--dur-fast);
     }
+    .proto-settings-btn svg { width: 12px; height: 12px; display: block; flex-shrink: 0; }
     .proto-settings-btn:hover { background: var(--danger-700); }
     .proto-settings-btn.is-open {
       background: var(--danger-700); transform: scale(1.05);
@@ -1770,7 +1772,11 @@
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
       </button>
       <div class="proto-settings-wrap">
-        <button type="button" class="proto-settings-btn" id="btn-proto-settings" aria-label="Prototype settings" aria-expanded="false" aria-controls="proto-settings-panel" title="Prototype settings"></button>
+        <button type="button" class="proto-settings-btn" id="btn-proto-settings" aria-label="Prototype settings" aria-expanded="false" aria-controls="proto-settings-panel" title="Prototype settings">
+          <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"/>
+          </svg>
+        </button>
         <div class="proto-settings-panel" id="proto-settings-panel" hidden>
           <div class="proto-settings-panel-title">Prototype controls</div>
           <div class="proto-settings-section">
@@ -3830,10 +3836,12 @@
         ${v.rebook >= 3 ? `<p class="rebook-warn">You've reached the maximum rebook attempts. Mark ${esc(viewerFirstName(v.viewer))} as a lost lead or schedule a new viewing if you've spoken to them directly.</p>` : ''}
       </div>` : '';
 
-    const cancelledHtml = v.status === 'cancelled' && v.cancelReason ? `
+    const cancelledHtml = v.status === 'cancelled' ? `
       <div class="dock-section">
-        <span class="dock-form-label">Cancellation reason</span>
-        <p class="text-body" style="text-align:left;margin-top:var(--space-1);">${esc(v.cancelReason)}</p>
+        ${v.cancelReason ? `<span class="dock-form-label">Cancellation reason</span>
+        <p class="text-body" style="text-align:left;margin-top:var(--space-1);">${esc(v.cancelReason)}</p>` : ''}
+        <p class="rebook-meta"${v.cancelReason ? ' style="margin-top:var(--space-3)"' : ''}>Rebook attempt ${v.rebook || 0} of 3</p>
+        ${(v.rebook || 0) >= 3 ? `<p class="rebook-warn">You've reached the maximum rebook attempts. Mark ${esc(viewerFirstName(v.viewer))} as a lost lead or schedule a new viewing if you've spoken to them directly.</p>` : ''}
       </div>` : '';
 
     const lostHtml = v.leadLost && v.lostReason ? `
@@ -3917,14 +3925,14 @@
           ${rebookDisabled && v.rebook < 3 ? '<p class="dock-footer-note">Rebook email already sent for this attempt.</p>' : ''}`;
       } else if (v.status === 'completed') {
         ctaHtml = `<button type="button" class="btn btn-secondary dock-cta" id="dock-mark-noshow">Mark as no show</button>`;
-      } else if (v.status === 'cancelled') {
-        const rescheduleReasons = ['Viewer wants to reschedule', 'Scheduling conflict'];
-        const lostReasons = ['Viewer found another property', 'Viewer no longer interested'];
-        if (rescheduleReasons.includes(v.cancelReason)) {
-          ctaHtml = `<button type="button" class="btn btn-primary dock-cta" id="dock-cta">Schedule New Viewing</button>`;
-        } else if (lostReasons.includes(v.cancelReason) && !v.leadLost) {
-          ctaHtml = `<button type="button" class="btn btn-primary dock-cta" id="dock-cta">Mark as Lost</button>`;
-        }
+      } else if (v.status === 'cancelled' && !v.leadLost) {
+        const rebookMaxed = (v.rebook || 0) >= 3;
+        const rebookDisabled = !rebookMaxed && v.rebookEmailSentAt >= v.rebook && v.rebook > 0;
+        ctaHtml = `
+          <button type="button" class="btn btn-primary dock-cta" id="dock-cta">Schedule a New Viewing</button>
+          <button type="button" class="btn btn-secondary dock-cta" id="dock-cta-secondary"${rebookDisabled || rebookMaxed ? ' disabled' : ''}>Send Rebook Email</button>
+          <button type="button" class="btn btn-tertiary dock-cta" id="dock-cta-mark-lost">Mark as Lost</button>
+          ${rebookDisabled ? '<p class="dock-footer-note">Rebook email already sent for this attempt.</p>' : ''}`;
       }
 
       footer.innerHTML = ctaHtml
@@ -3953,17 +3961,32 @@
             showToast('Rebook email sent', `Attempt ${v.rebook}/3 sent to ${v.viewer}.`);
           }
         } else if (v.status === 'cancelled') {
-          if (['Viewer found another property', 'Viewer no longer interested'].includes(v.cancelReason)) {
-            openMarkLostModal(v);
-            return;
-          } else {
-            openModal('modal-new-viewing');
-            return;
-          }
+          openModal('modal-new-viewing');
+          return;
         }
         renderList(); renderDock();
       });
-      $('#dock-cta-secondary')?.addEventListener('click', () => openModal('modal-new-viewing'));
+      $('#dock-cta-secondary')?.addEventListener('click', () => {
+        if (v.status === 'cancelled') {
+          if ((v.rebook || 0) >= 3) {
+            showToast('Maximum reached', 'You have used all 3 rebook attempts.', 'warning');
+            return;
+          }
+          if (v.rebookEmailSentAt >= v.rebook && v.rebook > 0) {
+            showToast('Already sent', `Rebook email already sent for attempt ${v.rebook}.`, 'warning');
+            return;
+          }
+          v.rebook = (v.rebook || 0) + 1;
+          v.rebookEmailSentAt = v.rebook;
+          v.activity.unshift({ agents: ['JA'], text: `Rebook email sent to ${fn} — attempt ${v.rebook} of 3`, time: 'Just now' });
+          showToast('Rebook email sent', `Attempt ${v.rebook}/3 sent to ${v.viewer}.`);
+          renderList();
+          renderDock();
+          return;
+        }
+        openModal('modal-new-viewing');
+      });
+      $('#dock-cta-mark-lost')?.addEventListener('click', () => openMarkLostModal(v));
       $('#dock-mark-noshow')?.addEventListener('click', () => {
         markViewingAsNoShow(v);
         showToast('Status updated', `${v.viewer} marked as No Show.`);

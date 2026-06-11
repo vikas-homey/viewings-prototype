@@ -10,7 +10,7 @@ This document describes the interactive viewings prototype built for **Homey Age
 
 Open `agent-view-v5.html` in a browser to walk through every flow.
 
-**Prototype controls:** click the small **red button** in the header (next to the avatar) to open **Prototype controls** — simulated date/time and email settings. Click outside or press Escape to close.
+**Prototype controls:** click the small **red settings gear icon** in the header (next to the avatar) to open **Prototype controls** — simulated date/time and email settings. Click outside or press Escape to close.
 
 ---
 
@@ -64,6 +64,20 @@ Active filters appear as **chips** (column name + value); each chip can be clear
 
 Left sidebar: vendor contact (Mr Hussain Somani), property address, price, workflow list with **Viewings** active under Agency.
 
+### 2.4 Viewing cards (agent list)
+
+Each card (**Figma 4172:22372**) shows:
+
+| Element | Content |
+|---------|---------|
+| **Name** | Full applicant name |
+| **Time** | Relative schedule label (Today / Tomorrow / date + time range) |
+| **Status badge** | One of five viewing statuses |
+| **Offer badge** | On `completed` viewings with `offerPrice` — grey (no feedback), blue (feedback, not highest), green (highest offer) |
+| **Footer** | On `completed`: feedback summary, or *No Feedback Recorded* (red italic) if empty |
+
+**Load more:** In **All** filter, Upcoming and Past sections preview 3 cards each; **Load more** switches to that time filter.
+
 ---
 
 ## 3. Viewing statuses
@@ -99,7 +113,7 @@ stateDiagram-v2
     no_show --> scheduled: Schedule new viewing / Reschedule path
     no_show --> cancelled: (via agent actions)
 
-    cancelled --> scheduled: Schedule new viewing (reschedule reasons)
+    cancelled --> scheduled: Schedule a new viewing (footer CTA or menu)
 ```
 
 ### 3.2 Lead status (separate from viewing status)
@@ -126,10 +140,10 @@ Each viewing is created via `base()` with these fields:
 | `summary` | Feedback & notes — **only field shared with vendor** in update emails |
 | `interest` | Very interested / Interested / Neutral / Not interested (assessment; not in vendor email) |
 | `buyingSituation` | First-time buyer, chain position, cash buyer, etc. (assessment; not in vendor email) |
-| `priceProposed`, `proposedPrice`, `offerPrice` | Offer tracking (assessment / client dashboard; not in vendor email) |
+| `priceProposed`, `proposedPrice`, `offerPrice` | Offer tracking (assessment / client dashboard; not in vendor email). On completed viewings, saving `proposedPrice` also syncs `offerPrice` |
 | `vendorNote` | Optional note on client dashboard (separate from vendor update email body) |
 | `cancelReason` | Why viewing was cancelled |
-| `rebook`, `rebookEmailSentAt` | No-show rebook attempt counter (max 3) |
+| `rebook`, `rebookEmailSentAt` | Rebook email attempt counter for **no-show** and **cancelled** viewings (max 3) |
 | `leadLost`, `lostReason` | Lead marked lost with reason |
 | `activity[]` | Chronological activity log entries |
 
@@ -144,15 +158,16 @@ Default **Simulated now**: 29 May 2026, 11:00.
 | Viewer | Date | Status | Notes |
 |--------|------|--------|-------|
 | Lisa Okinovo | 29 May | `scheduled` | No confirmation sent — full happy path |
-| Mark Jensen | 29 May | `confirmed` | Confirmation sent; viewer confirmed |
-| Sofia Romano | 29 May | `completed` | Assessment filled; feedback summary present |
-| Derik Alrhtia | 29 May | `no_show` | Rebook attempt 1 of 3; rebook email sent |
-| James Parker | 29 May | `cancelled` | “Viewer no longer interested” — Mark as Lost CTA |
+| Mark Jensen | 29 May | `confirmed` | Confirmation sent; viewer confirmed; `vendorNote` for client dock |
+| Sofia Romano | 29 May | `completed` | Feedback + interest + buying situation; offer £325k (highest — green badge) |
+| Derik Alrhtia | 29 May | `no_show` | Rebook attempt 1 of 3; rebook email already sent |
+| James Parker | 29 May | `cancelled` | “Viewer no longer interested” — three footer CTAs (see §6.5) |
 | Emma Walsh | 30 May | `scheduled` | Future; confirmation sent |
 | Nina Patel | 30 May | `confirmed` | Future |
 | Oliver Chen | 1 Jun | `scheduled` | Future |
 | Priya Sharma | 2 Jun | `scheduled` | Future |
-| Tom Bradley | 27 May | `completed` | Past; feedback summary present |
+| Tom Bradley | 27 May | `completed` | Past; **no** feedback summary; offer £295k (grey badge) |
+| Amy Foster | 28 May | `completed` | Past; feedback recorded; offer £300k (blue badge) |
 
 **Last vendor update** meta: button tooltip shows “sent 3 days ago” until agent sends a new update.
 
@@ -234,17 +249,19 @@ Default **Simulated now**: 29 May 2026, 11:00.
 
 ### 6.5 Cancelled
 
-**Dock shows:** Cancellation reason; lost reason if `leadLost`.
+**Dock shows:** Cancellation reason (when set); **Rebook attempt X of 3**; warning at max attempts; lost reason if `leadLost`.
 
-**Footer** branches on `cancelReason`:
+**Footer** (when `!leadLost` — same three actions for **all** cancel reasons):
 
-| Cancel reason | Footer CTA |
-|---------------|------------|
-| Viewer wants to reschedule / Scheduling conflict | Schedule New Viewing |
-| Viewer found another property / Viewer no longer interested | Mark as Lost (if not lost) |
-| Other reasons | No footer CTA |
+| Button | Style | Action |
+|--------|-------|--------|
+| **Schedule a New Viewing** | Primary | Opens Create Viewing modal |
+| **Send Rebook Email** | Secondary | Increments rebook counter (max 3); disabled if already sent for current attempt or max reached |
+| **Mark as Lost** | Tertiary | Opens Mark as Lost modal |
 
-**Three-dot menu:** Status actions and Reschedule hidden; Schedule New Viewing and Edit Applicant available.
+When `leadLost`, all footer buttons are hidden.
+
+**Three-dot menu:** Status actions and Reschedule hidden; **Schedule New Viewing**, Edit Applicant, and **Delete Viewing** available.
 
 ---
 
@@ -274,13 +291,13 @@ Default **Simulated now**: 29 May 2026, 11:00.
 
 ### 7.4 Cancel Viewing — agent (`modal-cancel`)
 
-Required reason dropdown → `cancelled`, reason stored, activity logged.
+Required reason dropdown (Viewer wants to reschedule, Viewer found another property, Viewer no longer interested, Property no longer available, Scheduling conflict, **Other** with free text) → `cancelled`, reason stored, activity logged.
 
 ### 7.5 Mark as Lost (`modal-mark-lost`)
 
 Required lost-reason dropdown (+ Other free text) → lead `lost`, `viewing.leadLost`, activity logged.
 
-**Entry points:** No show (rebook ≥ 3), cancelled (found another property / no longer interested).
+**Entry points:** No show (primary CTA when `rebook ≥ 3`); **Cancelled** (tertiary **Mark as Lost** footer button, any cancel reason).
 
 ### 7.6 Delete Viewing (`modal-delete`)
 
@@ -446,7 +463,7 @@ Clicking a card selects it (purple border) and populates the detail dock.
 
 ### 9.6 Offer badges on cards
 
-Same logic as agent list (`getOfferBadgeVariant`):
+Same logic as agent list (see §2.4, `getOfferBadgeVariant`):
 
 | Variant | Colour | When |
 |---------|--------|------|
@@ -647,16 +664,16 @@ When the agent creates viewings, updates assessment, changes status, or sends ve
 | Completed | — | Mark as no show | — |
 | No Show | rebook < 3 | Send Rebook Email | Schedule New Viewing |
 | No Show | rebook ≥ 3, not lost | Mark as Lost | Schedule New Viewing |
-| Cancelled | Reschedule reasons | Schedule New Viewing | — |
-| Cancelled | Lost reasons, not lost | Mark as Lost | — |
+| Cancelled | not lost | Schedule a New Viewing | Send Rebook Email + Mark as Lost (tertiary) |
+| Cancelled | `leadLost` | — | — |
 
 ---
 
 ## 12. Cross-cutting behaviour
 
-### 12.1 Prototype controls (red header button)
+### 12.1 Prototype controls (red settings gear icon)
 
-Popover contains:
+Small red circular button with a white **gear icon** in the header (next to avatar). Popover contains:
 
 | Control | Effect |
 |---------|--------|
@@ -708,6 +725,12 @@ Debounced 500ms on: agent notes, feedback, interest, buying situation, proposed 
 ### No-show → lost
 1. Mark viewing no show → Send Rebook Email ×3 → **Mark as Lost**
 
+### Cancelled viewing actions
+1. **Agent** → James Parker (`cancelled`) → dock shows cancellation reason + rebook 0 of 3
+2. Footer: **Schedule a New Viewing** (primary) · **Send Rebook Email** (secondary) · **Mark as Lost** (tertiary)
+3. Send rebook email → counter increments; button disables until next attempt
+4. **Mark as Lost** → reason modal → footer buttons hidden; lost reason shown in dock
+
 ### Vendor update (mixed statuses)
 1. **Update Vendor** → includes Derik (no show, no feedback) + Sofia (feedback) + Lisa (scheduled today)
 2. Preview shows placeholder badge; sent email includes status lines + feedback where present only
@@ -733,7 +756,8 @@ Debounced 500ms on: agent notes, feedback, interest, buying situation, proposed 
 | Vendor update | — | Split modal, Homey email, today/past viewings, feedback-only sharing |
 | Accompanied by | Agent / owner / unaccompanied list | Owner \| Agent + Assigned to |
 | Applicant picker | Basic dropdown | + New Lead + name list |
-| Prototype settings | Inline header bars | Compact red button → popover |
+| Prototype settings | Inline header bars | Compact red **gear icon** button → popover |
+| Cancelled footer | Reason-based single CTA | **Schedule a New Viewing** + **Send Rebook Email** + **Mark as Lost** |
 | Reminder toggle in dock | Visible | Removed from UI (data field remains) |
 | Client dashboard | — | Task dashboard + **Viewing and Feedback** workflow |
 | Client viewings UI | — | Agent-parity list + read-only dock; **All / Upcoming / Past / Offers** filters (no separate Offers tab) |
@@ -755,4 +779,4 @@ Debounced 500ms on: agent notes, feedback, interest, buying situation, proposed 
 
 ---
 
-*Last updated to reflect `agent-view-v5.html` — agent viewings CRM, client Viewing and Feedback workflow (list + read-only dock, Offers filter, offer preference), viewer inbox, vendor update modal, and responsive detail drawer.*
+*Last updated to reflect `agent-view-v5.html` — agent viewings CRM (cancelled three-button footer, rebook on cancelled), client Viewing and Feedback workflow, viewer inbox, vendor update modal, prototype settings gear icon, and responsive client detail drawer.*
