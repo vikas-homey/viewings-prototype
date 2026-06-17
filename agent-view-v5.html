@@ -908,9 +908,15 @@
     .viewing-card-footer {
       font-size: var(--text-info-label-size); font-weight: var(--fw-regular);
       line-height: normal; color: #334155; margin: 0;
+      white-space: pre-line;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
     .viewing-card-footer.is-missing {
-      font-style: italic; color: var(--danger-600);
+      color: var(--danger-600);
     }
 
     /* Status badges */
@@ -925,6 +931,7 @@
     .vf-badge svg { width: 16px; height: 16px; flex-shrink: 0; }
     .badge-scheduled  { background: #f8fafc; border-color: #e2e8f0; color: #64748b; }
     .badge-confirmed  { background: #dbeafe; border-color: #bfdbfe; color: #2563eb; }
+    .badge-in-progress { background: #ede9fe; border-color: #ddd6fe; color: #7c3aed; }
     .badge-completed  { background: var(--success-50); border-color: #6ee7b7; color: var(--success-600); }
     .badge-no-show    { background: #fef2f2; border-color: #fecaca; color: #ef4444; }
     .badge-cancelled  { background: #fef7ec; border-color: #fbd3a7; color: #ff7214; }
@@ -2124,6 +2131,10 @@
                   <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="2" y="2.67" width="12" height="10.67" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M2 5.33h12M5.33 1.33v2M10.67 1.33v2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M5.5 8.5l2 2 3.5-3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                   Mark as Confirmed
                 </button>
+                <button type="button" class="dock-dd-item" role="menuitem" data-action="mark-in-progress">
+                  <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.2"/><path d="M8 4.8V8l2.2 1.8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Mark as In Progress
+                </button>
                 <button type="button" class="dock-dd-item" role="menuitem" data-action="mark-completed">
                   <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.2"/><path d="M8 5.33V8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="8" cy="10.67" r=".5" fill="currentColor"/></svg>
                   Mark as Completed
@@ -3072,7 +3083,7 @@
 
   const STATUS_LABEL = {
     scheduled: 'Scheduled', confirmed: 'Confirmed',
-    completed: 'Completed', cancelled: 'Cancelled', no_show: 'No Show'
+    in_progress: 'In Progress', completed: 'Completed', cancelled: 'Cancelled', no_show: 'No Show'
   };
 
   // ── Utils ─────────────────────────────────────────────────────────────
@@ -3100,31 +3111,54 @@
     const mins = v.duration || 30;
     return new Date(toDateTime(v).getTime() + mins * 60000);
   }
-  function autoCompleteConfirmedViewings() {
-    let count = 0;
+  function autoAdvanceViewingStatuses() {
+    let inProgressCount = 0;
+    let completedCount = 0;
     viewings.forEach(v => {
-      if (v.status !== 'confirmed') return;
-      if (simulatedNow < viewingEndDate(v)) return;
-      markViewingAsComplete(v, { automatic: true });
-      count += 1;
+      if (v.status !== 'confirmed' && v.status !== 'in_progress') return;
+      const start = toDateTime(v);
+      const end = viewingEndDate(v);
+      if (simulatedNow >= end) {
+        if (v.status !== 'completed') {
+          markViewingAsComplete(v, { automatic: true });
+          completedCount += 1;
+        }
+        return;
+      }
+      if (simulatedNow >= start && simulatedNow < end && v.status === 'confirmed') {
+        v.status = 'in_progress';
+        const fn = viewerFirstName(v.viewer);
+        v.activity.unshift({ agents: ['JA'], text: `${fn}'s viewing is now in progress`, time: 'Just now' });
+        inProgressCount += 1;
+      }
     });
-    return count;
+    return { inProgressCount, completedCount };
   }
   function applySimulatedTime() {
     const date = $('#sim-date')?.value;
     const time = $('#sim-time')?.value;
     if (!date || !time) return;
     simulatedNow = new Date(`${date}T${time}`);
-    const completed = autoCompleteConfirmedViewings();
+    const { inProgressCount, completedCount } = autoAdvanceViewingStatuses();
     renderFilterRow();
     renderList();
     renderDock();
     renderClientDashboard();
     renderViewerDashboard();
-    if (completed) {
+    if (inProgressCount && completedCount) {
       showToast(
-        completed === 1 ? 'Viewing completed' : `${completed} viewings completed`,
-        'Confirmed viewings past their scheduled end time were marked as completed automatically.'
+        `${inProgressCount} in progress, ${completedCount} completed`,
+        'Confirmed viewings moved to In Progress at start time and Completed at end time.'
+      );
+    } else if (inProgressCount) {
+      showToast(
+        inProgressCount === 1 ? 'Viewing in progress' : `${inProgressCount} viewings in progress`,
+        'Confirmed viewings at their scheduled start time were marked as In Progress automatically.'
+      );
+    } else if (completedCount) {
+      showToast(
+        completedCount === 1 ? 'Viewing completed' : `${completedCount} viewings completed`,
+        'In-progress or confirmed viewings past their scheduled end time were marked as completed automatically.'
       );
     }
   }
@@ -3239,6 +3273,7 @@
   const BADGE_ICONS = {
     scheduled: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="2" y="2.67" width="12" height="10.67" rx="1" stroke="currentColor" stroke-width="1.3"/><path d="M2 5.33h12M5.33 1.33v2M10.67 1.33v2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>`,
     confirmed:  `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="2" y="2.67" width="12" height="10.67" rx="1" stroke="currentColor" stroke-width="1.3"/><path d="M2 5.33h12M5.33 1.33v2M10.67 1.33v2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M5 9.5l2 2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+    in_progress: `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M8 4.8V8l2.2 1.8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
     completed:  `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M2 8.5l3.5 3.5 8.5-8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
     no_show:    `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.3"/><path d="M8 5.33v2.67" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="10.67" r=".6" fill="currentColor"/></svg>`,
     cancelled:  `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><circle cx="8" cy="5.5" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M3 13.5c0-2.8 2.2-4.5 5-4.5s5 1.7 5 4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="11.5" y1="8.5" x2="13.5" y2="10.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="13.5" y1="8.5" x2="11.5" y2="10.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>`,
@@ -3247,27 +3282,27 @@
 
   function badgeHtml(status) {
     const cls = { scheduled: 'badge-scheduled', confirmed: 'badge-confirmed',
-      completed: 'badge-completed', no_show: 'badge-no-show', cancelled: 'badge-cancelled' }[status] || 'badge-scheduled';
+      in_progress: 'badge-in-progress', completed: 'badge-completed', no_show: 'badge-no-show', cancelled: 'badge-cancelled' }[status] || 'badge-scheduled';
     return `<span class="vf-badge ${cls}">${BADGE_ICONS[status] || ''}${esc(STATUS_LABEL[status] || status)}</span>`;
   }
 
-  function getHighestOfferPrice() {
-    const prices = viewings.map(v => v.offerPrice).filter(p => p != null);
-    return prices.length ? Math.max(...prices) : 0;
+  function isAssessmentStatus(status) {
+    return status === 'completed' || status === 'in_progress';
   }
 
   function getOfferBadgeVariant(v) {
-    if (v.status !== 'completed' || v.offerPrice == null) return null;
-    const hasFeedback = !!(v.summary && v.summary.trim());
-    if (!hasFeedback) return 'information';
-    if (v.offerPrice >= getHighestOfferPrice()) return 'success';
-    return 'pending';
+    if (!isAssessmentStatus(v.status)) return null;
+    if (v.offerPrice == null) return 'information';
+    if (v.proposedPrice == null) return 'pending';
+    if (v.offerPrice > v.proposedPrice) return 'success';
+    if (v.offerPrice === v.proposedPrice) return 'pending';
+    return 'information';
   }
 
   function offerBadgeHtml(v) {
     const variant = getOfferBadgeVariant(v);
     if (!variant) return '';
-    const amount = Number(v.offerPrice).toLocaleString('en-GB');
+    const amount = v.offerPrice == null ? 'No offer' : `Offer £${Number(v.offerPrice).toLocaleString('en-GB')}`;
     return `<span class="vf-offer-badge vf-offer-badge--${variant}">${OFFER_BADGE_ICON}${esc(amount)}</span>`;
   }
 
@@ -3805,7 +3840,7 @@
         autosaveWrap.hidden = true;
       } else {
         const selected = getSelected();
-        autosaveWrap.hidden = !(selected && selected.status === 'completed');
+        autosaveWrap.hidden = !(selected && isAssessmentStatus(selected.status));
       }
     }
   }
@@ -3813,7 +3848,7 @@
   function updateDockAutosaveVisibility(v) {
     const wrap = $('#dock-autosave-wrap');
     if (!wrap) return;
-    const show = v && v.status === 'completed' && !dockActivityFullView;
+    const show = v && isAssessmentStatus(v.status) && !dockActivityFullView;
     wrap.hidden = !show;
     if (!show) setAutosaveStatus('idle');
   }
@@ -3822,17 +3857,23 @@
     const dd = $('#dock-dropdown');
     if (!dd || !v) return;
 
-    const statusActions = ['mark-confirmed', 'mark-completed', 'mark-noshow', 'cancel-viewing'];
+    const statusActions = ['mark-confirmed', 'mark-in-progress', 'mark-completed', 'mark-noshow', 'cancel-viewing'];
     const editActions = ['reschedule', 'schedule-new', 'edit-applicant', 'delete-viewing'];
     const setHidden = (sel, hidden) => { const el = dd.querySelector(sel); if (el) el.hidden = hidden; };
 
     $$('.dock-dd-item', dd).forEach(el => { el.hidden = false; });
 
     if (v.status === 'scheduled') {
+      setHidden('[data-action="mark-in-progress"]', true);
       setHidden('[data-action="mark-completed"]', true);
       setHidden('[data-action="schedule-new"]', true);
     } else if (v.status === 'confirmed') {
       setHidden('[data-action="mark-confirmed"]', true);
+      setHidden('[data-action="schedule-new"]', true);
+    } else if (v.status === 'in_progress') {
+      setHidden('[data-action="mark-confirmed"]', true);
+      setHidden('[data-action="mark-in-progress"]', true);
+      setHidden('[data-action="mark-noshow"]', true);
       setHidden('[data-action="schedule-new"]', true);
     } else if (v.status === 'completed') {
       statusActions.forEach(a => setHidden(`[data-action="${a}"]`, true));
@@ -3913,7 +3954,7 @@
 
     updateDockAutosaveVisibility(v);
 
-    const assessmentHtml = v.status === 'completed' ? `
+    const assessmentHtml = isAssessmentStatus(v.status) ? `
       <div class="assessment-section">
         <div class="assessment-header">
           <p class="text-h2 assessment-title">Applicant Assessment</p>
@@ -4001,9 +4042,9 @@
       v.priceProposed = e.target.checked;
       const wrap = $('#dock-proposed-price-wrap');
       if (wrap) wrap.hidden = !v.priceProposed;
-      if (v.status === 'completed') scheduleAssessmentAutosave(v);
+      if (isAssessmentStatus(v.status)) scheduleAssessmentAutosave(v);
     });
-    if (v.status === 'completed') {
+    if (isAssessmentStatus(v.status)) {
       bindAssessmentAutosave(v);
       if (v.summary || v.interest || v.buyingSituation || v.priceProposed || v.notesInternal) {
         setAutosaveStatus('saved');
@@ -4017,7 +4058,7 @@
       dockActivityFullView = true;
       renderDock();
     });
-    if (v.status !== 'completed') {
+    if (!isAssessmentStatus(v.status)) {
       $('#dock-agent-notes')?.addEventListener('blur', (e) => { v.notesInternal = e.target.value.trim(); });
     }
 
@@ -4054,6 +4095,8 @@
           ${rebookDisabled && v.rebook < 3 ? '<p class="dock-footer-note">Rebook email already sent for this attempt.</p>' : ''}`;
       } else if (v.status === 'completed') {
         ctaHtml = `<button type="button" class="btn btn-secondary dock-cta" id="dock-mark-noshow">Mark as no show</button>`;
+      } else if (v.status === 'in_progress') {
+        ctaHtml = `<button type="button" class="btn btn-secondary dock-cta" id="dock-mark-completed">Mark as completed</button>`;
       } else if (v.status === 'cancelled' && !v.leadLost) {
         const rebookMaxed = (v.rebook || 0) >= 3;
         const rebookDisabled = !rebookMaxed && v.rebookEmailSentAt >= v.rebook && v.rebook > 0;
@@ -4119,6 +4162,12 @@
       $('#dock-mark-noshow')?.addEventListener('click', () => {
         markViewingAsNoShow(v);
         showToast('Status updated', `${v.viewer} marked as No Show.`);
+        renderList();
+        renderDock();
+      });
+      $('#dock-mark-completed')?.addEventListener('click', () => {
+        markViewingAsComplete(v);
+        showToast('Status updated', `${v.viewer} marked as Completed.`);
         renderList();
         renderDock();
       });
@@ -4824,6 +4873,10 @@
         v.status = 'confirmed';
         v.activity.unshift({ agents: ['JA'], text: `John Agent marked ${v.viewer} as Confirmed`, time: 'Just now' });
         showToast('Status updated', `${v.viewer} marked as Confirmed.`);
+      } else if (action === 'mark-in-progress') {
+        v.status = 'in_progress';
+        v.activity.unshift({ agents: ['JA'], text: `John Agent marked ${v.viewer} as In Progress`, time: 'Just now' });
+        showToast('Status updated', `${v.viewer} marked as In Progress.`);
       } else if (action === 'mark-completed') {
         markViewingAsComplete(v);
         showToast('Status updated', `${v.viewer} marked as complete.`);
@@ -6040,7 +6093,7 @@
 
   function clientTaskStatusLabel(status) {
     if (status === 'completed') return 'Completed';
-    if (status === 'in_progress') return 'In progress';
+    if (status === 'in_progress') return 'In Progress';
     return 'Not started';
   }
 
